@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../core/theme/app_colors.dart';
 import '../core/widgets/premium_widgets.dart';
+import '../core/widgets/premium_header.dart';
 import '../data/mock_data.dart';
 import '../models/models.dart';
 import '../services/firebase/firestore_repository.dart';
@@ -34,47 +35,57 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> with Single
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Row(
-          children: [
-            Icon(Icons.admin_panel_settings, color: AppColors.trustGreen),
-            SizedBox(width: 10),
-            Text('Panel Administrativo PROVEO'),
-          ],
-        ),
-        actions: [
-          IconButton(
-            tooltip: 'Sincronizar base de datos',
-            icon: const Icon(Icons.sync),
-            onPressed: () {
-              setState(() {});
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Base de datos Firestore sincronizada.')),
-              );
-            },
-          ),
-          const SizedBox(width: 8),
-        ],
-        bottom: TabBar(
-          controller: _tabController,
-          labelColor: Colors.white,
-          indicatorColor: AppColors.trustGreen,
-          isScrollable: true,
-          tabs: const [
-            Tab(icon: Icon(Icons.dashboard_outlined), text: 'Resumen & KPIs'),
-            Tab(icon: Icon(Icons.storefront_outlined), text: 'Proveedores (1,250+)'),
-            Tab(icon: Icon(Icons.receipt_long_outlined), text: 'Cotizaciones (4,800+)'),
-            Tab(icon: Icon(Icons.people_outline), text: 'Usuarios & Permisos'),
-          ],
-        ),
-      ),
-      body: TabBarView(
-        controller: _tabController,
+      appBar: const PremiumHeader(currentPage: 'Admin'),
+      body: Column(
         children: [
-          _buildOverviewTab(),
-          _buildProvidersTab(),
-          _buildQuotationsTab(),
-          _buildUsersTab(),
+          Container(
+            color: Colors.white,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TabBar(
+                    controller: _tabController,
+                    labelColor: AppColors.navy,
+                    unselectedLabelColor: AppColors.textSecondary,
+                    indicatorColor: AppColors.trustGreen,
+                    indicatorWeight: 3,
+                    isScrollable: true,
+                    tabAlignment: TabAlignment.start,
+                    labelStyle: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
+                    tabs: const [
+                      Tab(icon: Icon(Icons.dashboard_outlined, size: 18), text: 'Resumen & KPIs'),
+                      Tab(icon: Icon(Icons.storefront_outlined, size: 18), text: 'Proveedores'),
+                      Tab(icon: Icon(Icons.receipt_long_outlined, size: 18), text: 'Cotizaciones'),
+                      Tab(icon: Icon(Icons.people_outline, size: 18), text: 'Usuarios & Permisos'),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  tooltip: 'Sincronizar Firestore',
+                  icon: const Icon(Icons.sync_rounded, color: AppColors.navy),
+                  onPressed: () {
+                    setState(() {});
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Base de datos Firestore sincronizada.')),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+          const Divider(height: 1, color: AppColors.border),
+          Expanded(
+            child: TabBarView(
+              controller: _tabController,
+              children: [
+                _buildOverviewTab(),
+                _buildProvidersTab(),
+                _buildQuotationsTab(),
+                _buildUsersTab(),
+              ],
+            ),
+          ),
         ],
       ),
     );

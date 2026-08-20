@@ -1,141 +1,88 @@
 import 'package:flutter/material.dart';
 import '../core/theme/app_colors.dart';
-import '../core/widgets/premium_widgets.dart';
 import '../models/models.dart';
 import '../services/firebase/firestore_repository.dart';
+import '../core/widgets/premium_footer.dart';
+import '../core/widgets/premium_header.dart';
 import 'provider_profile_screen.dart';
 import 'quotation_request_screen.dart';
-import '../core/widgets/premium_footer.dart';
 
-/// Buscador B2B interactivo y responsive con filtros funcionales en tiempo real.
+// ─── Constantes de categorías y ubicaciones ────────────────────────────────
+const _kAllCategories = 'Todas las categorías';
+const _kAllLocations = 'Todas las ubicaciones';
+const List<String> _kCategories = [
+  _kAllCategories, 'Empaques', 'Materia Prima', 'Logística', 'Tecnología',
+  'Etiquetas', 'Manufactura',
+];
+const List<String> _kLocations = [
+  _kAllLocations, 'Managua, Nicaragua', 'Masaya, Nicaragua',
+  'León, Nicaragua', 'Chinandega, Nicaragua', 'Matagalpa, Nicaragua',
+  'Granada, Nicaragua', 'Tipitapa, Nicaragua',
+];
+
+/// Buscador B2B premium con filtros funcionales y resultados desplazables.
 class SearchScreen extends StatefulWidget {
-  final String? initialCategory;
-  final String? initialQuery;
-
-  const SearchScreen({
-    super.key,
-    this.initialCategory,
-    this.initialQuery,
-  });
-
+  const SearchScreen({super.key});
   @override
   State<SearchScreen> createState() => _SearchScreenState();
 }
 
 class _SearchScreenState extends State<SearchScreen> {
-  final TextEditingController _searchController = TextEditingController();
-  final FirestoreRepository _repository = FirestoreRepository();
-
-  String _selectedCategory = 'Todas las categorías';
-  String _selectedLocation = 'Todos los departamentos';
-  double _minRating = 0.0;
-  String _sortBy = 'Más relevantes';
+  final _searchCtrl = TextEditingController();
+  String _selectedCategory = _kAllCategories;
+  String _selectedLocation = _kAllLocations;
+  double _minRating = 0;
+  bool _onlyFeatured = false;
+  final bool _filterPanelOpen = false; // para mobile
+  String _activeCategory = _kAllCategories; // categoría visual seleccionada
 
   List<ProviderModel> _allProviders = [];
-  bool _isLoading = true;
-
-  final List<Map<String, dynamic>> _categories = [
-    {'name': 'Todas las categorías', 'label': 'Todas', 'icon': Icons.all_inclusive_rounded, 'color': AppColors.navy},
-    {'name': 'Empaques', 'label': 'Empaques\ny Envases', 'icon': Icons.inventory_2_outlined, 'color': AppColors.trustGreen},
-    {'name': 'Materia Prima', 'label': 'Materia\nPrima', 'icon': Icons.eco_outlined, 'color': AppColors.teal},
-    {'name': 'Logística y Transporte', 'label': 'Logística\ny Transporte', 'icon': Icons.local_shipping_outlined, 'color': AppColors.navy},
-    {'name': 'Etiquetas y Publicidad', 'label': 'Etiquetas\ny Publicidad', 'icon': Icons.print_outlined, 'color': AppColors.blue},
-    {'name': 'Tecnología B2B', 'label': 'Tecnología\nB2B', 'icon': Icons.computer_outlined, 'color': AppColors.warning},
-  ];
-
-  final List<String> _locations = [
-    'Todos los departamentos',
-    'Managua',
-    'Masaya',
-    'León',
-    'Chinandega',
-    'Matagalpa',
-    'Estelí',
-  ];
+  bool _loading = true;
 
   @override
   void initState() {
     super.initState();
-    if (widget.initialCategory != null) {
-      _selectedCategory = widget.initialCategory!;
-    }
-    if (widget.initialQuery != null) {
-      _searchController.text = widget.initialQuery!;
-    }
     _loadProviders();
   }
 
   Future<void> _loadProviders() async {
-    setState(() => _isLoading = true);
-    final data = await _repository.getProviders();
-    if (mounted) {
-      setState(() {
-        _allProviders = data;
-        _isLoading = false;
-      });
-    }
+    final data = await FirestoreRepository().getProviders();
+    if (mounted) setState(() { _allProviders = data; _loading = false; });
+  }
+
+  List<ProviderModel> get _filtered {
+    return _allProviders.where((p) {
+      final q = _searchCtrl.text.toLowerCase();
+      final matchesSearch = q.isEmpty ||
+          p.name.toLowerCase().contains(q) ||
+          p.description.toLowerCase().contains(q) ||
+          p.category.toLowerCase().contains(q);
+      final matchesCat = _selectedCategory == _kAllCategories ||
+          p.category.toLowerCase().contains(_selectedCategory.toLowerCase());
+      final matchesActiveCat = _activeCategory == _kAllCategories ||
+          p.category.toLowerCase().contains(_activeCategory.toLowerCase());
+      final matchesLoc = _selectedLocation == _kAllLocations ||
+          p.location == _selectedLocation;
+      final matchesRating = p.rating >= _minRating;
+      final matchesFeatured = !_onlyFeatured || p.featured;
+      return matchesSearch && matchesCat && matchesActiveCat && matchesLoc && matchesRating && matchesFeatured;
+    }).toList();
   }
 
   void _clearFilters() {
     setState(() {
-      _searchController.clear();
-      _selectedCategory = 'Todas las categorías';
-      _selectedLocation = 'Todos los departamentos';
-      _minRating = 0.0;
-      _sortBy = 'Más relevantes';
+      _searchCtrl.clear();
+      _selectedCategory = _kAllCategories;
+      _selectedLocation = _kAllLocations;
+      _minRating = 0;
+      _onlyFeatured = false;
+      _activeCategory = _kAllCategories;
     });
-  }
-
-  List<ProviderModel> get _filteredProviders {
-    final query = _searchController.text.trim().toLowerCase();
-
-    return _allProviders.where((provider) {
-      // Filtro de Texto
-      if (query.isNotEmpty) {
-        final matchesName = provider.name.toLowerCase().contains(query);
-        final matchesDesc = provider.description.toLowerCase().contains(query);
-        final matchesCategory = provider.category.toLowerCase().contains(query);
-        final matchesLoc = provider.location.toLowerCase().contains(query);
-        if (!matchesName && !matchesDesc && !matchesCategory && !matchesLoc) {
-          return false;
-        }
-      }
-
-      // Filtro de Categoría
-      if (_selectedCategory != 'Todas las categorías') {
-        if (!provider.category.toLowerCase().contains(_selectedCategory.toLowerCase()) &&
-            !_selectedCategory.toLowerCase().contains(provider.category.toLowerCase())) {
-          return false;
-        }
-      }
-
-      // Filtro de Ubicación
-      if (_selectedLocation != 'Todos los departamentos') {
-        if (!provider.location.toLowerCase().contains(_selectedLocation.toLowerCase())) {
-          return false;
-        }
-      }
-
-      // Filtro de Calificación
-      if (_minRating > 0.0 && provider.rating < _minRating) {
-        return false;
-      }
-
-      return true;
-    }).toList()
-      ..sort((a, b) {
-        if (_sortBy == 'Mejor calificados') {
-          return b.rating.compareTo(a.rating);
-        } else if (_sortBy == 'Más reseñas') {
-          return b.reviews.compareTo(a.reviews);
-        }
-        return (b.featured ? 1 : 0).compareTo(a.featured ? 1 : 0);
-      });
   }
 
   @override
   void dispose() {
-    _searchController.dispose();
+    _searchCtrl.dispose();
     super.dispose();
   }
 
@@ -143,320 +90,210 @@ class _SearchScreenState extends State<SearchScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Directorio de Proveedores B2B'),
-        elevation: 0,
-      ),
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          final isDesktop = constraints.maxWidth >= 960;
-          final filtered = _filteredProviders;
+      appBar: const PremiumHeader(currentPage: 'Proveedores'),
+      body: LayoutBuilder(builder: (context, constraints) {
+        final desktop = constraints.maxWidth >= 900;
+        final results = _loading
+            ? const Center(child: CircularProgressIndicator())
+            : _ResultsPanel(
+                providers: _filtered,
+                searchCtrl: _searchCtrl,
+                activeCategory: _activeCategory,
+                onSearch: () => setState(() {}),
+                onCategoryTap: (cat) => setState(() => _activeCategory = cat),
+              );
 
+        if (desktop) {
           return SingleChildScrollView(
             child: Column(
               children: [
-                Padding(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: isDesktop ? 32 : 16,
-                    vertical: 24,
-                  ),
-                  child: Center(
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 1200),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          // ── BARRA DE BÚSQUEDA Y CATEGORÍAS RÁPIDAS ──────────────────
-                          _buildSearchHeader(),
-                          const SizedBox(height: 24),
-
-                          // ── CONTENIDO PRINCIPAL (FILTROS + LISTA) ───────────────────
-                          if (isDesktop)
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                SizedBox(
-                                  width: 280,
-                                  child: _buildFiltersSidebar(),
-                                ),
-                                const SizedBox(width: 24),
-                                Expanded(
-                                  child: _buildResultsList(filtered),
-                                ),
-                              ],
-                            )
-                          else
-                            Column(
-                              children: [
-                                _buildMobileFiltersToggle(),
-                                const SizedBox(height: 16),
-                                _buildResultsList(filtered),
-                              ],
-                            ),
-                        ],
+                IntrinsicHeight(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SizedBox(
+                        width: 270,
+                        child: _FiltersPanel(
+                          selectedCategory: _selectedCategory,
+                          selectedLocation: _selectedLocation,
+                          minRating: _minRating,
+                          onlyFeatured: _onlyFeatured,
+                          onCategoryChanged: (v) => setState(() => _selectedCategory = v ?? _kAllCategories),
+                          onLocationChanged: (v) => setState(() => _selectedLocation = v ?? _kAllLocations),
+                          onRatingChanged: (v) => setState(() => _minRating = v),
+                          onFeaturedChanged: (v) => setState(() => _onlyFeatured = v),
+                          onClear: _clearFilters,
+                        ),
                       ),
-                    ),
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.all(24),
+                          child: results,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 const PremiumFooter(),
               ],
             ),
           );
-        },
-      ),
-    );
-  }
+        }
 
-  // ── Header de Búsqueda y Carrusel de Categorías ───────────────────────────
-  Widget _buildSearchHeader() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Buscador Central
-        Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: AppColors.border),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.04),
-                blurRadius: 14,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: TextField(
-            controller: _searchController,
-            onChanged: (_) => setState(() {}),
-            decoration: InputDecoration(
-              hintText: 'Buscar por producto, servicio, material o nombre de empresa...',
-              hintStyle: const TextStyle(color: AppColors.textSecondary, fontSize: 14),
-              prefixIcon: const Icon(Icons.search_rounded, color: AppColors.navy, size: 24),
-              suffixIcon: _searchController.text.isNotEmpty
-                  ? IconButton(
-                      icon: const Icon(Icons.clear_rounded, size: 20),
-                      onPressed: () {
-                        setState(() {
-                          _searchController.clear();
-                        });
-                      },
-                    )
-                  : null,
-              border: InputBorder.none,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-            ),
-          ),
-        ),
-        const SizedBox(height: 20),
-
-        // Carrusel de Categorías
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        return Column(
           children: [
-            const Text(
-              'Explorar por Categorías',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w900,
-                color: AppColors.navy,
+            if (_filterPanelOpen)
+              _FiltersPanel(
+                selectedCategory: _selectedCategory,
+                selectedLocation: _selectedLocation,
+                minRating: _minRating,
+                onlyFeatured: _onlyFeatured,
+                onCategoryChanged: (v) => setState(() => _selectedCategory = v ?? _kAllCategories),
+                onLocationChanged: (v) => setState(() => _selectedLocation = v ?? _kAllLocations),
+                onRatingChanged: (v) => setState(() => _minRating = v),
+                onFeaturedChanged: (v) => setState(() => _onlyFeatured = v),
+                onClear: _clearFilters,
+              ),
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.all(16),
+                children: [results, const SizedBox(height: 24), const PremiumFooter()],
               ),
             ),
-            if (_selectedCategory != 'Todas las categorías')
-              TextButton.icon(
-                onPressed: () => setState(() => _selectedCategory = 'Todas las categorías'),
-                icon: const Icon(Icons.close, size: 14),
-                label: const Text('Ver todas', style: TextStyle(fontSize: 12)),
-              ),
           ],
-        ),
-        const SizedBox(height: 12),
-        SizedBox(
-          height: 96,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            itemCount: _categories.length,
-            itemBuilder: (context, index) {
-              final cat = _categories[index];
-              final isSelected = _selectedCategory == cat['name'];
-              final color = cat['color'] as Color;
-
-              return Padding(
-                padding: const EdgeInsets.only(right: 12),
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(16),
-                  onTap: () {
-                    setState(() {
-                      _selectedCategory = cat['name'] as String;
-                    });
-                  },
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    width: 125,
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-                    decoration: BoxDecoration(
-                      color: isSelected ? color : Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: isSelected ? color : AppColors.border,
-                        width: isSelected ? 2 : 1,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: isSelected
-                              ? color.withValues(alpha: 0.25)
-                              : Colors.black.withValues(alpha: 0.02),
-                          blurRadius: isSelected ? 10 : 4,
-                          offset: const Offset(0, 3),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          cat['icon'] as IconData,
-                          color: isSelected ? Colors.white : color,
-                          size: 26,
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          cat['label'] as String,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: isSelected ? Colors.white : AppColors.navy,
-                            fontWeight: isSelected ? FontWeight.w900 : FontWeight.w700,
-                            fontSize: 11,
-                            height: 1.15,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              );
-            },
-          ),
-        ),
-      ],
+        );
+      }),
     );
   }
+}
 
-  // ── Sidebar de Filtros (Desktop) ──────────────────────────────────────────
-  Widget _buildFiltersSidebar() {
+// ─── Panel de Filtros ──────────────────────────────────────────────────────
+class _FiltersPanel extends StatelessWidget {
+  final String selectedCategory;
+  final String selectedLocation;
+  final double minRating;
+  final bool onlyFeatured;
+  final ValueChanged<String?> onCategoryChanged;
+  final ValueChanged<String?> onLocationChanged;
+  final ValueChanged<double> onRatingChanged;
+  final ValueChanged<bool> onFeaturedChanged;
+  final VoidCallback onClear;
+
+  const _FiltersPanel({
+    required this.selectedCategory,
+    required this.selectedLocation,
+    required this.minRating,
+    required this.onlyFeatured,
+    required this.onCategoryChanged,
+    required this.onLocationChanged,
+    required this.onRatingChanged,
+    required this.onFeaturedChanged,
+    required this.onClear,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final hasActiveFilter = selectedCategory != _kAllCategories ||
+        selectedLocation != _kAllLocations ||
+        minRating > 0 ||
+        onlyFeatured;
+
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.fromLTRB(20, 24, 16, 24),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.border),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        color: AppColors.surface,
+        border: const Border(right: BorderSide(color: AppColors.border)),
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 8)],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Row(
-                children: [
-                  Icon(Icons.tune_rounded, size: 20, color: AppColors.navy),
-                  SizedBox(width: 8),
-                  Text(
-                    'Filtros',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: AppColors.navy),
-                  ),
-                ],
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(color: AppColors.paleBlue, borderRadius: BorderRadius.circular(8)),
+                child: const Icon(Icons.tune_rounded, color: AppColors.navy, size: 18),
               ),
-              TextButton(
-                onPressed: _clearFilters,
-                child: const Text('Limpiar', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.blue)),
+              const SizedBox(width: 10),
+              const Text('Filtros', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 17, color: AppColors.navy)),
+              const Spacer(),
+              if (hasActiveFilter)
+                TextButton.icon(
+                  onPressed: onClear,
+                  icon: const Icon(Icons.close_rounded, size: 15),
+                  label: const Text('Limpiar', style: TextStyle(fontSize: 12)),
+                  style: TextButton.styleFrom(foregroundColor: AppColors.error, padding: EdgeInsets.zero),
+                ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          _sectionLabel('Categoría'),
+          const SizedBox(height: 8),
+          DropdownButtonFormField<String>(
+            value: selectedCategory,
+            decoration: _dropInputDec(),
+            items: _kCategories.map((c) => DropdownMenuItem(value: c, child: Text(c, style: const TextStyle(fontSize: 13)))).toList(),
+            onChanged: onCategoryChanged,
+          ),
+          const SizedBox(height: 18),
+          _sectionLabel('Ubicación'),
+          const SizedBox(height: 8),
+          DropdownButtonFormField<String>(
+            value: selectedLocation,
+            decoration: _dropInputDec(),
+            isExpanded: true,
+            items: _kLocations.map((l) => DropdownMenuItem(value: l, child: Text(l, style: const TextStyle(fontSize: 12)))).toList(),
+            onChanged: onLocationChanged,
+          ),
+          const SizedBox(height: 18),
+          _sectionLabel('Calificación mínima'),
+          const SizedBox(height: 8),
+          Row(
+            children: List.generate(5, (i) {
+              final val = (i + 1).toDouble();
+              return GestureDetector(
+                onTap: () => onRatingChanged(minRating == val ? 0 : val),
+                child: Icon(
+                  Icons.star_rounded,
+                  color: val <= minRating ? AppColors.warning : AppColors.border,
+                  size: 28,
+                ),
+              );
+            }),
+          ),
+          if (minRating > 0)
+            Padding(
+              padding: const EdgeInsets.only(top: 6),
+              child: Text('${minRating.toInt()} estrella${minRating > 1 ? 's' : ''} o más',
+                  style: const TextStyle(color: AppColors.textSecondary, fontSize: 11)),
+            ),
+          const SizedBox(height: 18),
+          Row(
+            children: [
+              Switch.adaptive(
+                value: onlyFeatured,
+                onChanged: onFeaturedChanged,
+                activeColor: AppColors.trustGreen,
+              ),
+              const SizedBox(width: 8),
+              const Expanded(
+                child: Text('Solo verificados / Top', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.navy)),
               ),
             ],
           ),
-          const Divider(height: 24),
-
-          // Filtro Categoría
-          const Text('Categoría', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13, color: AppColors.navy)),
-          const SizedBox(height: 8),
-          DropdownButtonFormField<String>(
-            value: _selectedCategory,
-            isExpanded: true,
-            decoration: InputDecoration(
-              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.border)),
-              filled: true,
-              fillColor: AppColors.background,
-            ),
-            items: _categories.map((c) {
-              return DropdownMenuItem<String>(
-                value: c['name'] as String,
-                child: Text(c['name'] as String, style: const TextStyle(fontSize: 13)),
-              );
-            }).toList(),
-            onChanged: (val) {
-              if (val != null) setState(() => _selectedCategory = val);
-            },
-          ),
-          const SizedBox(height: 18),
-
-          // Filtro Ubicación
-          const Text('Ubicación en Nicaragua', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13, color: AppColors.navy)),
-          const SizedBox(height: 8),
-          DropdownButtonFormField<String>(
-            value: _selectedLocation,
-            isExpanded: true,
-            decoration: InputDecoration(
-              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.border)),
-              filled: true,
-              fillColor: AppColors.background,
-            ),
-            items: _locations.map((loc) {
-              return DropdownMenuItem<String>(
-                value: loc,
-                child: Text(loc, style: const TextStyle(fontSize: 13)),
-              );
-            }).toList(),
-            onChanged: (val) {
-              if (val != null) setState(() => _selectedLocation = val);
-            },
-          ),
-          const SizedBox(height: 18),
-
-          // Filtro Calificación Mínima
-          const Text('Calificación Mínima', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13, color: AppColors.navy)),
-          const SizedBox(height: 10),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              _ratingChip('Todas', 0.0),
-              _ratingChip('4.0+ ★', 4.0),
-              _ratingChip('4.5+ ★', 4.5),
-              _ratingChip('4.8+ ★', 4.8),
-            ],
-          ),
-          const SizedBox(height: 24),
-
-          // Botón Aplicar / Restablecer
+          const SizedBox(height: 20),
           SizedBox(
             width: double.infinity,
             child: FilledButton.icon(
               style: FilledButton.styleFrom(
                 backgroundColor: AppColors.navy,
-                padding: const EdgeInsets.symmetric(vertical: 12),
+                padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
-              onPressed: () => setState(() {}),
-              icon: const Icon(Icons.check_rounded, size: 18),
-              label: const Text('Aplicar filtros', style: TextStyle(fontWeight: FontWeight.bold)),
+              onPressed: () {},
+              icon: const Icon(Icons.search_rounded, size: 18),
+              label: const Text('Aplicar filtros', style: TextStyle(fontWeight: FontWeight.w800)),
             ),
           ),
         ],
@@ -464,448 +301,313 @@ class _SearchScreenState extends State<SearchScreen> {
     );
   }
 
-  Widget _ratingChip(String label, double rating) {
-    final isSelected = _minRating == rating;
-    return ChoiceChip(
-      label: Text(label),
-      selected: isSelected,
-      selectedColor: AppColors.warning.withValues(alpha: 0.2),
-      labelStyle: TextStyle(
-        fontSize: 12,
-        fontWeight: isSelected ? FontWeight.w900 : FontWeight.w600,
-        color: isSelected ? const Color(0xFFB7791F) : AppColors.textPrimary,
-      ),
-      side: BorderSide(color: isSelected ? AppColors.warning : AppColors.border),
-      onSelected: (_) {
-        setState(() => _minRating = rating);
-      },
-    );
-  }
+  Widget _sectionLabel(String label) => Text(label,
+      style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13, color: AppColors.textPrimary));
 
-  // ── Filtros en Móvil ───────────────────────────────────────────────────────
-  Widget _buildMobileFiltersToggle() {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: OutlinedButton.icon(
-              onPressed: () {
-                showModalBottomSheet(
-                  context: context,
-                  isScrollControlled: true,
-                  shape: const RoundedRectangleBorder(
-                    borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-                  ),
-                  builder: (ctx) => StatefulBuilder(
-                    builder: (context, setModalState) {
-                      return Padding(
-                        padding: const EdgeInsets.all(24),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            _buildFiltersSidebar(),
-                            const SizedBox(height: 16),
-                            FilledButton(
-                              onPressed: () => Navigator.pop(ctx),
-                              child: const Text('Cerrar y Ver Resultados'),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                  ),
-                );
-              },
-              icon: const Icon(Icons.tune_rounded, size: 18),
-              label: const Text('Filtrar y Ordenar'),
-            ),
-          ),
-          const SizedBox(width: 8),
-          TextButton(
-            onPressed: _clearFilters,
-            child: const Text('Limpiar'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ── Lista de Resultados ────────────────────────────────────────────────────
-  Widget _buildResultsList(List<ProviderModel> providers) {
-    if (_isLoading) {
-      return const Center(
-        child: Padding(
-          padding: EdgeInsets.all(40),
-          child: CircularProgressIndicator(),
-        ),
+  InputDecoration _dropInputDec() => InputDecoration(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.border)),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.border)),
       );
-    }
+}
 
+// ─── Panel de Resultados ───────────────────────────────────────────────────
+class _ResultsPanel extends StatelessWidget {
+  final List<ProviderModel> providers;
+  final TextEditingController searchCtrl;
+  final String activeCategory;
+  final VoidCallback onSearch;
+  final ValueChanged<String> onCategoryTap;
+
+  const _ResultsPanel({
+    required this.providers,
+    required this.searchCtrl,
+    required this.activeCategory,
+    required this.onSearch,
+    required this.onCategoryTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Encabezado de Resultados y Ordenamiento
+        // Barra de búsqueda
+        TextField(
+          controller: searchCtrl,
+          onChanged: (_) => onSearch(),
+          decoration: InputDecoration(
+            prefixIcon: const Icon(Icons.search_rounded, color: AppColors.navy),
+            hintText: 'Buscar por nombre, producto o servicio...',
+            hintStyle: const TextStyle(fontSize: 14),
+            filled: true,
+            fillColor: Colors.white,
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppColors.border)),
+            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppColors.border)),
+            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppColors.navy, width: 2)),
+          ),
+        ),
+        const SizedBox(height: 20),
+
+        // Categorías visuales
+        const Text('Explorar por Categorías', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w900, color: AppColors.navy)),
+        const SizedBox(height: 12),
+        SizedBox(
+          height: 96,
+          child: ListView(
+            scrollDirection: Axis.horizontal,
+            children: [
+              _CategoryChip(icon: Icons.apps_rounded, name: 'Todas', color: AppColors.navy, active: activeCategory == _kAllCategories, onTap: () => onCategoryTap(_kAllCategories)),
+              _CategoryChip(icon: Icons.inventory_2_outlined, name: 'Empaques', color: AppColors.trustGreen, active: activeCategory == 'Empaques', onTap: () => onCategoryTap('Empaques')),
+              _CategoryChip(icon: Icons.eco_outlined, name: 'Materia Prima', color: AppColors.teal, active: activeCategory == 'Materia Prima', onTap: () => onCategoryTap('Materia Prima')),
+              _CategoryChip(icon: Icons.local_shipping_outlined, name: 'Logística', color: const Color(0xFF7B5EA7), active: activeCategory == 'Logística', onTap: () => onCategoryTap('Logística')),
+              _CategoryChip(icon: Icons.computer_outlined, name: 'Tecnología', color: AppColors.blue, active: activeCategory == 'Tecnología', onTap: () => onCategoryTap('Tecnología')),
+              _CategoryChip(icon: Icons.print_outlined, name: 'Etiquetas', color: const Color(0xFFDD6B20), active: activeCategory == 'Etiquetas', onTap: () => onCategoryTap('Etiquetas')),
+              _CategoryChip(icon: Icons.precision_manufacturing_outlined, name: 'Manufactura', color: const Color(0xFF6B3FA0), active: activeCategory == 'Manufactura', onTap: () => onCategoryTap('Manufactura')),
+            ],
+          ),
+        ),
+        const SizedBox(height: 20),
+
+        // Encabezado de resultados
         Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '${providers.length} ${providers.length == 1 ? 'proveedor encontrado' : 'proveedores encontrados'}',
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w900,
-                    color: AppColors.navy,
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    activeCategory == _kAllCategories ? 'Todos los Proveedores' : activeCategory,
+                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: AppColors.navy),
                   ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  _selectedCategory != 'Todas las categorías'
-                      ? 'Filtrado por: $_selectedCategory'
-                      : 'Empresas verificadas y activas en Nicaragua',
-                  style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
-                ),
-              ],
+                  Text(
+                    '${providers.length} proveedor${providers.length != 1 ? 'es' : ''} encontrado${providers.length != 1 ? 's' : ''}',
+                    style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                  ),
+                ],
+              ),
             ),
-            DropdownButton<String>(
-              value: _sortBy,
-              underline: const SizedBox(),
-              icon: const Icon(Icons.sort_rounded, color: AppColors.navy),
-              style: const TextStyle(color: AppColors.navy, fontWeight: FontWeight.bold, fontSize: 13),
-              items: const [
-                DropdownMenuItem(value: 'Más relevantes', child: Text('Más relevantes')),
-                DropdownMenuItem(value: 'Mejor calificados', child: Text('Mejor calificados')),
-                DropdownMenuItem(value: 'Más reseñas', child: Text('Más reseñas')),
-              ],
-              onChanged: (val) {
-                if (val != null) setState(() => _sortBy = val);
-              },
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(color: AppColors.paleBlue, borderRadius: BorderRadius.circular(10)),
+              child: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.sort_rounded, size: 15, color: AppColors.navy),
+                  SizedBox(width: 4),
+                  Text('Más relevantes', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.navy)),
+                ],
+              ),
             ),
           ],
         ),
         const SizedBox(height: 16),
 
-        // Lista de Proveedores
+        // Lista de proveedores
         if (providers.isEmpty)
-          Container(
-            padding: const EdgeInsets.all(40),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: AppColors.border),
-            ),
-            child: Column(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: const BoxDecoration(
-                    color: AppColors.paleBlue,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Icons.search_off_rounded, size: 48, color: AppColors.navy),
-                ),
-                const SizedBox(height: 16),
-                const Text(
-                  'No se encontraron proveedores con estos filtros',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.navy),
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  'Intenta cambiar la categoría, ubicación o limpiar los términos de búsqueda.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
-                ),
-                const SizedBox(height: 20),
-                FilledButton.tonal(
-                  onPressed: _clearFilters,
-                  child: const Text('Restablecer todos los filtros'),
-                ),
-              ],
+          const Center(
+            child: Padding(
+              padding: EdgeInsets.all(48),
+              child: Column(
+                children: [
+                  Icon(Icons.search_off_rounded, size: 56, color: AppColors.textSecondary),
+                  SizedBox(height: 16),
+                  Text('Sin resultados', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18, color: AppColors.textPrimary)),
+                  SizedBox(height: 8),
+                  Text('Intenta cambiar los filtros o el término de búsqueda.', style: TextStyle(color: AppColors.textSecondary), textAlign: TextAlign.center),
+                ],
+              ),
             ),
           )
         else
-          ListView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(), // El scroll lo maneja el SingleChildScrollView exterior
-            itemCount: providers.length,
-            itemBuilder: (context, index) {
-              final provider = providers[index];
-              return _ProviderItemCard(provider: provider);
-            },
-          ),
+          ...providers.map((p) => _ProviderResultCard(provider: p)),
       ],
     );
   }
 }
 
-// ── Tarjeta de Proveedor Ultra-Premium ───────────────────────────────────────
-class _ProviderItemCard extends StatefulWidget {
-  final ProviderModel provider;
-  const _ProviderItemCard({required this.provider});
+// ─── Chip de Categoría ─────────────────────────────────────────────────────
+class _CategoryChip extends StatelessWidget {
+  final IconData icon;
+  final String name;
+  final Color color;
+  final bool active;
+  final VoidCallback onTap;
+
+  const _CategoryChip({required this.icon, required this.name, required this.color, required this.active, required this.onTap});
 
   @override
-  State<_ProviderItemCard> createState() => _ProviderItemCardState();
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        width: 110,
+        margin: const EdgeInsets.only(right: 12),
+        decoration: BoxDecoration(
+          color: active ? color : Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: active ? color : AppColors.border, width: active ? 2 : 1),
+          boxShadow: active ? [BoxShadow(color: color.withValues(alpha: 0.3), blurRadius: 10, offset: const Offset(0, 4))] : [],
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, color: active ? Colors.white : color, size: 26),
+            const SizedBox(height: 6),
+            Text(name, textAlign: TextAlign.center, style: TextStyle(
+              color: active ? Colors.white : AppColors.navy,
+              fontWeight: active ? FontWeight.w900 : FontWeight.w700,
+              fontSize: 11,
+              height: 1.2,
+            )),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
-class _ProviderItemCardState extends State<_ProviderItemCard> {
-  bool _isHovered = false;
+// ─── Tarjeta de Resultado ──────────────────────────────────────────────────
+class _ProviderResultCard extends StatefulWidget {
+  final ProviderModel provider;
+  const _ProviderResultCard({required this.provider});
+  @override
+  State<_ProviderResultCard> createState() => _ProviderResultCardState();
+}
+
+class _ProviderResultCardState extends State<_ProviderResultCard> {
+  bool _hovered = false;
 
   @override
   Widget build(BuildContext context) {
     final p = widget.provider;
-    final isMobile = MediaQuery.of(context).size.width < 720;
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: MouseRegion(
-        onEnter: (_) => setState(() => _isHovered = true),
-        onExit: (_) => setState(() => _isHovered = false),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: _isHovered ? AppColors.blue : AppColors.border,
-              width: _isHovered ? 1.5 : 1,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: _isHovered
-                    ? AppColors.navy.withValues(alpha: 0.1)
-                    : Colors.black.withValues(alpha: 0.03),
-                blurRadius: _isHovered ? 16 : 8,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Flex(
-              direction: isMobile ? Axis.vertical : Axis.horizontal,
-              crossAxisAlignment: isMobile ? CrossAxisAlignment.start : CrossAxisAlignment.center,
-              children: [
-                // Avatar / Logo
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      width: 64,
-                      height: 64,
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [AppColors.navy, AppColors.blue],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Center(
-                        child: Text(
-                          p.name.length >= 2 ? p.name.substring(0, 2).toUpperCase() : 'PR',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 22,
-                            fontWeight: FontWeight.w900,
-                          ),
-                        ),
-                      ),
+    return MouseRegion(
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit: (_) => setState(() => _hovered = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        margin: const EdgeInsets.only(bottom: 16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: _hovered ? AppColors.blue : AppColors.border, width: _hovered ? 2 : 1),
+          boxShadow: [BoxShadow(
+            color: _hovered ? AppColors.blue.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.04),
+            blurRadius: _hovered ? 20 : 8,
+            offset: const Offset(0, 4),
+          )],
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Avatar
+                  Container(
+                    width: 56,
+                    height: 56,
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(colors: [AppColors.navy, AppColors.teal], begin: Alignment.topLeft, end: Alignment.bottomRight),
+                      borderRadius: BorderRadius.circular(16),
                     ),
-                    if (isMobile) ...[
-                      const SizedBox(width: 14),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              p.name,
-                              style: const TextStyle(
-                                fontSize: 17,
-                                fontWeight: FontWeight.w900,
-                                color: AppColors.navy,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              '${p.category} • ${p.location}',
-                              style: const TextStyle(color: AppColors.textSecondary, fontSize: 12),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-
-                if (!isMobile) const SizedBox(width: 20),
-
-                // Información Detallada
-                if (!isMobile)
+                    child: Center(child: Text(p.logo.isNotEmpty ? p.logo.substring(0, p.logo.length.clamp(0, 2)) : p.name.substring(0, 2).toUpperCase(),
+                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 16, letterSpacing: 0.5))),
+                  ),
+                  const SizedBox(width: 14),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
-                          children: [
-                            Flexible(
-                              child: Text(
-                                p.name,
-                                style: const TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w900,
-                                  color: AppColors.navy,
-                                ),
-                              ),
-                            ),
+                        Row(children: [
+                          Flexible(child: Text(p.name, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w900, color: AppColors.navy))),
+                          if (p.featured) ...[
                             const SizedBox(width: 8),
-                            if (p.featured)
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                decoration: BoxDecoration(
-                                  color: AppColors.trustGreen.withValues(alpha: 0.15),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: const Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(Icons.verified_rounded, size: 12, color: AppColors.trustGreen),
-                                    SizedBox(width: 4),
-                                    Text(
-                                      'Verificado',
-                                      style: TextStyle(
-                                        color: AppColors.trustGreen,
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                              decoration: BoxDecoration(color: AppColors.trustGreen, borderRadius: BorderRadius.circular(8)),
+                              child: const Row(mainAxisSize: MainAxisSize.min, children: [
+                                Icon(Icons.verified_rounded, color: Colors.white, size: 10),
+                                SizedBox(width: 3),
+                                Text('Top', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                              ]),
+                            ),
                           ],
-                        ),
+                        ]),
                         const SizedBox(height: 4),
-                        Row(
-                          children: [
-                            RatingStars(rating: p.rating),
-                            const SizedBox(width: 8),
-                            Text(
-                              '${p.rating} (${p.reviews} reseñas)',
-                              style: const TextStyle(
-                                color: AppColors.navy,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 12,
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            const Text('•', style: TextStyle(color: AppColors.border)),
-                            const SizedBox(width: 12),
-                            const Icon(Icons.location_on_outlined, size: 14, color: AppColors.textSecondary),
-                            const SizedBox(width: 4),
-                            Text(p.location, style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          p.description,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(color: AppColors.textSecondary, fontSize: 13, height: 1.4),
-                        ),
+                        Row(children: [
+                          const Icon(Icons.location_on_outlined, size: 13, color: AppColors.textSecondary),
+                          const SizedBox(width: 3),
+                          Text(p.location, style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+                          const SizedBox(width: 10),
+                          Container(width: 4, height: 4, decoration: const BoxDecoration(color: AppColors.border, shape: BoxShape.circle)),
+                          const SizedBox(width: 10),
+                          const Icon(Icons.category_outlined, size: 13, color: AppColors.textSecondary),
+                          const SizedBox(width: 3),
+                          Text(p.category, style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+                        ]),
+                        const SizedBox(height: 6),
+                        Row(children: [
+                          ...List.generate(5, (i) => Icon(Icons.star_rounded, size: 15, color: i < p.rating.floor() ? AppColors.warning : AppColors.border)),
+                          const SizedBox(width: 6),
+                          Text('${p.rating} (${p.reviews} reseñas)', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+                        ]),
                       ],
                     ),
                   ),
-
-                if (isMobile) ...[
-                  const SizedBox(height: 12),
-                  Row(
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      RatingStars(rating: p.rating),
-                      const SizedBox(width: 8),
-                      Text('${p.rating} (${p.reviews})', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(color: AppColors.paleGreen, borderRadius: BorderRadius.circular(8)),
+                        child: Row(mainAxisSize: MainAxisSize.min, children: [
+                          const Icon(Icons.timer_outlined, size: 12, color: AppColors.trustGreen),
+                          const SizedBox(width: 4),
+                          Text('Resp: ${p.responseTime}', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.trustGreen)),
+                        ]),
+                      ),
+                      const SizedBox(height: 4),
+                      Text('${p.years} años', style: const TextStyle(color: AppColors.textSecondary, fontSize: 11)),
                     ],
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    p.description,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
-                  ),
-                  const SizedBox(height: 16),
                 ],
-
-                if (!isMobile) const SizedBox(width: 24),
-
-                // Acciones y Tiempo de Respuesta
-                Column(
-                  crossAxisAlignment: isMobile ? CrossAxisAlignment.stretch : CrossAxisAlignment.end,
-                  children: [
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.timer_outlined, size: 14, color: AppColors.trustGreen),
-                        const SizedBox(width: 4),
-                        Text(
-                          'Resp: ${p.responseTime}',
-                          style: const TextStyle(
-                            color: AppColors.trustGreen,
-                            fontWeight: FontWeight.w700,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
+              ),
+              const SizedBox(height: 12),
+              Text(p.description, maxLines: 2, overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(color: AppColors.textSecondary, fontSize: 13, height: 1.4)),
+              const SizedBox(height: 16),
+              Row(children: [
+                Expanded(
+                  child: OutlinedButton(
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.navy,
+                      side: const BorderSide(color: AppColors.navy),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     ),
-                    const SizedBox(height: 12),
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        OutlinedButton(
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: AppColors.navy,
-                            side: const BorderSide(color: AppColors.navy),
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          ),
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => ProviderProfileScreen(provider: p),
-                              ),
-                            );
-                          },
-                          child: const Text('Ver perfil', style: TextStyle(fontWeight: FontWeight.bold)),
-                        ),
-                        const SizedBox(width: 8),
-                        FilledButton(
-                          style: FilledButton.styleFrom(
-                            backgroundColor: AppColors.trustGreen,
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          ),
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => const QuotationRequestScreen(),
-                              ),
-                            );
-                          },
-                          child: const Text('Solicitar cotización', style: TextStyle(fontWeight: FontWeight.bold)),
-                        ),
-                      ],
-                    ),
-                  ],
+                    onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ProviderProfileScreen(provider: p))),
+                    child: const Text('Ver perfil'),
+                  ),
                 ),
-              ],
-            ),
+                const SizedBox(width: 10),
+                Expanded(
+                  flex: 2,
+                  child: FilledButton.icon(
+                    style: FilledButton.styleFrom(
+                      backgroundColor: AppColors.trustGreen,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const QuotationRequestScreen())),
+                    icon: const Icon(Icons.request_quote_outlined, size: 16),
+                    label: const Text('Solicitar cotización'),
+                  ),
+                ),
+              ]),
+            ],
           ),
         ),
       ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../core/theme/app_colors.dart';
 import '../core/widgets/premium_footer.dart';
+import '../core/widgets/premium_header.dart';
 
 class AboutUsScreen extends StatelessWidget {
   const AboutUsScreen({super.key});
@@ -9,11 +10,7 @@ class AboutUsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Acerca de PROVEO'),
-        backgroundColor: AppColors.surface,
-        scrolledUnderElevation: 1,
-      ),
+      appBar: const PremiumHeader(currentPage: 'Nosotros'),
       body: CustomScrollView(
         slivers: [
           // ── Hero Section ──────────────────────────────────────────────

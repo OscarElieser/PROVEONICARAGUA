@@ -96,63 +96,7 @@ class _AppShellState extends State<AppShell> {
     return Scaffold(
       key: _scaffoldKey,
       drawer: _buildHamburgerDrawer(),
-      body: Stack(
-        children: [
-          // Página principal a pantalla completa (100% de vista disponible)
-          Positioned.fill(
-            child: pages[index],
-          ),
-
-          // Botón Hamburguesa Flotante Premium (siempre accesible)
-          Positioned(
-            top: 14,
-            left: 14,
-            child: SafeArea(
-              child: Container(
-                decoration: BoxDecoration(
-                  color: AppColors.navy.withValues(alpha: 0.92),
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.22),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(16),
-                    onTap: () => _scaffoldKey.currentState?.openDrawer(),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(Icons.menu_rounded, color: Colors.white, size: 22),
-                          const SizedBox(width: 8),
-                          Text(
-                            _getCurrentPageLabel(),
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w800,
-                              fontSize: 13,
-                              letterSpacing: 0.4,
-                            ),
-                          ),
-                          const SizedBox(width: 4),
-                          const Icon(Icons.keyboard_arrow_down_rounded, color: AppColors.trustGreen, size: 18),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
+      body: pages[index],
       bottomNavigationBar: MediaQuery.sizeOf(context).width < 768
           ? NavigationBar(
               selectedIndex: index > 5 ? 0 : index,
@@ -161,29 +105,6 @@ class _AppShellState extends State<AppShell> {
             )
           : null,
     );
-  }
-
-  String _getCurrentPageLabel() {
-    switch (index) {
-      case 0:
-        return 'Inicio';
-      case 1:
-        return 'Buscar Proveedores';
-      case 2:
-        return 'PROVEO Match';
-      case 3:
-        return 'Cotizaciones';
-      case 4:
-        return 'Mensajes';
-      case 5:
-        return 'Mi Perfil';
-      case 6:
-        return widget.user.role == UserRole.provider ? 'Panel Empresa' : 'Administración';
-      case 7:
-        return 'Administración';
-      default:
-        return 'Menú';
-    }
   }
 
   // ── Menú Hamburguesa Desplegable (Slide Drawer) ───────────────────────

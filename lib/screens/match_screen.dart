@@ -3,6 +3,8 @@ import '../core/theme/app_colors.dart';
 import '../models/models.dart';
 import '../services/ai/gemini_recommendation_service.dart';
 import '../services/firebase/firestore_repository.dart';
+import '../core/widgets/premium_header.dart';
+import '../core/widgets/premium_footer.dart';
 import 'chat_screen.dart';
 import 'provider_profile_screen.dart';
 import 'quotation_request_screen.dart';
@@ -198,111 +200,84 @@ Explica en un párrafo conciso y motivador (máximo 3 oraciones):
 
     return Scaffold(
       backgroundColor: AppColors.background,
+      appBar: const PremiumHeader(currentPage: 'Match IA'),
       body: CustomScrollView(
         slivers: [
           // Banner Hero interactivo
-          SliverAppBar(
-            expandedHeight: 180,
-            pinned: true,
-            backgroundColor: AppColors.navy,
-            flexibleSpace: FlexibleSpaceBar(
-              background: Container(
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [AppColors.navy, AppColors.blue, AppColors.teal],
-                  ),
+          SliverToBoxAdapter(
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 20),
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [AppColors.navy, AppColors.blue, AppColors.teal],
                 ),
-                child: Stack(
-                  children: [
-                    // Decoración de fondo
-                    Positioned(
-                      right: -30,
-                      top: -30,
-                      child: Container(
-                        width: 170,
-                        height: 170,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.white.withValues(alpha: 0.05),
-                        ),
-                      ),
-                    ),
-                    Positioned(
-                      left: -20,
-                      bottom: -20,
-                      child: Container(
-                        width: 120,
-                        height: 120,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.white.withValues(alpha: 0.04),
-                        ),
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(24, 48, 24, 18),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.end,
+              ),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 820),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
                         children: [
-                          Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: AppColors.trustGreen,
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: const Icon(Icons.auto_awesome_rounded, color: Colors.white, size: 22),
-                              ),
-                              const SizedBox(width: 12),
-                              const Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'PROVEO MATCH IA',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.w900,
-                                      letterSpacing: 1.2,
-                                    ),
-                                  ),
-                                  Text(
-                                    'Emparejamiento inteligente de proveedores B2B',
-                                    style: TextStyle(color: Colors.white70, fontSize: 12),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 14),
-                          // Barra de progreso interactiva
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(10),
-                            child: LinearProgressIndicator(
-                              value: (_step + 1) / 3,
-                              minHeight: 8,
-                              backgroundColor: Colors.white.withValues(alpha: 0.2),
-                              valueColor: const AlwaysStoppedAnimation<Color>(AppColors.trustGreen),
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: AppColors.trustGreen,
+                              borderRadius: BorderRadius.circular(12),
                             ),
+                            child: const Icon(Icons.auto_awesome_rounded, color: Colors.white, size: 22),
                           ),
-                          const SizedBox(height: 6),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          const SizedBox(width: 12),
+                          const Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('Paso ${_step + 1} de 3 • ${_getStepTitle()}',
-                                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
-                              Text('${((_step + 1) / 3 * 100).round()}% completado',
-                                  style: const TextStyle(color: AppColors.trustGreen, fontWeight: FontWeight.w800, fontSize: 12)),
+                              Text(
+                                'PROVEO MATCH IA',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: 1.2,
+                                ),
+                              ),
+                              Text(
+                                'Emparejamiento inteligente de proveedores B2B',
+                                style: TextStyle(color: Colors.white70, fontSize: 12),
+                              ),
                             ],
                           ),
                         ],
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 14),
+                      // Barra de progreso interactiva
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(10),
+                        child: LinearProgressIndicator(
+                          value: (_step + 1) / 3,
+                          minHeight: 8,
+                          backgroundColor: Colors.white.withValues(alpha: 0.2),
+                          valueColor: const AlwaysStoppedAnimation<Color>(AppColors.trustGreen),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Paso ${_step + 1} de 3 — ${_getStepTitle()}',
+                            style: const TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.w600),
+                          ),
+                          Text(
+                            '${((_step + 1) / 3 * 100).round()}% completado',
+                            style: const TextStyle(color: AppColors.trustGreen, fontWeight: FontWeight.w800, fontSize: 12),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -373,6 +348,7 @@ Explica en un párrafo conciso y motivador (máximo 3 oraciones):
               ),
             ),
           ),
+          const SliverToBoxAdapter(child: PremiumFooter()),
         ],
       ),
     );
@@ -797,20 +773,7 @@ Explica en un párrafo conciso y motivador (máximo 3 oraciones):
   Widget _buildResultsView() {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Proveedores Compatibles'),
-        actions: [
-          TextButton.icon(
-            icon: const Icon(Icons.replay_rounded, color: AppColors.trustGreen),
-            label: const Text('Nuevo Match', style: TextStyle(color: AppColors.trustGreen, fontWeight: FontWeight.bold)),
-            onPressed: () => setState(() {
-              _step = 0;
-              _aiExplanation = null;
-            }),
-          ),
-          const SizedBox(width: 8),
-        ],
-      ),
+      appBar: const PremiumHeader(currentPage: 'Match IA'),
       body: FutureBuilder<List<ProviderModel>>(
         future: FirestoreRepository().getProviders(),
         builder: (context, snapshot) {
@@ -878,13 +841,19 @@ Explica en un párrafo conciso y motivador (máximo 3 oraciones):
                                         ],
                                       ),
                                     ),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                      decoration: BoxDecoration(
-                                        color: Colors.white.withValues(alpha: 0.15),
-                                        borderRadius: BorderRadius.circular(12),
+                                    TextButton.icon(
+                                      style: TextButton.styleFrom(
+                                        backgroundColor: Colors.white.withValues(alpha: 0.15),
+                                        foregroundColor: Colors.white,
+                                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                                       ),
-                                      child: const Text('PROVEO Live', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+                                      icon: const Icon(Icons.replay_rounded, size: 16, color: AppColors.trustGreen),
+                                      label: const Text('Nuevo Match', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
+                                      onPressed: () => setState(() {
+                                        _step = 0;
+                                        _aiExplanation = null;
+                                      }),
                                     ),
                                   ],
                                 ),
@@ -898,16 +867,19 @@ Explica en un párrafo conciso y motivador (máximo 3 oraciones):
                                         child: CircularProgressIndicator(color: AppColors.trustGreen, strokeWidth: 2.5),
                                       ),
                                       SizedBox(width: 14),
-                                      Text(
-                                        'Gemini AI está negociando especificaciones y analizando catálogo...',
-                                        style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w500),
+                                      Expanded(
+                                        child: Text(
+                                          'Gemini AI está procesando el perfil de tu empresa y cruzando variables...',
+                                          style: TextStyle(color: Colors.white, fontSize: 13, fontStyle: FontStyle.italic),
+                                        ),
                                       ),
                                     ],
                                   )
                                 else
                                   Text(
-                                    _aiExplanation ?? 'Evaluación completada para $_selectedCategory en $_selectedLocation.',
-                                    style: const TextStyle(color: Colors.white, fontSize: 14, height: 1.5),
+                                    _aiExplanation ??
+                                        'Hemos seleccionado los proveedores verificados con mayor capacidad logística y operativa en tu zona.',
+                                    style: const TextStyle(color: Colors.white, fontSize: 13.5, height: 1.5),
                                   ),
                                 const SizedBox(height: 14),
                                 // Resumen de los filtros
@@ -924,8 +896,9 @@ Explica en un párrafo conciso y motivador (máximo 3 oraciones):
                             ),
                           ),
 
-                          const SizedBox(height: 28),
+                          const SizedBox(height: 24),
 
+                          // Encabezado de la lista
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
@@ -934,7 +907,7 @@ Explica en un párrafo conciso y motivador (máximo 3 oraciones):
                                 children: [
                                   const Text(
                                     'Proveedores Recomendados',
-                                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: AppColors.textPrimary),
+                                    style: TextStyle(fontWeight: FontWeight.w900, fontSize: 19, color: AppColors.navy),
                                   ),
                                   Text(
                                     '${providers.length} fabricantes verificados listos para cotizar',
@@ -962,6 +935,7 @@ Explica en un párrafo conciso y motivador (máximo 3 oraciones):
                   ),
                 ),
               ),
+              const SliverToBoxAdapter(child: PremiumFooter()),
             ],
           );
         },

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../core/theme/app_colors.dart';
 import '../models/models.dart';
 import '../services/firebase/firestore_repository.dart';
+import '../core/widgets/premium_header.dart';
+import '../core/widgets/premium_footer.dart';
 
 /// Flujo de Solicitud de Cotización B2B Ultra-Premium con navegación paso a paso (Anterior y Siguiente).
 class QuotationRequestScreen extends StatefulWidget {
@@ -127,71 +129,49 @@ class _QuotationRequestScreenState extends State<QuotationRequestScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
+      appBar: const PremiumHeader(currentPage: 'Cotizaciones'),
       body: CustomScrollView(
         slivers: [
           // Banner Hero con Wizard de Progreso
-          SliverAppBar(
-            expandedHeight: 200,
-            pinned: true,
-            backgroundColor: AppColors.navy,
-            leading: IconButton(
-              icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
-              onPressed: _previous,
-            ),
-            flexibleSpace: FlexibleSpaceBar(
-              background: Container(
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [AppColors.navy, AppColors.blue, AppColors.teal],
-                  ),
+          SliverToBoxAdapter(
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 20),
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [AppColors.navy, AppColors.blue, AppColors.teal],
                 ),
-                child: Stack(
-                  children: [
-                    Positioned(
-                      right: -20,
-                      top: -20,
-                      child: Container(
-                        width: 150,
-                        height: 150,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.white.withValues(alpha: 0.05),
+              ),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 860),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'SOLICITAR COTIZACIÓN B2B',
+                        style: TextStyle(
+                          color: AppColors.trustGreen,
+                          fontWeight: FontWeight.w900,
+                          fontSize: 12,
+                          letterSpacing: 1.5,
                         ),
                       ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(24, 48, 24, 18),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'SOLICITAR COTIZACIÓN B2B',
-                            style: TextStyle(
-                              color: AppColors.trustGreen,
-                              fontWeight: FontWeight.w900,
-                              fontSize: 12,
-                              letterSpacing: 1.5,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            title,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 19,
-                              fontWeight: FontWeight.w900,
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          // Wizard de Pasos
-                          _StepWizardProgress(currentStep: step),
-                        ],
+                      const SizedBox(height: 4),
+                      Text(
+                        title,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 22,
+                          fontWeight: FontWeight.w900,
+                        ),
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 14),
+                      // Wizard de Pasos
+                      _StepWizardProgress(currentStep: step),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -284,6 +264,7 @@ class _QuotationRequestScreenState extends State<QuotationRequestScreen> {
               ),
             ),
           ),
+          const SliverToBoxAdapter(child: PremiumFooter()),
         ],
       ),
     );

@@ -1,66 +1,49 @@
 import 'package:flutter/material.dart';
 import '../core/theme/app_colors.dart';
-import '../models/models.dart';
+import '../core/widgets/premium_header.dart';
 import '../services/ai/gemini_recommendation_service.dart';
-import 'quotation_request_screen.dart';
 
-/// Pantalla de Chat interactivo B2B con Asistente Inteligente Gemini y Mensajería con Proveedores.
+/// Pantalla de Chat interactivo con Asistente Inteligente Gemini y Mensajería B2B.
 class ChatScreen extends StatefulWidget {
-  final ProviderModel? initialProvider;
-
-  const ChatScreen({super.key, this.initialProvider});
+  const ChatScreen({super.key});
 
   @override
   State<ChatScreen> createState() => _ChatScreenState();
 }
 
 class _ChatScreenState extends State<ChatScreen> with SingleTickerProviderStateMixin {
+  // Controlador de pestañas (Asistente IA vs Proveedores)
   late final TabController _tabController;
+  
+  // Controlador de texto para el campo de entrada
   final _messageController = TextEditingController();
+  
+  // Servicio Gemini
   final _geminiService = GeminiService();
-
-  // Conversación con Gemini AI
+  
+  // Lista de mensajes en la conversación con Gemini
   final List<Map<String, dynamic>> _aiMessages = [
     {
       'isUser': false,
-      'text': '¡Hola! Soy el Asistente Inteligente de PROVEO potenciado por Gemini AI. 🤖\n\n¿En qué puedo asesorar a tu negocio hoy? Puedo ayudarte a cotizar materias primas, comparar capacidades técnicas de proveedores o resolver dudas sobre suministros industriales en Nicaragua.',
+      'text': '¡Hola! Soy el Asistente Inteligente de PROVEO potenciado por Gemini AI. 🤖\n\n¿En qué te puedo ayudar hoy? Puedes consultarme sobre especificaciones de empaques, comparación de proveedores en Nicaragua o consejos para solicitar cotizaciones.',
       'time': 'Ahora',
     }
   ];
 
-  // Conversación con Proveedor
-  late final List<Map<String, dynamic>> _providerMessages;
-  late final String _providerName;
-  late final String _providerCategory;
-  late final String _providerLocation;
-  late final String _providerResponseTime;
+  // Lista de mensajes con proveedor de ejemplo
+  final List<Map<String, dynamic>> _providerMessages = [
+    {'isUser': false, 'text': 'Hola Carlos, recibimos tu solicitud de cotización para 2,000 unidades de envases.', 'time': '10:15 AM'},
+    {'isUser': true, 'text': 'Excelente. ¿Tienen disponibilidad para entrega en Managua esta semana?', 'time': '10:18 AM'},
+    {'isUser': false, 'text': 'Sí, tenemos stock listo para despacho en 3 a 4 días hábiles.', 'time': '10:20 AM'},
+  ];
 
-  bool _isAiTyping = false;
-  bool _isProviderTyping = false;
+  // Estado de carga mientras Gemini genera respuesta
+  bool _isTyping = false;
 
   @override
   void initState() {
     super.initState();
-    final p = widget.initialProvider;
-    _providerName = p?.name ?? 'PlastiPack Nicaragua';
-    _providerCategory = p?.category ?? 'Empaques Industriales';
-    _providerLocation = p?.location ?? 'Managua, Nicaragua';
-    _providerResponseTime = p?.responseTime ?? '~2 horas';
-
-    _providerMessages = [
-      {
-        'isUser': false,
-        'text': '¡Hola! Gracias por contactar a $_providerName. Somos especialistas en $_providerCategory. ¿En qué producto o volumen de compra podemos ayudarte hoy?',
-        'time': '10:00 AM',
-      },
-    ];
-
-    // Si viene desde un proveedor específico, arrancamos en la pestaña del proveedor
-    _tabController = TabController(
-      length: 2,
-      vsync: this,
-      initialIndex: widget.initialProvider != null ? 1 : 0,
-    );
+    _tabController = TabController(length: 2, vsync: this);
   }
 
   @override
@@ -70,7 +53,7 @@ class _ChatScreenState extends State<ChatScreen> with SingleTickerProviderStateM
     super.dispose();
   }
 
-  /// Envía mensaje a Gemini AI
+  /// Envía la consulta del usuario a Gemini AI y agrega la respuesta a la conversación.
   Future<void> _sendAiMessage(String text) async {
     final query = text.trim();
     if (query.isEmpty) return;
@@ -81,16 +64,16 @@ class _ChatScreenState extends State<ChatScreen> with SingleTickerProviderStateM
         'text': query,
         'time': 'Ahora',
       });
-      _isAiTyping = true;
+      _isTyping = true;
     });
     _messageController.clear();
 
     try {
-      final prompt = '''Eres el Asesor Senior de Compras B2B de PROVEO Nicaragua.
-Responde de forma ejecutiva, concisa y profesional en español.
-Enfócate en proveedores verificados, mejores prácticas de compra, logística e insumos en Nicaragua.
+      final prompt = '''Eres el Asistente Inteligente B2B oficial de la plataforma PROVEO Nicaragua.
+Ayuda al usuario con su consulta de forma profesional, clara y precisa en español.
+Enfócate en compras empresariales, proveedores, materiales (plásticos, envases, etiquetas, materias primas) y negocios en Nicaragua.
 
-Pregunta del comprador: "$query"''';
+Consulta del usuario: "$query"''';
 
       final response = await _geminiService.generarRespuesta(prompt);
 
@@ -101,7 +84,7 @@ Pregunta del comprador: "$query"''';
             'text': response,
             'time': 'Ahora',
           });
-          _isAiTyping = false;
+          _isTyping = false;
         });
       }
     } catch (_) {
@@ -109,317 +92,204 @@ Pregunta del comprador: "$query"''';
         setState(() {
           _aiMessages.add({
             'isUser': false,
-            'text': 'Te sugiero revisar a los proveedores verificados en nuestro directorio para recibir cotizaciones formales con precios por volumen.',
+            'text': 'Te recomiendo PlastiPack Nicaragua y Evanplast S.A. para suministros de alta calidad y entrega rápida.',
             'time': 'Ahora',
           });
-          _isAiTyping = false;
+          _isTyping = false;
         });
       }
     }
-  }
-
-  /// Envía mensaje al Proveedor con auto-respuesta simulada
-  void _sendProviderMessage(String text) {
-    final query = text.trim();
-    if (query.isEmpty) return;
-
-    setState(() {
-      _providerMessages.add({
-        'isUser': true,
-        'text': query,
-        'time': 'Ahora',
-      });
-      _isProviderTyping = true;
-    });
-    _messageController.clear();
-
-    // Auto-respuesta corporativa
-    Future.delayed(const Duration(seconds: 2), () {
-      if (mounted) {
-        setState(() {
-          _isProviderTyping = false;
-          _providerMessages.add({
-            'isUser': false,
-            'text': 'Recibido. Un ejecutivo de ventas corporativas de $_providerName está revisando tu solicitud sobre "$query". Te adjuntaremos ficha técnica y disponibilidad de inmediato.',
-            'time': 'Ahora',
-          });
-        });
-      }
-    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Sala de Negociación y Chat B2B'),
-        elevation: 0,
-        bottom: TabBar(
-          controller: _tabController,
-          labelColor: Colors.white,
-          unselectedLabelColor: Colors.white70,
-          indicatorColor: AppColors.trustGreen,
-          indicatorWeight: 3,
-          labelStyle: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
-          tabs: [
-            const Tab(icon: Icon(Icons.auto_awesome, size: 18), text: 'Asistente IA (Gemini)'),
-            Tab(icon: const Icon(Icons.storefront_outlined, size: 18), text: _providerName),
-          ],
-        ),
-      ),
-      body: TabBarView(
-        controller: _tabController,
+      appBar: const PremiumHeader(currentPage: 'Chat B2B'),
+      body: Column(
         children: [
-          _buildAiChatTab(),
-          _buildProviderChatTab(),
+          Container(
+            color: Colors.white,
+            child: TabBar(
+              controller: _tabController,
+              labelColor: AppColors.navy,
+              unselectedLabelColor: AppColors.textSecondary,
+              indicatorColor: AppColors.trustGreen,
+              indicatorWeight: 3,
+              labelStyle: const TextStyle(fontWeight: FontWeight.w900, fontSize: 13.5),
+              tabs: const [
+                Tab(icon: Icon(Icons.auto_awesome, size: 20), text: 'Asistente IA (Gemini)'),
+                Tab(icon: Icon(Icons.chat_bubble_outline, size: 20), text: 'PlastiPack Nicaragua'),
+              ],
+            ),
+          ),
+          const Divider(height: 1, color: AppColors.border),
+          Expanded(
+            child: TabBarView(
+              controller: _tabController,
+              children: [
+                _buildAiChatTab(),
+                _buildProviderChatTab(),
+              ],
+            ),
+          ),
         ],
       ),
     );
   }
 
-  // ── Tab 1: Chat con IA Gemini ─────────────────────────────────────────────
+  /// Pestaña interactiva de chat con Gemini AI
   Widget _buildAiChatTab() {
     return Column(
       children: [
-        // Banner Inteligente
+        // Banner informativo sobre Gemini
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-          decoration: const BoxDecoration(
-            color: AppColors.paleGreen,
-            border: Border(bottom: BorderSide(color: AppColors.border)),
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          color: AppColors.paleGreen,
           child: const Row(
             children: [
               Icon(Icons.auto_awesome, color: AppColors.trustGreen, size: 20),
-              SizedBox(width: 10),
+              SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  'Asistente PROVEO impulsado por Google Gemini — Recomendaciones B2B instantáneas.',
-                  style: TextStyle(color: AppColors.textPrimary, fontSize: 12, fontWeight: FontWeight.w700),
+                  'Consultas impulsadas por Google Gemini AI — Respuestas B2B en tiempo real.',
+                  style: TextStyle(color: AppColors.textPrimary, fontSize: 12, fontWeight: FontWeight.w600),
                 ),
               ),
             ],
           ),
         ),
 
-        // Sugerencias Rápidas
+        // Sugerencias rápidas para el cliente
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           child: Row(
             children: [
-              _quickPromptChip('¿Quién entrega más rápido en Managua?', onSelected: _sendAiMessage),
+              _quickPromptChip('¿Quién entrega más rápido en Managua?'),
               const SizedBox(width: 8),
-              _quickPromptChip('Recomiéndame empaques biodegradables', onSelected: _sendAiMessage),
+              _quickPromptChip('Recomiéndame empaques biodegradables'),
               const SizedBox(width: 8),
-              _quickPromptChip('¿Cómo negociar precios por volumen?', onSelected: _sendAiMessage),
+              _quickPromptChip('¿Cómo solicitar una cotización formal?'),
             ],
           ),
         ),
 
-        // Mensajes
+        // Lista de mensajes
         Expanded(
           child: ListView.builder(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            itemCount: _aiMessages.length + (_isAiTyping ? 1 : 0),
+            padding: const EdgeInsets.all(16),
+            itemCount: _aiMessages.length + (_isTyping ? 1 : 0),
             itemBuilder: (context, index) {
-              if (index == _aiMessages.length && _isAiTyping) {
-                return _buildTypingIndicator(label: 'Gemini AI está analizando el mercado...');
+              if (index == _aiMessages.length && _isTyping) {
+                return _buildTypingIndicator();
               }
               final msg = _aiMessages[index];
               return _buildMessageBubble(
                 text: msg['text'] as String,
                 isUser: msg['isUser'] as bool,
                 time: msg['time'] as String,
-                isAi: true,
               );
             },
           ),
         ),
 
-        // Input
-        _buildInputBar(
-          onSend: _sendAiMessage,
-          hint: 'Pregúntale a Gemini sobre proveedores, insumos o precios...',
-        ),
+        // Barra de entrada de texto
+        _buildInputBar(onSend: _sendAiMessage, hint: 'Pregúntale a Gemini sobre proveedores o productos...'),
       ],
     );
   }
 
-  // ── Tab 2: Chat Directo con Proveedor ──────────────────────────────────────
+  /// Pestaña de chat con proveedor
   Widget _buildProviderChatTab() {
     return Column(
       children: [
-        // Encabezado del Proveedor
         Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            border: const Border(bottom: BorderSide(color: AppColors.border)),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.03),
-                blurRadius: 6,
-                offset: const Offset(0, 2),
-              ),
-            ],
+          padding: const EdgeInsets.all(12),
+          decoration: const BoxDecoration(
+            color: AppColors.surface,
+            border: Border(bottom: BorderSide(color: AppColors.border)),
           ),
           child: Row(
             children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [AppColors.navy, AppColors.blue],
-                  ),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Center(
-                  child: Text(
-                    _providerName.length >= 2 ? _providerName.substring(0, 2).toUpperCase() : 'PR',
-                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 16),
-                  ),
-                ),
+              const CircleAvatar(
+                backgroundColor: AppColors.navy,
+                child: Text('PP', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
               ),
-              const SizedBox(width: 14),
-              Expanded(
+              const SizedBox(width: 12),
+              const Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      children: [
-                        Flexible(
-                          child: Text(
-                            _providerName,
-                            style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: AppColors.navy),
-                          ),
-                        ),
-                        const SizedBox(width: 6),
-                        const Icon(Icons.verified_rounded, size: 14, color: AppColors.trustGreen),
-                      ],
-                    ),
-                    const SizedBox(height: 2),
-                    Row(
-                      children: [
-                        Container(
-                          width: 7,
-                          height: 7,
-                          decoration: const BoxDecoration(color: AppColors.trustGreen, shape: BoxShape.circle),
-                        ),
-                        const SizedBox(width: 5),
-                        Text(
-                          'En línea • Resp. promedio: $_providerResponseTime • $_providerLocation',
-                          style: const TextStyle(color: AppColors.textSecondary, fontSize: 11),
-                        ),
-                      ],
-                    ),
+                    Text('PlastiPack Nicaragua', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                    Text('En línea • Tiempo de respuesta: ~2 horas', style: TextStyle(color: AppColors.trustGreen, fontSize: 11)),
                   ],
                 ),
               ),
-              const SizedBox(width: 10),
-              FilledButton.icon(
-                style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.trustGreen,
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-                onPressed: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const QuotationRequestScreen()),
-                ),
-                icon: const Icon(Icons.request_quote_rounded, size: 16),
-                label: const Text('Cotizar', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+              OutlinedButton.icon(
+                onPressed: () {},
+                icon: const Icon(Icons.description_outlined, size: 16),
+                label: const Text('Ver Cotización'),
               ),
             ],
           ),
         ),
-
-        // Preguntas Rápidas de Negociación B2B
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-          child: Row(
-            children: [
-              _quickPromptChip('📄 Solicitar catálogo formal (PDF)', onSelected: _sendProviderMessage),
-              const SizedBox(width: 8),
-              _quickPromptChip('📦 ¿Cuál es el pedido mínimo (MOQ)?', onSelected: _sendProviderMessage),
-              const SizedBox(width: 8),
-              _quickPromptChip('🚚 ¿Tienen cobertura de entrega en mi departamento?', onSelected: _sendProviderMessage),
-              const SizedBox(width: 8),
-              _quickPromptChip('💳 ¿Manejan crédito a 30 días con RUC?', onSelected: _sendProviderMessage),
-            ],
-          ),
-        ),
-
-        // Mensajes
         Expanded(
           child: ListView.builder(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            itemCount: _providerMessages.length + (_isProviderTyping ? 1 : 0),
+            padding: const EdgeInsets.all(16),
+            itemCount: _providerMessages.length,
             itemBuilder: (context, index) {
-              if (index == _providerMessages.length && _isProviderTyping) {
-                return _buildTypingIndicator(label: '$_providerName está escribiendo...');
-              }
               final msg = _providerMessages[index];
               return _buildMessageBubble(
                 text: msg['text'] as String,
                 isUser: msg['isUser'] as bool,
                 time: msg['time'] as String,
-                isAi: false,
               );
             },
           ),
         ),
-
-        // Input
         _buildInputBar(
-          onSend: _sendProviderMessage,
-          hint: 'Escribe un mensaje directo a $_providerName...',
+          onSend: (text) {
+            if (text.trim().isEmpty) return;
+            setState(() {
+              _providerMessages.add({'isUser': true, 'text': text.trim(), 'time': 'Ahora'});
+            });
+            _messageController.clear();
+          },
+          hint: 'Escribe un mensaje al proveedor...',
         ),
       ],
     );
   }
 
-  // ── Widgets Reutilizables ──────────────────────────────────────────────────
-  Widget _quickPromptChip(String prompt, {required Function(String) onSelected}) {
+  /// Chip de pregunta sugerida
+  Widget _quickPromptChip(String prompt) {
     return ActionChip(
-      backgroundColor: Colors.white,
-      side: const BorderSide(color: AppColors.border),
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      label: Text(
-        prompt,
-        style: const TextStyle(fontSize: 11.5, color: AppColors.navy, fontWeight: FontWeight.w700),
-      ),
-      onPressed: () => onSelected(prompt),
+      backgroundColor: AppColors.paleBlue,
+      label: Text(prompt, style: const TextStyle(fontSize: 11, color: AppColors.navy, fontWeight: FontWeight.w600)),
+      onPressed: () => _sendAiMessage(prompt),
     );
   }
 
-  Widget _buildMessageBubble({
-    required String text,
-    required bool isUser,
-    required String time,
-    required bool isAi,
-  }) {
+  /// Burbuja de mensaje estilizada
+  Widget _buildMessageBubble({required String text, required bool isUser, required String time}) {
     return Align(
       alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        constraints: const BoxConstraints(maxWidth: 580),
+        constraints: const BoxConstraints(maxWidth: 520),
         decoration: BoxDecoration(
-          color: isUser ? AppColors.navy : Colors.white,
-          borderRadius: BorderRadius.circular(18).copyWith(
-            bottomRight: isUser ? const Radius.circular(0) : const Radius.circular(18),
-            bottomLeft: !isUser ? const Radius.circular(0) : const Radius.circular(18),
+          color: isUser ? AppColors.navy : AppColors.surface,
+          borderRadius: BorderRadius.circular(16).copyWith(
+            bottomRight: isUser ? const Radius.circular(0) : const Radius.circular(16),
+            bottomLeft: !isUser ? const Radius.circular(0) : const Radius.circular(16),
           ),
           border: isUser ? null : Border.all(color: AppColors.border),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
-              blurRadius: 8,
+              color: Colors.black.withValues(alpha: .04),
+              blurRadius: 6,
               offset: const Offset(0, 2),
             ),
           ],
@@ -428,33 +298,22 @@ Pregunta del comprador: "$query"''';
           crossAxisAlignment: isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
           children: [
             if (!isUser) ...[
-              Row(
+              const Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(
-                    isAi ? Icons.auto_awesome : Icons.business_rounded,
-                    size: 14,
-                    color: isAi ? AppColors.trustGreen : AppColors.blue,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    isAi ? 'PROVEO Gemini AI' : _providerName,
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w900,
-                      color: isAi ? AppColors.trustGreen : AppColors.navy,
-                    ),
-                  ),
+                  Icon(Icons.auto_awesome, size: 14, color: AppColors.trustGreen),
+                  SizedBox(width: 4),
+                  Text('PROVEO AI', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.trustGreen)),
                 ],
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: 4),
             ],
             Text(
               text,
               style: TextStyle(
                 color: isUser ? Colors.white : AppColors.textPrimary,
                 fontSize: 14,
-                height: 1.45,
+                height: 1.4,
               ),
             ),
             const SizedBox(height: 4),
@@ -471,57 +330,49 @@ Pregunta del comprador: "$query"''';
     );
   }
 
-  Widget _buildTypingIndicator({required String label}) {
+  /// Indicador de escritura animado
+  Widget _buildTypingIndicator() {
     return Align(
       alignment: Alignment.centerLeft,
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: AppColors.paleBlue,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(12),
         ),
-        child: Row(
+        child: const Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const SizedBox(
+            SizedBox(
               width: 14,
               height: 14,
               child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.navy),
             ),
-            const SizedBox(width: 8),
-            Text(label, style: const TextStyle(fontSize: 12, color: AppColors.navy, fontWeight: FontWeight.w600)),
+            SizedBox(width: 8),
+            Text('Gemini está analizando tu consulta...', style: TextStyle(fontSize: 12, color: AppColors.navy, fontWeight: FontWeight.w600)),
           ],
         ),
       ),
     );
   }
 
+  /// Barra de entrada inferior
   Widget _buildInputBar({required Function(String) onSend, required String hint}) {
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(12),
       decoration: const BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface,
         border: Border(top: BorderSide(color: AppColors.border)),
       ),
       child: Row(
         children: [
-          IconButton(
-            icon: const Icon(Icons.attach_file_rounded, color: AppColors.navy),
-            tooltip: 'Adjuntar documento o imagen B2B',
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Función para adjuntar especificaciones y fichas técnicas')),
-              );
-            },
-          ),
           Expanded(
             child: TextField(
               controller: _messageController,
               decoration: InputDecoration(
                 hintText: hint,
-                hintStyle: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(24), borderSide: const BorderSide(color: AppColors.border)),
                 filled: true,
                 fillColor: AppColors.background,
@@ -531,11 +382,8 @@ Pregunta del comprador: "$query"''';
           ),
           const SizedBox(width: 8),
           IconButton.filled(
-            style: IconButton.styleFrom(
-              backgroundColor: AppColors.navy,
-              padding: const EdgeInsets.all(12),
-            ),
-            icon: const Icon(Icons.send_rounded, color: Colors.white, size: 20),
+            style: IconButton.styleFrom(backgroundColor: AppColors.navy),
+            icon: const Icon(Icons.send, color: Colors.white),
             onPressed: () => onSend(_messageController.text),
           ),
         ],

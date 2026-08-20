@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../core/theme/app_colors.dart';
+import '../core/widgets/premium_header.dart';
+import '../core/widgets/premium_footer.dart';
 import '../models/models.dart';
 import '../services/firebase/firestore_repository.dart';
 import 'chat_screen.dart';
@@ -336,99 +338,76 @@ class _QuotationsScreenState extends State<QuotationsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
+      appBar: const PremiumHeader(currentPage: 'Cotizaciones'),
       body: CustomScrollView(
         slivers: [
           // Header moderno con degradado
-          SliverAppBar(
-            expandedHeight: 170,
-            pinned: true,
-            backgroundColor: AppColors.navy,
-            flexibleSpace: FlexibleSpaceBar(
-              background: Container(
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [AppColors.navy, AppColors.blue, AppColors.teal],
-                  ),
+          SliverToBoxAdapter(
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 20),
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [AppColors.navy, AppColors.blue, AppColors.teal],
                 ),
-                child: Stack(
-                  children: [
-                    Positioned(
-                      right: -20,
-                      top: -20,
-                      child: Container(
-                        width: 140,
-                        height: 140,
+              ),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 1000),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.white.withValues(alpha: 0.05),
+                          color: Colors.white.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: const Icon(
+                          Icons.receipt_long_rounded,
+                          color: Colors.white,
+                          size: 28,
                         ),
                       ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(24, 56, 24, 20),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(10),
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withValues(alpha: 0.15),
-                                  borderRadius: BorderRadius.circular(14),
-                                ),
-                                child: const Icon(
-                                  Icons.receipt_long_rounded,
-                                  color: Colors.white,
-                                  size: 24,
-                                ),
+                      const SizedBox(width: 16),
+                      const Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Mis Cotizaciones',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 24,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 0.3,
                               ),
-                              const SizedBox(width: 14),
-                              const Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Mis Cotizaciones',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 22,
-                                      fontWeight: FontWeight.w900,
-                                      letterSpacing: 0.3,
-                                    ),
-                                  ),
-                                  Text(
-                                    'Gestiona, negocia y acepta ofertas en tiempo real',
-                                    style: TextStyle(
-                                      color: Colors.white70,
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const Spacer(),
-                              ElevatedButton.icon(
-                                onPressed: () => Navigator.push(context,
-                                    MaterialPageRoute(builder: (_) => const ComparisonScreen())),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppColors.trustGreen,
-                                  foregroundColor: Colors.white,
-                                  elevation: 0,
-                                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                ),
-                                icon: const Icon(Icons.compare_arrows_rounded, size: 18),
-                                label: const Text('Comparar',
-                                    style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
-                              ),
-                            ],
-                          ),
-                        ],
+                            ),
+                            SizedBox(height: 4),
+                            Text(
+                              'Gestiona, negocia y acepta ofertas en tiempo real',
+                              style: TextStyle(color: Colors.white70, fontSize: 13),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
+                      ElevatedButton.icon(
+                        onPressed: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const ComparisonScreen()),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.trustGreen,
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                        icon: const Icon(Icons.compare_arrows_rounded, size: 18),
+                        label: const Text('Comparar', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -442,71 +421,83 @@ class _QuotationsScreenState extends State<QuotationsScreen> {
                     child: Center(child: CircularProgressIndicator(color: AppColors.teal)),
                   )
                 : _quotations == null || _quotations!.isEmpty
-                    ? const _EmptyState(
-                        icon: Icons.inbox_rounded,
-                        title: 'Aún no tienes cotizaciones',
-                        subtitle: 'Busca proveedores y solicita tu primera cotización.',
-                        color: AppColors.textSecondary,
+                    ? Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(48),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(20),
+                                decoration: const BoxDecoration(
+                                  color: AppColors.paleBlue,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(Icons.receipt_long_outlined, size: 48, color: AppColors.navy),
+                              ),
+                              const SizedBox(height: 16),
+                              const Text(
+                                'No tienes cotizaciones registradas',
+                                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: AppColors.navy),
+                              ),
+                              const SizedBox(height: 8),
+                              const Text(
+                                'Explora proveedores y solicita cotizaciones para verlas aquí.',
+                                style: TextStyle(color: AppColors.textSecondary),
+                              ),
+                            ],
+                          ),
+                        ),
                       )
                     : Padding(
                         padding: const EdgeInsets.all(20),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Resumen de métricas
-                            Row(
+                        child: Center(
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(maxWidth: 1000),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                _QuickStat(
-                                  value: '${_quotations!.length}',
-                                  label: 'Cotizaciones',
-                                  icon: Icons.receipt_long_rounded,
-                                  color: AppColors.blue,
+                                Row(
+                                  children: [
+                                    Text(
+                                      '${_quotations!.length} Propuestas Recibidas',
+                                      style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18, color: AppColors.navy),
+                                    ),
+                                    const Spacer(),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.paleBlue,
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      child: const Text('Ordenado por Recomendación',
+                                          style: TextStyle(color: AppColors.navy, fontSize: 11, fontWeight: FontWeight.bold)),
+                                    ),
+                                  ],
                                 ),
-                                const SizedBox(width: 12),
-                                _QuickStat(
-                                  value: 'C\$${_minPrice(_quotations!).toStringAsFixed(0)}',
-                                  label: 'Precio mínimo',
-                                  icon: Icons.trending_down_rounded,
-                                  color: AppColors.trustGreen,
-                                ),
-                                const SizedBox(width: 12),
-                                _QuickStat(
-                                  value: '${_fastestDelivery(_quotations!)} días',
-                                  label: 'Entrega rápida',
-                                  icon: Icons.local_shipping_outlined,
-                                  color: AppColors.teal,
-                                ),
+                                const SizedBox(height: 16),
+
+                                // Lista de cotizaciones interactivas
+                                ..._quotations!.asMap().entries.map((entry) {
+                                  final i = entry.key;
+                                  final q = entry.value;
+                                  final isBest = q.price == _minPrice(_quotations!);
+                                  return _QuotationCard(
+                                    quotation: q,
+                                    rank: i + 1,
+                                    isBest: isBest,
+                                    onAccept: () => _acceptQuotation(q, i),
+                                    onReject: () => _rejectQuotation(q, i),
+                                    onNegotiate: () => _negotiateQuotation(q),
+                                  );
+                                }),
                               ],
                             ),
-                            const SizedBox(height: 24),
-
-                            const Text(
-                              'Proveedores Cotizando',
-                              style: TextStyle(
-                                  fontWeight: FontWeight.w900,
-                                  fontSize: 17,
-                                  color: AppColors.textPrimary),
-                            ),
-                            const SizedBox(height: 12),
-
-                            // Lista de cotizaciones interactivas
-                            ..._quotations!.asMap().entries.map((entry) {
-                              final i = entry.key;
-                              final q = entry.value;
-                              final isBest = q.price == _minPrice(_quotations!);
-                              return _QuotationCard(
-                                quotation: q,
-                                rank: i + 1,
-                                isBest: isBest,
-                                onAccept: () => _acceptQuotation(q, i),
-                                onReject: () => _rejectQuotation(q, i),
-                                onNegotiate: () => _negotiateQuotation(q),
-                              );
-                            }),
-                          ],
+                          ),
                         ),
                       ),
           ),
+          const SliverToBoxAdapter(child: PremiumFooter()),
         ],
       ),
     );
@@ -514,9 +505,6 @@ class _QuotationsScreenState extends State<QuotationsScreen> {
 
   double _minPrice(List<QuotationModel> q) =>
       q.map((e) => e.price).reduce((a, b) => a < b ? a : b);
-
-  int _fastestDelivery(List<QuotationModel> q) =>
-      q.map((e) => e.deliveryDays).reduce((a, b) => a < b ? a : b);
 }
 
 // ── Tarjeta de Cotización Interactiva ─────────────────────────────────
@@ -838,108 +826,6 @@ class _MetricChip extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-// ── Estadística rápida ────────────────────────────────────────────────
-class _QuickStat extends StatelessWidget {
-  final String value;
-  final String label;
-  final IconData icon;
-  final Color color;
-
-  const _QuickStat({
-    required this.value,
-    required this.label,
-    required this.icon,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 3),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(icon, color: color, size: 20),
-            const SizedBox(height: 8),
-            Text(value,
-                style: TextStyle(
-                    color: color, fontSize: 18, fontWeight: FontWeight.w900)),
-            const SizedBox(height: 2),
-            Text(label,
-                style: const TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w600)),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ── Estado vacío ──────────────────────────────────────────────────────
-class _EmptyState extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final Color color;
-
-  const _EmptyState({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 340,
-      child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.1),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(icon, size: 48, color: color),
-            ),
-            const SizedBox(height: 20),
-            Text(title,
-                style: const TextStyle(
-                    fontWeight: FontWeight.w800,
-                    fontSize: 16,
-                    color: AppColors.textPrimary)),
-            const SizedBox(height: 8),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 40),
-              child: Text(subtitle,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                      color: AppColors.textSecondary, fontSize: 13)),
-            ),
-          ],
-        ),
       ),
     );
   }

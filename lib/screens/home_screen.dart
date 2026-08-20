@@ -3,13 +3,13 @@ import '../core/theme/app_colors.dart';
 import '../core/widgets/premium_widgets.dart';
 import '../models/models.dart';
 import '../services/firebase/firestore_repository.dart';
-import 'admin_dashboard_screen.dart';
 import 'chat_screen.dart';
 import 'match_screen.dart';
 import 'provider_profile_screen.dart';
 import 'search_screen.dart';
 import 'dart:async';
 import '../core/widgets/premium_footer.dart';
+import '../core/widgets/premium_header.dart';
 
 /// Home premium centrada en confianza, descubrimiento y PROVEO Match.
 class HomeScreen extends StatelessWidget {
@@ -28,7 +28,7 @@ class HomeScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const _Header(),
+                  const PremiumHeader(currentPage: 'Inicio', showBackButton: false),
                   const SizedBox(height: 20),
                   _Hero(desktop: desktop),
                   const SizedBox(height: 18),
@@ -64,141 +64,6 @@ class HomeScreen extends StatelessWidget {
               const PremiumFooter(),
             ],
           ),
-        );
-      },
-    );
-  }
-}
-
-class _Header extends StatelessWidget {
-  const _Header();
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final isMobile = constraints.maxWidth < 680;
-        final logoRow = Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 38,
-              height: 38,
-              decoration: BoxDecoration(
-                color: AppColors.navy,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Icon(Icons.hub_outlined, color: AppColors.successGreen),
-            ),
-            const SizedBox(width: 10),
-            const Text(
-              'PROVEO',
-              style: TextStyle(
-                color: AppColors.navy,
-                fontSize: 22,
-                fontWeight: FontWeight.w900,
-                letterSpacing: 1.2,
-              ),
-            ),
-          ],
-        );
-
-        if (isMobile) {
-          return Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              logoRow,
-              PopupMenuButton<int>(
-                icon: const Icon(Icons.menu, color: AppColors.navy, size: 28),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                itemBuilder: (context) => [
-                  PopupMenuItem(
-                    value: 1,
-                    child: Row(
-                      children: [
-                        Icon(Icons.storefront_outlined, color: AppColors.navy.withValues(alpha: 0.7)),
-                        const SizedBox(width: 12),
-                        const Text('Proveedores'),
-                      ],
-                    ),
-                  ),
-                  PopupMenuItem(
-                    value: 2,
-                    child: Row(
-                      children: [
-                        Icon(Icons.auto_awesome, color: AppColors.trustGreen.withValues(alpha: 0.9)),
-                        const SizedBox(width: 12),
-                        const Text('Match IA'),
-                      ],
-                    ),
-                  ),
-                  PopupMenuItem(
-                    value: 3,
-                    child: Row(
-                      children: [
-                        Icon(Icons.chat_bubble_outline, color: AppColors.blue.withValues(alpha: 0.9)),
-                        const SizedBox(width: 12),
-                        const Text('Asistente IA'),
-                      ],
-                    ),
-                  ),
-                  const PopupMenuDivider(),
-                  PopupMenuItem(
-                    value: 4,
-                    child: Row(
-                      children: [
-                        Icon(Icons.admin_panel_settings, color: AppColors.navy.withValues(alpha: 0.9)),
-                        const SizedBox(width: 12),
-                        const Text('Panel Admin', style: TextStyle(fontWeight: FontWeight.bold)),
-                      ],
-                    ),
-                  ),
-                ],
-                onSelected: (value) {
-                  switch (value) {
-                    case 1:
-                      Navigator.push(context, MaterialPageRoute(builder: (_) => const SearchScreen()));
-                      break;
-                    case 2:
-                      Navigator.push(context, MaterialPageRoute(builder: (_) => const MatchScreen()));
-                      break;
-                    case 3:
-                      Navigator.push(context, MaterialPageRoute(builder: (_) => const ChatScreen()));
-                      break;
-                    case 4:
-                      Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminDashboardScreen()));
-                      break;
-                  }
-                },
-              ),
-            ],
-          );
-        }
-
-        return Row(
-          children: [
-            logoRow,
-            const Spacer(),
-            TextButton(
-              onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SearchScreen())),
-              child: const Text('Proveedores'),
-            ),
-            TextButton.icon(
-              onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MatchScreen())),
-              icon: const Icon(Icons.auto_awesome, size: 16, color: AppColors.trustGreen),
-              label: const Text('Match IA'),
-            ),
-            TextButton.icon(
-              onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ChatScreen())),
-              icon: const Icon(Icons.chat_bubble_outline, size: 16),
-              label: const Text('Asistente IA'),
-            ),
-            const SizedBox(width: 8),
-            FilledButton.tonal(
-              style: FilledButton.styleFrom(backgroundColor: AppColors.paleBlue),
-              onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminDashboardScreen())),
-              child: const Text('Panel Admin', style: TextStyle(color: AppColors.navy, fontWeight: FontWeight.bold)),
-            ),
-          ],
         );
       },
     );

@@ -2,17 +2,78 @@ import '../models/models.dart';
 
 class MockData {
   static final providers = <ProviderModel>[
-    ProviderModel(id: 'p1', name: 'PlastiPack Nicaragua', location: 'Managua, Nicaragua', category: 'Empaques', description: 'Fabricación de envases y empaques plásticos de alta calidad para empresas y marcas nacionales.', logo: 'PLASTI PACK', rating: 4.8, reviews: 128, years: 16, responseTime: '2 horas', featured: true),
-    ProviderModel(id: 'p2', name: 'Evanplast S.A.', location: 'Masaya, Nicaragua', category: 'Empaques', description: 'Soluciones integrales de empaque plástico e inyección para industrias, cosméticos y comercios.', logo: 'Evanplast', rating: 4.6, reviews: 89, years: 12, responseTime: '3 horas', featured: true),
-    ProviderModel(id: 'p3', name: 'Innoplast', location: 'León, Nicaragua', category: 'Empaques', description: 'Innovación en empaques plásticos sostenibles, bolsas oxo-biodegradables y sellado hermético.', logo: 'Innoplast', rating: 4.5, reviews: 64, years: 9, responseTime: '3 horas'),
-    ProviderModel(id: 'p4', name: 'Pack Solutions', location: 'Managua, Nicaragua', category: 'Empaques', description: 'Empaques personalizados y cajas de cartón corrugado para alimentos, comercio y manufactura.', logo: 'PACK', rating: 4.4, reviews: 71, years: 10, responseTime: '5 horas'),
-    ProviderModel(id: 'p5', name: 'TransLogix Nicaragua', location: 'Managua, Nicaragua', category: 'Logística y Transporte', description: 'Transporte de carga pesada, distribución de última milla y almacenamiento refrigerado a nivel nacional.', logo: 'TransLogix', rating: 4.9, reviews: 156, years: 14, responseTime: '1 hora', featured: true),
-    ProviderModel(id: 'p6', name: 'AgroInsumos del Norte', location: 'Matagalpa, Nicaragua', category: 'Materia Prima', description: 'Suministro mayorista de insumos agrícolas orgánicos, semillas certificadas y fertilizantes.', logo: 'AgroInsumos', rating: 4.7, reviews: 82, years: 18, responseTime: '4 horas', featured: true),
-    ProviderModel(id: 'p7', name: 'PrintGrafic & Etiquetas', location: 'Managua, Nicaragua', category: 'Etiquetas y Publicidad', description: 'Impresión digital flexográfica de etiquetas autoadhesivas en bobina, termoencogibles y material POP.', logo: 'PrintGrafic', rating: 4.7, reviews: 95, years: 11, responseTime: '2 horas', featured: true),
-    ProviderModel(id: 'p8', name: 'BioEnvases Occidente', location: 'Chinandega, Nicaragua', category: 'Empaques', description: 'Fabricante de envases biodegradables a base de bagazo de caña y fibras vegetales.', logo: 'BioEnvases', rating: 4.8, reviews: 43, years: 6, responseTime: '3 horas'),
-    ProviderModel(id: 'p9', name: 'NicaTech Soluciones B2B', location: 'Estelí, Nicaragua', category: 'Tecnología B2B', description: 'Desarrollo de software empresarial ERP, automatización de inventarios y facturación electrónica DGI.', logo: 'NicaTech', rating: 4.9, reviews: 67, years: 8, responseTime: '1 hora', featured: true),
-    ProviderModel(id: 'p10', name: 'Lácteos y Materia Prima Segoviana', location: 'Estelí, Nicaragua', category: 'Materia Prima', description: 'Distribución mayorista de derivados lácteos, pulpas de fruta y materias primas alimenticias.', logo: 'Segoviana', rating: 4.6, reviews: 52, years: 15, responseTime: '4 horas'),
-    ProviderModel(id: 'p11', name: 'Express Carga Masaya', location: 'Masaya, Nicaragua', category: 'Logística y Transporte', description: 'Fletes y paquetería empresarial interdepartamental con entregas garantizadas en 24 horas.', logo: 'ExpressCarga', rating: 4.5, reviews: 78, years: 7, responseTime: '2 horas'),
+    ProviderModel(
+      id: 'p1', name: 'PlastiPack Nicaragua', location: 'Managua, Nicaragua',
+      category: 'Empaques', logo: 'PP', rating: 4.8, reviews: 128, years: 16,
+      responseTime: '2 horas', featured: true,
+      description: 'Fabricación de envases y empaques plásticos de alta calidad para empresas. Más de 16 años liderando el sector industrial en Nicaragua con certificaciones nacionales e internacionales.',
+    ),
+    ProviderModel(
+      id: 'p2', name: 'Evanplast S.A.', location: 'Masaya, Nicaragua',
+      category: 'Empaques', logo: 'EV', rating: 4.6, reviews: 89, years: 12,
+      responseTime: '3 horas', featured: true,
+      description: 'Soluciones de empaque plástico para industrias y comercios. Especialistas en producción a gran escala con control de calidad ISO y entregas puntuales en toda Nicaragua.',
+    ),
+    ProviderModel(
+      id: 'p3', name: 'Innoplast', location: 'León, Nicaragua',
+      category: 'Empaques', logo: 'IN', rating: 4.5, reviews: 64, years: 9,
+      responseTime: '3 horas', featured: false,
+      description: 'Innovación en empaques plásticos sostenibles y personalizados. Pioneros en materiales biodegradables y eco-friendly para el sector empresarial nicaragüense.',
+    ),
+    ProviderModel(
+      id: 'p4', name: 'Pack Solutions', location: 'Managua, Nicaragua',
+      category: 'Empaques', logo: 'PS', rating: 4.4, reviews: 71, years: 10,
+      responseTime: '5 horas', featured: false,
+      description: 'Empaques personalizados para alimentos, comercio y manufactura. Ofrecemos diseño, producción y entrega de soluciones de empaque a medida del cliente.',
+    ),
+    ProviderModel(
+      id: 'p5', name: 'AgroTech Nicaragua', location: 'Chinandega, Nicaragua',
+      category: 'Materia Prima', logo: 'AT', rating: 4.7, reviews: 112, years: 14,
+      responseTime: '4 horas', featured: true,
+      description: 'Proveedor de materias primas agrícolas e industriales. Suministramos insumos para la agroindustria, manufactura y exportación con estándares de calidad internacionales.',
+    ),
+    ProviderModel(
+      id: 'p6', name: 'CacaoNica Export', location: 'Matagalpa, Nicaragua',
+      category: 'Materia Prima', logo: 'CN', rating: 4.9, reviews: 204, years: 20,
+      responseTime: '6 horas', featured: true,
+      description: 'Exportación y comercialización de cacao fino de aroma certificado. Producto orgánico de las mejores fincas del norte de Nicaragua con trazabilidad completa.',
+    ),
+    ProviderModel(
+      id: 'p7', name: 'LogisNica S.A.', location: 'Managua, Nicaragua',
+      category: 'Logística', logo: 'LN', rating: 4.3, reviews: 45, years: 7,
+      responseTime: '2 horas', featured: false,
+      description: 'Servicios de logística y transporte de mercancía a nivel nacional. Gestión de cadena de suministro, almacenamiento y distribución last-mile para empresas de todos los tamaños.',
+    ),
+    ProviderModel(
+      id: 'p8', name: 'TechSolutions NI', location: 'Managua, Nicaragua',
+      category: 'Tecnología', logo: 'TS', rating: 4.6, reviews: 58, years: 8,
+      responseTime: '1 hora', featured: false,
+      description: 'Soluciones tecnológicas B2B: hardware, software y servicios de TI para empresas. Implementación de ERP, sistemas de gestión y soporte técnico empresarial.',
+    ),
+    ProviderModel(
+      id: 'p9', name: 'Imprenta Digital Pro', location: 'Granada, Nicaragua',
+      category: 'Etiquetas', logo: 'ID', rating: 4.4, reviews: 37, years: 6,
+      responseTime: '4 horas', featured: false,
+      description: 'Impresión digital de etiquetas, empaques y material POP para marcas. Tecnología de última generación para tirajes desde 100 unidades con acabados premium.',
+    ),
+    ProviderModel(
+      id: 'p10', name: 'QuímiTech Industrial', location: 'Tipitapa, Nicaragua',
+      category: 'Materia Prima', logo: 'QT', rating: 4.5, reviews: 93, years: 11,
+      responseTime: '5 horas', featured: false,
+      description: 'Distribución de químicos industriales, aditivos y materias primas para manufactura. Certificados INSHT y con manejo especializado de materiales peligrosos.',
+    ),
+    ProviderModel(
+      id: 'p11', name: 'FrioNic Refrigeración', location: 'Managua, Nicaragua',
+      category: 'Logística', logo: 'FR', rating: 4.2, reviews: 29, years: 5,
+      responseTime: '3 horas', featured: false,
+      description: 'Transporte refrigerado y cadena de frío para alimentos y farmacéuticos. Flota moderna con monitoreo GPS y temperatura controlada en tiempo real.',
+    ),
+    ProviderModel(
+      id: 'p12', name: 'Carpintería Artesana', location: 'Masaya, Nicaragua',
+      category: 'Manufactura', logo: 'CA', rating: 4.8, reviews: 156, years: 25,
+      responseTime: '8 horas', featured: false,
+      description: 'Muebles y soluciones en madera para empresas y retail. Especialistas en producción por lotes, packaging de madera y mobiliario corporativo personalizado.',
+    ),
   ];
 
   static final products = <ProductModel>[
