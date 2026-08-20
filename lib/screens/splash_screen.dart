@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import '../core/theme/app_colors.dart';
 import '../core/widgets/proveo_logo.dart';
-import 'app_shell.dart';
+import 'auth_screen.dart';
 
-/// Pantalla de entrada de la demo. La decision de sesion queda encapsulada
-/// aqui para sustituirse luego por el estado de Firebase Auth.
+/// Pantalla de entrada de PROVEO durante la preparación de la sesión.
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -27,7 +26,7 @@ class _SplashScreenState extends State<SplashScreen>
       if (!mounted) return;
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute<void>(builder: (_) => const AppShell()),
+        MaterialPageRoute<void>(builder: (_) => const AuthScreen()),
       );
     });
   }

@@ -58,6 +58,16 @@ class FirestoreRepository {
         'updatedAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
 
+  Future<UserRole?> getUserRole(String userId) async {
+    if (_firestore == null) return null;
+    final document = await _collection('users').doc(userId).get();
+    final value = document.data()?['role'] as String?;
+    for (final role in UserRole.values) {
+      if (role.name == value) return role;
+    }
+    return null;
+  }
+
   Future<void> saveProduct(ProductModel product) => _collection('products')
       .doc(product.id)
       .set({

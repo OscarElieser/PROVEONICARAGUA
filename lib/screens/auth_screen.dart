@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../core/theme/app_colors.dart';
 import '../core/widgets/proveo_logo.dart';
+import '../models/models.dart';
 import '../services/auth/firebase_auth_repository.dart';
 import 'app_shell.dart';
 
@@ -15,9 +16,11 @@ class AuthScreen extends StatefulWidget {
 class _AuthScreenState extends State<AuthScreen> {
   final _email = TextEditingController();
   final _password = TextEditingController();
-  final _repository = FirebaseAuthRepository();
+  FirebaseAuthRepository? _repository;
   bool _loading = false;
   String? _error;
+
+  FirebaseAuthRepository get _authRepository => _repository ??= FirebaseAuthRepository();
 
   @override
   void dispose() {
@@ -26,12 +29,12 @@ class _AuthScreenState extends State<AuthScreen> {
     super.dispose();
   }
 
-  Future<void> _signIn(Future<void> Function() action) async {
+  Future<void> _signIn(Future<AuthUser> Function() action) async {
     setState(() { _loading = true; _error = null; });
     try {
-      await action();
+      final user = await action();
       if (!mounted) return;
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const AppShell()));
+      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => AppShell(user: user)));
     } on FirebaseAuthException catch (error) {
       setState(() => _error = _friendlyError(error.code));
     } catch (_) {
@@ -74,9 +77,9 @@ class _AuthScreenState extends State<AuthScreen> {
               TextField(controller: _password, obscureText: true, decoration: const InputDecoration(labelText: 'Contraseña', prefixIcon: Icon(Icons.lock_outline))),
               if (_error != null) ...[const SizedBox(height: 14), Text(_error!, style: const TextStyle(color: AppColors.error))],
               const SizedBox(height: 22),
-              FilledButton(onPressed: _loading ? null : () => _signIn(() async { await _repository.signIn(_email.text.trim(), _password.text); }), child: _loading ? const CircularProgressIndicator() : const Text('Iniciar sesión')),
+              FilledButton(onPressed: _loading ? null : () => _signIn(() => _authRepository.signIn(_email.text.trim(), _password.text)), child: _loading ? const CircularProgressIndicator() : const Text('Iniciar sesión')),
               const SizedBox(height: 12),
-              OutlinedButton.icon(onPressed: _loading ? null : () => _signIn(() async { await _repository.signInWithGoogle(); }), icon: const Icon(Icons.account_circle_outlined), label: const Text('Continuar con Google')),
+              OutlinedButton.icon(onPressed: _loading ? null : () => _signIn(_authRepository.signInWithGoogle), icon: const Icon(Icons.account_circle_outlined), label: const Text('Continuar con Google')),
               const SizedBox(height: 22),
               const Text('Tu cuenta y tus datos se protegen con Firebase Authentication.', textAlign: TextAlign.center, style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
             ]),
