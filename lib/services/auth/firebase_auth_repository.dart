@@ -31,7 +31,9 @@ class FirebaseAuthRepository implements AuthRepository {
   Future<AuthUser> signInWithGoogle() async {
     UserCredential credential;
     if (kIsWeb) {
-      credential = await _auth.signInWithPopup(GoogleAuthProvider());
+      final provider = GoogleAuthProvider()
+        ..setCustomParameters({'prompt': 'select_account'});
+      credential = await _auth.signInWithPopup(provider);
     } else {
       final account = await _googleSignIn.signIn();
       if (account == null) throw FirebaseAuthException(code: 'cancelled-by-user', message: 'Inicio de sesión cancelado.');

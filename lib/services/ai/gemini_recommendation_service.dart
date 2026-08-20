@@ -8,7 +8,7 @@ import 'ai_recommendation_service.dart';
 class GeminiService {
   static const _modelName = String.fromEnvironment(
     'GEMINI_MODEL',
-    defaultValue: 'gemini-2.0-flash-001',
+    defaultValue: 'gemini-1.5-flash-latest',
   );
 
   GenerativeModel? _model;

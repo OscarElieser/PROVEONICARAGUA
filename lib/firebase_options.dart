@@ -20,31 +20,15 @@ class DefaultFirebaseOptions {
       return web;
     }
     switch (defaultTargetPlatform) {
+      // Las plataformas de escritorio y moviles no estan configuradas.
+      // Se devuelve una configuracion vacia para evitar un crash.
+      // La app usara Mocks en estas plataformas.
       case TargetPlatform.android:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for android - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
       case TargetPlatform.iOS:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for ios - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
       case TargetPlatform.macOS:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for macos - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
       case TargetPlatform.windows:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for windows - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
       case TargetPlatform.linux:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for linux - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return _emptyOptions;
       default:
         throw UnsupportedError(
           'DefaultFirebaseOptions are not supported for this platform.',
@@ -53,12 +37,19 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyAJra8cpQmVzdVtD4rv_tITNU4C6MK5q-s',
-    appId: '1:287507799011:web:8a63dcd6e4d6e655c39ed6',
-    messagingSenderId: '287507799011',
-    projectId: 'proveonicaragua',
-    authDomain: 'proveonicaragua.firebaseapp.com',
-    storageBucket: 'proveonicaragua.firebasestorage.app',
-    measurementId: 'G-QBZBMF1VRD',
+    apiKey: 'AIzaSyA_osHHZBo3gpWOjeR26VaDkMPm55-Zqls',
+    appId: '1:248254644384:web:ff90463639b6319ccd89c5',
+    messagingSenderId: '248254644384',
+    projectId: 'proveonicaragua-43264',
+    authDomain: 'proveonicaragua-43264.firebaseapp.com',
+    storageBucket: 'proveonicaragua-43264.firebasestorage.app',
+    measurementId: 'G-290ZBZ2YWZ',
+  );
+
+  static const FirebaseOptions _emptyOptions = FirebaseOptions(
+    apiKey: '',
+    appId: '',
+    messagingSenderId: '',
+    projectId: '',
   );
 }

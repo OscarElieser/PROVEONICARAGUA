@@ -18,11 +18,11 @@ class FirebaseService {
 
   static Future<bool> initialize() async {
     try {
-      if (Firebase.apps.isEmpty) {
-        await Firebase.initializeApp(
-          options: DefaultFirebaseOptions.currentPlatform,
-        );
-      }
+      final options = DefaultFirebaseOptions.currentPlatform;
+      // Solo inicializar si las opciones son validas (no es una plataforma no configurada)
+      if (options.projectId.isEmpty) return false;
+      if (Firebase.apps.isEmpty) await Firebase.initializeApp(options: options);
+      if (Firebase.apps.isEmpty) return false;
       _initialized = true;
       await _activateAppCheck();
       _analytics = FirebaseAnalytics.instance;

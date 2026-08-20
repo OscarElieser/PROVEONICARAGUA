@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import '../core/theme/app_colors.dart';
 import '../core/widgets/proveo_logo.dart';
 import '../models/models.dart';
+import '../services/auth/auth_repository.dart';
 import '../services/auth/firebase_auth_repository.dart';
+import '../services/firebase/firebase_service.dart';
 import 'app_shell.dart';
 
 /// Acceso real a PROVEO mediante Firebase Authentication.
@@ -16,11 +18,14 @@ class AuthScreen extends StatefulWidget {
 class _AuthScreenState extends State<AuthScreen> {
   final _email = TextEditingController();
   final _password = TextEditingController();
-  FirebaseAuthRepository? _repository;
+  AuthRepository? _repository;
   bool _loading = false;
   String? _error;
 
-  FirebaseAuthRepository get _authRepository => _repository ??= FirebaseAuthRepository();
+  AuthRepository get _authRepository =>
+      _repository ??= FirebaseService.isInitialized
+          ? FirebaseAuthRepository()
+          : MockAuthRepository();
 
   @override
   void dispose() {
@@ -30,13 +35,23 @@ class _AuthScreenState extends State<AuthScreen> {
   }
 
   Future<void> _signIn(Future<AuthUser> Function() action) async {
-    setState(() { _loading = true; _error = null; });
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
     try {
       final user = await action();
       if (!mounted) return;
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => AppShell(user: user)));
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => AppShell(user: user, onSignOut: _signOut),
+        ),
+      );
     } on FirebaseAuthException catch (error) {
       setState(() => _error = _friendlyError(error.code));
+    } on FirebaseException catch (error) {
+      setState(() => _error = 'Firebase: ${error.message ?? error.code}');
     } catch (_) {
       setState(() => _error = 'No pudimos iniciar sesión. Intenta nuevamente.');
     } finally {
@@ -52,9 +67,29 @@ class _AuthScreenState extends State<AuthScreen> {
         return 'El correo o la contraseña no son correctos.';
       case 'invalid-email':
         return 'Escribe un correo electrónico válido.';
+      case 'unauthorized-domain':
+        return 'Este dominio no está autorizado en Firebase. Agrega localhost en Authentication > Settings > Authorized domains.';
+      case 'operation-not-allowed':
+        return 'Google Sign-In no está habilitado en Firebase Authentication.';
+      case 'popup-blocked':
+        return 'El navegador bloqueó la ventana de Google. Permite ventanas emergentes para esta aplicación.';
+      case 'popup-closed-by-user':
+        return 'La ventana de Google se cerró antes de completar el acceso.';
+      case 'network-request-failed':
+        return 'No hay conexión con Firebase. Revisa tu red e inténtalo de nuevo.';
       default:
         return 'No pudimos iniciar sesión. Revisa tu conexión e inténtalo de nuevo.';
     }
+  }
+
+  Future<void> _signOut() async {
+    await _authRepository.signOut();
+    if (!mounted) return;
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (_) => const AuthScreen()),
+      (_) => false,
+    );
   }
 
   @override
@@ -65,24 +100,64 @@ class _AuthScreenState extends State<AuthScreen> {
           constraints: const BoxConstraints(maxWidth: 460),
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(24),
-            child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-              const ProveoLogo(height: 58),
-              const SizedBox(height: 34),
-              Text('Bienvenido a PROVEO', style: Theme.of(context).textTheme.headlineLarge),
-              const SizedBox(height: 8),
-              const Text('Conecta con proveedores confiables y toma mejores decisiones.', style: TextStyle(color: AppColors.textSecondary)),
-              const SizedBox(height: 28),
-              TextField(controller: _email, keyboardType: TextInputType.emailAddress, decoration: const InputDecoration(labelText: 'Correo electrónico', prefixIcon: Icon(Icons.email_outlined))),
-              const SizedBox(height: 14),
-              TextField(controller: _password, obscureText: true, decoration: const InputDecoration(labelText: 'Contraseña', prefixIcon: Icon(Icons.lock_outline))),
-              if (_error != null) ...[const SizedBox(height: 14), Text(_error!, style: const TextStyle(color: AppColors.error))],
-              const SizedBox(height: 22),
-              FilledButton(onPressed: _loading ? null : () => _signIn(() => _authRepository.signIn(_email.text.trim(), _password.text)), child: _loading ? const CircularProgressIndicator() : const Text('Iniciar sesión')),
-              const SizedBox(height: 12),
-              OutlinedButton.icon(onPressed: _loading ? null : () => _signIn(_authRepository.signInWithGoogle), icon: const Icon(Icons.account_circle_outlined), label: const Text('Continuar con Google')),
-              const SizedBox(height: 22),
-              const Text('Tu cuenta y tus datos se protegen con Firebase Authentication.', textAlign: TextAlign.center, style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
-            ]),
+            child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const ProveoLogo(height: 58),
+                  const SizedBox(height: 34),
+                  Text('Bienvenido a PROVEO',
+                      style: Theme.of(context).textTheme.headlineLarge),
+                  const SizedBox(height: 8),
+                  const Text(
+                      'Conecta con proveedores confiables y toma mejores decisiones.',
+                      style: TextStyle(color: AppColors.textSecondary)),
+                  const SizedBox(height: 28),
+                  TextField(
+                      controller: _email,
+                      keyboardType: TextInputType.emailAddress,
+                      decoration: const InputDecoration(
+                          labelText: 'Correo electrónico',
+                          prefixIcon: Icon(Icons.email_outlined))),
+                  const SizedBox(height: 14),
+                  TextField(
+                      controller: _password,
+                      obscureText: true,
+                      decoration: const InputDecoration(
+                          labelText: 'Contraseña',
+                          prefixIcon: Icon(Icons.lock_outline))),
+                  if (_error != null) ...[
+                    const SizedBox(height: 14),
+                    Text(_error!,
+                        style: const TextStyle(color: AppColors.error))
+                  ],
+                  const SizedBox(height: 22),
+                  FilledButton(
+                    onPressed: _loading
+                        ? null
+                        : () => _signIn(() => _authRepository.signIn(
+                            _email.text.trim(), _password.text)),
+                    child: _loading
+                        ? const SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(
+                                strokeWidth: 3, color: Colors.white))
+                        : const Text('Iniciar sesión'),
+                  ),
+                  const SizedBox(height: 12),
+                  OutlinedButton.icon(
+                      onPressed: _loading
+                          ? null
+                          : () => _signIn(_authRepository.signInWithGoogle),
+                      icon: const Icon(Icons.account_circle_outlined),
+                      label: const Text('Continuar con Google')),
+                  const SizedBox(height: 22),
+                  const Text(
+                      'Tu cuenta y tus datos se protegen con Firebase Authentication.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                          color: AppColors.textSecondary, fontSize: 12)),
+                ]),
           ),
         ),
       ),
