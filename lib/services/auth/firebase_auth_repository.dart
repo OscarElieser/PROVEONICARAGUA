@@ -5,7 +5,7 @@ import '../../models/models.dart';
 import 'auth_repository.dart';
 import '../firebase/firestore_repository.dart';
 
-/// Implementacion real de autenticacion para Firebase Auth.
+/// Implementación real de autenticación para Firebase Auth.
 class FirebaseAuthRepository implements AuthRepository {
   final FirebaseAuth _auth;
   final GoogleSignIn _googleSignIn;
@@ -26,7 +26,27 @@ class FirebaseAuthRepository implements AuthRepository {
     try {
       await _repository.saveUser(user);
     } catch (_) {
-      // No bloquea la sesion si falla la actualizacion en base de datos
+      // No bloquea la sesión si falla la actualización en base de datos
+    }
+    return user;
+  }
+
+  @override
+  Future<AuthUser> signUp(String email, String password, String name, UserRole role) async {
+    final credential = await _auth.createUserWithEmailAndPassword(email: email, password: password);
+    if (credential.user != null && name.isNotEmpty) {
+      await credential.user!.updateDisplayName(name);
+    }
+    final user = AuthUser(
+      id: credential.user!.uid,
+      name: name.isNotEmpty ? name : (credential.user!.displayName ?? 'Usuario PROVEO'),
+      email: email,
+      role: role,
+    );
+    try {
+      await _repository.saveUser(user);
+    } catch (_) {
+      // No bloquea el registro si falla el guardado adicional
     }
     return user;
   }
@@ -49,7 +69,7 @@ class FirebaseAuthRepository implements AuthRepository {
     try {
       await _repository.saveUser(user);
     } catch (_) {
-      // No bloquea la sesion si falla la sincronizacion
+      // No bloquea la sesión si falla la sincronización
     }
     return user;
   }

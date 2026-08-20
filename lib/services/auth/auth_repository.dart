@@ -1,15 +1,16 @@
 import '../../models/models.dart';
 
-/// Contrato de autenticacion. Firebase Auth puede implementarlo sin cambiar
+/// Contrato de autenticación. Firebase Auth puede implementarlo sin cambiar
 /// las pantallas ni los casos de uso.
 abstract interface class AuthRepository {
   AuthUser? get currentUser;
   Future<AuthUser> signIn(String email, String password);
+  Future<AuthUser> signUp(String email, String password, String name, UserRole role);
   Future<AuthUser> signInWithGoogle();
   Future<void> signOut();
 }
 
-/// Sesion demo para ejecutar PROVEO sin credenciales externas.
+/// Sesión demo para ejecutar PROVEO sin credenciales externas.
 class MockAuthRepository implements AuthRepository {
   AuthUser? _currentUser = const AuthUser(
     id: 'demo-entrepreneur',
@@ -32,6 +33,17 @@ class MockAuthRepository implements AuthRepository {
     } else {
       _currentUser = const AuthUser(id: 'demo-entrepreneur', name: 'Carlos González', email: 'emprendedor@demo.proveo', role: UserRole.entrepreneur);
     }
+    return _currentUser!;
+  }
+
+  @override
+  Future<AuthUser> signUp(String email, String password, String name, UserRole role) async {
+    _currentUser = AuthUser(
+      id: 'demo-user-${DateTime.now().millisecondsSinceEpoch}',
+      name: name,
+      email: email,
+      role: role,
+    );
     return _currentUser!;
   }
 
