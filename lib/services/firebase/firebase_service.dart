@@ -14,7 +14,14 @@ class FirebaseService {
 
   static FirebaseAnalytics? get analytics => _analytics;
   static bool get isInitialized => _initialized;
-  static FirebaseFirestore get firestore => FirebaseFirestore.instance;
+  // Conecta a la base de datos 'proveodb' creada en Firebase Console
+  static FirebaseFirestore get firestore {
+    try {
+      return FirebaseFirestore.instanceFor(app: Firebase.app(), databaseId: 'proveodb');
+    } catch (_) {
+      return FirebaseFirestore.instance;
+    }
+  }
 
   static Future<bool> initialize() async {
     try {
@@ -24,7 +31,18 @@ class FirebaseService {
       if (Firebase.apps.isEmpty) await Firebase.initializeApp(options: options);
       if (Firebase.apps.isEmpty) return false;
       _initialized = true;
-      await _activateAppCheck();
+      
+      // Activa Firebase App Check (utilizará el token de depuración declarado en index.html en desarrollo web)
+      try {
+        await FirebaseAppCheck.instance.activate(
+          webProvider: ReCaptchaV3Provider('6Ld_placeholder'), // Se complementa con self.FIREBASE_APPCHECK_DEBUG_TOKEN
+          androidProvider: AndroidProvider.debug,
+          appleProvider: AppleProvider.debug,
+        );
+      } catch (e) {
+        debugPrint('App Check Info: $e');
+      }
+
       _analytics = FirebaseAnalytics.instance;
       await _analytics!.logAppOpen();
       return true;
@@ -34,18 +52,6 @@ class FirebaseService {
     } on FirebaseException {
       _initialized = false;
       return false;
-    }
-  }
-
-  static Future<void> _activateAppCheck() async {
-    if (String.fromEnvironment('FIREBASE_APPCHECK_ENABLED') != 'true') return;
-    final appCheck = FirebaseAppCheck.instance;
-    if (kIsWeb) {
-      final siteKey = String.fromEnvironment('FIREBASE_APPCHECK_WEB_KEY');
-      if (siteKey.isEmpty) return;
-      await appCheck.activate(webProvider: ReCaptchaV3Provider(siteKey));
-    } else {
-      await appCheck.activate();
     }
   }
 }

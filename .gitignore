@@ -27,9 +27,11 @@ google-services.json
 GoogleService-Info.plist
 *.service-account.json
 service-account*.json
+proveo-service-account.json
 
 # Firebase local development files
 .firebase/
+.genkit/
 
 # Web development files (if you use npm/yarn in your project)
 node_modules/

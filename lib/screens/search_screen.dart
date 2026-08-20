@@ -14,9 +14,10 @@ class SearchScreen extends StatelessWidget {
         appBar: AppBar(title: const Text('Buscar proveedores')),
         body: LayoutBuilder(builder: (context, constraints) {
           final desktop = constraints.maxWidth >= 900;
-          final results = const _ResultsPanel();
+          const results = _ResultsPanel(); // Constante en tiempo de compilacion para evitar reconstrucciones innecesarias
           if (!desktop) return ListView(padding: const EdgeInsets.all(20), children: [const TextField(decoration: InputDecoration(prefixIcon: Icon(Icons.search), hintText: 'Buscar productos, servicios o proveedores')), const SizedBox(height: 14), OutlinedButton.icon(onPressed: () {}, icon: const Icon(Icons.tune), label: const Text('Filtros y orden')), const SizedBox(height: 20), results]);
-          return Row(crossAxisAlignment: CrossAxisAlignment.start, children: [const SizedBox(width: 250, child: _FiltersPanel()), Expanded(child: Padding(padding: const EdgeInsets.only(left: 24), child: results))]);
+          // Retorna layout de dos columnas: panel de filtros a la izquierda y resultados a la derecha
+          return const Row(crossAxisAlignment: CrossAxisAlignment.start, children: [SizedBox(width: 250, child: _FiltersPanel()), Expanded(child: Padding(padding: EdgeInsets.only(left: 24), child: results))]);
         }),
       );
 }
@@ -24,7 +25,57 @@ class SearchScreen extends StatelessWidget {
 class _FiltersPanel extends StatelessWidget {
   const _FiltersPanel();
   @override
-  Widget build(BuildContext context) => Container(padding: const EdgeInsets.fromLTRB(24, 20, 18, 24), decoration: const BoxDecoration(color: AppColors.surface, border: Border(right: BorderSide(color: AppColors.border))), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Row(children: [Text('Filtros', style: Theme.of(context).textTheme.titleLarge), const Spacer(), TextButton(onPressed: () {}, child: const Text('Limpiar'))]), const SizedBox(height: 18), const Text('Categoría', style: TextStyle(fontWeight: FontWeight.w700)), const SizedBox(height: 8), DropdownButtonFormField<String>(initialValue: 'Todas las categorías', items: const [DropdownMenuItem(value: 'Todas las categorías', child: Text('Todas las categorías')), DropdownMenuItem(value: 'Empaques', child: Text('Empaques'))], onChanged: null), const SizedBox(height: 16), const Text('Ubicación', style: TextStyle(fontWeight: FontWeight.w700)), const SizedBox(height: 8), DropdownButtonFormField<String>(initialValue: 'Managua', items: const [DropdownMenuItem(value: 'Managua', child: Text('Managua')), DropdownMenuItem(value: 'Masaya', child: Text('Masaya'))], onChanged: null), const SizedBox(height: 16), const Text('Calificación mínima', style: TextStyle(fontWeight: FontWeight.w700)), const SizedBox(height: 8), const Text('★★★★☆  4 estrellas o más', style: TextStyle(color: AppColors.warning)), const SizedBox(height: 18), SizedBox(width: double.infinity, child: FilledButton(onPressed: () {}, child: const Text('Aplicar filtros')))]));
+  Widget build(BuildContext context) => Container(
+      // Contenedor del panel de filtros lateral
+      padding: const EdgeInsets.fromLTRB(24, 20, 18, 24),
+      decoration: const BoxDecoration(
+        color: AppColors.surface, // Fondo blanco del panel
+        border: Border(right: BorderSide(color: AppColors.border)), // Borde derecho separador
+      ),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        // Fila encabezado con titulo y boton limpiar
+        Row(children: [
+          Text('Filtros', style: Theme.of(context).textTheme.titleLarge),
+          const Spacer(),
+          TextButton(onPressed: () {}, child: const Text('Limpiar')),
+        ]),
+        const SizedBox(height: 18),
+        // Filtro de categoria
+        const Text('Categoría', style: TextStyle(fontWeight: FontWeight.w700)),
+        const SizedBox(height: 8),
+        DropdownButtonFormField<String>(
+          value: 'Todas las categorías', // 'value' es el parametro correcto (no 'initialValue')
+          items: const [
+            DropdownMenuItem(value: 'Todas las categorías', child: Text('Todas las categorías')),
+            DropdownMenuItem(value: 'Empaques', child: Text('Empaques')),
+          ],
+          onChanged: null, // Deshabilitado por ahora, se habilita con logica de filtros
+        ),
+        const SizedBox(height: 16),
+        // Filtro de ubicacion
+        const Text('Ubicación', style: TextStyle(fontWeight: FontWeight.w700)),
+        const SizedBox(height: 8),
+        DropdownButtonFormField<String>(
+          value: 'Managua', // 'value' es el parametro correcto (no 'initialValue')
+          items: const [
+            DropdownMenuItem(value: 'Managua', child: Text('Managua')),
+            DropdownMenuItem(value: 'Masaya', child: Text('Masaya')),
+          ],
+          onChanged: null, // Deshabilitado por ahora
+        ),
+        const SizedBox(height: 16),
+        // Filtro de calificacion minima
+        const Text('Calificación mínima', style: TextStyle(fontWeight: FontWeight.w700)),
+        const SizedBox(height: 8),
+        const Text('★★★★☆  4 estrellas o más', style: TextStyle(color: AppColors.warning)),
+        const SizedBox(height: 18),
+        // Boton para aplicar todos los filtros seleccionados
+        SizedBox(
+          width: double.infinity,
+          child: FilledButton(onPressed: () {}, child: const Text('Aplicar filtros')),
+        ),
+      ]),
+    );
 }
 
 class _ResultsPanel extends StatelessWidget {

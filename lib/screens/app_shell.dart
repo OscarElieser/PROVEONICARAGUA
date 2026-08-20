@@ -54,12 +54,16 @@ class _AppShellState extends State<AppShell> {
       const NavigationDestination(
           icon: Icon(Icons.person_outline), label: 'Perfil')
     ];
-    if (widget.user.role == UserRole.provider)
+    // Agrega destino de panel proveedor si el usuario tiene rol de proveedor
+    if (widget.user.role == UserRole.provider) {
       destinations.add(const NavigationDestination(
           icon: Icon(Icons.storefront_outlined), label: 'Empresa'));
-    if (widget.user.role == UserRole.admin)
+    }
+    // Agrega destino de panel admin si el usuario tiene rol de administrador
+    if (widget.user.role == UserRole.admin) {
       destinations.add(const NavigationDestination(
           icon: Icon(Icons.admin_panel_settings_outlined), label: 'Admin'));
+    }
     return Scaffold(
         body: Row(
             children: [if (desktop) _sidebar(), Expanded(child: pages[index])]),

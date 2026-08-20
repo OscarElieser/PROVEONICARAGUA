@@ -1,5 +1,12 @@
 {
+  "scripts": {
+    "genkit:dev": "genkit start -- node genkit-proveo.mjs",
+    "genkit:run": "node genkit-proveo.mjs"
+  },
   "dependencies": {
-    "firebase": "^12.18.0"
+    "@genkit-ai/firebase": "^1.41.0",
+    "@genkit-ai/googleai": "^1.28.0",
+    "firebase": "^12.18.0",
+    "genkit": "^1.41.0"
   }
 }

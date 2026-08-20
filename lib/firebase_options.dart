@@ -36,14 +36,16 @@ class DefaultFirebaseOptions {
     }
   }
 
+  /// Configuracion oficial del proyecto Firebase de PROVEO Nicaragua.
+  /// Credenciales para la plataforma web (Flutter Web / PWA).
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyA_osHHZBo3gpWOjeR26VaDkMPm55-Zqls',
-    appId: '1:248254644384:web:ff90463639b6319ccd89c5',
-    messagingSenderId: '248254644384',
-    projectId: 'proveonicaragua-43264',
-    authDomain: 'proveonicaragua-43264.firebaseapp.com',
-    storageBucket: 'proveonicaragua-43264.firebasestorage.app',
-    measurementId: 'G-290ZBZ2YWZ',
+    apiKey: 'AIzaSyCIQif5gmNmFvaiMmt32HQsUFMeUQ-mz8Q',          // Clave API del proyecto Firebase
+    appId: '1:248254644384:web:ff90463639b6319ccd89c5',          // ID unico de la app web en Firebase
+    messagingSenderId: '248254644384',                             // ID del remitente para Cloud Messaging
+    projectId: 'proveonicaragua-43264',                            // ID del proyecto en Firebase Console
+    authDomain: 'proveonicaragua-43264.firebaseapp.com',          // Dominio autorizado para autenticacion
+    storageBucket: 'proveonicaragua-43264.firebasestorage.app',   // Bucket de Firebase Storage
+    measurementId: 'G-290ZBZ2YWZ',                                // ID de medicion para Google Analytics
   );
 
   static const FirebaseOptions _emptyOptions = FirebaseOptions(

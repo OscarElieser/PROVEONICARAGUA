@@ -1,7 +1,7 @@
 {
 	"firestore": {
 		"rules": "firestore.rules",
-		"database": "(default)"
+		"database": "proveodb"
 	},
 	"hosting": {
 		"public": "build/web",

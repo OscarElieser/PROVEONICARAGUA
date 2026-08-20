@@ -32,11 +32,6 @@
 
   <title>PROVEO | Conectamos confianza</title>
   <link rel="manifest" href="manifest.json">
-  <script>
-    // This script enables debugging for Firebase App Check.
-    // It must be in the head to ensure it's executed before the Flutter app loads.
-    self.FIREBASE_APPCHECK_DEBUG_TOKEN = true;
-  </script>
 </head><body><!--
     You can customize the "flutter_bootstrap.js" script.
     This is useful to provide a custom configuration to the Flutter loader
@@ -45,6 +40,9 @@
     For more details:
     * https://docs.flutter.dev/platform-integration/web/initialization
   -->
+  <script>
+    self.FIREBASE_APPCHECK_DEBUG_TOKEN = '31396ADD-B467-46E5-A292-D3E1297BD236';
+  </script>
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>

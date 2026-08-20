@@ -22,8 +22,12 @@ class FirebaseAuthRepository implements AuthRepository {
   @override
   Future<AuthUser> signIn(String email, String password) async {
     final credential = await _auth.signInWithEmailAndPassword(email: email, password: password);
-    final user = await _withStoredRole(_requireUser(credential.user));
-    await _repository.saveUser(user);
+    final user = await _safeWithStoredRole(_requireUser(credential.user));
+    try {
+      await _repository.saveUser(user);
+    } catch (_) {
+      // No bloquea la sesion si falla la actualizacion en base de datos
+    }
     return user;
   }
 
@@ -41,9 +45,22 @@ class FirebaseAuthRepository implements AuthRepository {
       final googleCredential = GoogleAuthProvider.credential(idToken: authentication.idToken);
       credential = await _auth.signInWithCredential(googleCredential);
     }
-    final user = await _withStoredRole(_requireUser(credential.user));
-    await _repository.saveUser(user);
+    final user = await _safeWithStoredRole(_requireUser(credential.user));
+    try {
+      await _repository.saveUser(user);
+    } catch (_) {
+      // No bloquea la sesion si falla la sincronizacion
+    }
     return user;
+  }
+
+  Future<AuthUser> _safeWithStoredRole(AuthUser user) async {
+    try {
+      final role = await _repository.getUserRole(user.id);
+      return role == null ? user : AuthUser(id: user.id, name: user.name, email: user.email, role: role);
+    } catch (_) {
+      return user;
+    }
   }
 
   @override
@@ -56,11 +73,6 @@ class FirebaseAuthRepository implements AuthRepository {
     final mapped = _mapUser(user);
     if (mapped == null) throw FirebaseAuthException(code: 'user-not-found', message: 'No se pudo recuperar la sesión.');
     return mapped;
-  }
-
-  Future<AuthUser> _withStoredRole(AuthUser user) async {
-    final role = await _repository.getUserRole(user.id);
-    return role == null ? user : AuthUser(id: user.id, name: user.name, email: user.email, role: role);
   }
 
   AuthUser? _mapUser(User? user) => user == null ? null : AuthUser(id: user.uid, name: user.displayName ?? 'Usuario PROVEO', email: user.email ?? '', role: UserRole.entrepreneur);
