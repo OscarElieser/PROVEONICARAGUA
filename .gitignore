@@ -13,3 +13,5 @@ package.json
 service-account*.json
 google-services.json
 GoogleService-Info.plist
+.firebase/
+*.log
