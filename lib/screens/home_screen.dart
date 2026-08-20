@@ -11,7 +11,7 @@ import 'dart:async';
 import '../core/widgets/premium_footer.dart';
 import '../core/widgets/premium_header.dart';
 
-/// Home premium centrada en confianza, descubrimiento y PROVEO Match.
+/// Home centrada en confianza, descubrimiento y PROVEO Match.
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 

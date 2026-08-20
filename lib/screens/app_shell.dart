@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../core/theme/app_colors.dart';
+import '../core/providers/auth_provider.dart';
 import '../models/models.dart';
 import 'chat_screen.dart';
 import 'admin_dashboard_screen.dart';
@@ -15,9 +17,8 @@ import 'about_us_screen.dart';
 /// para dar 100% de visibilidad panorámica a las páginas principales.
 class AppShell extends StatefulWidget {
   final AuthUser user;
-  final Future<void> Function() onSignOut;
 
-  const AppShell({super.key, required this.user, required this.onSignOut});
+  const AppShell({super.key, required this.user});
 
   @override
   State<AppShell> createState() => _AppShellState();
@@ -37,7 +38,7 @@ class _AppShellState extends State<AppShell> {
       const MatchScreen(),
       const QuotationsScreen(),
       const ChatScreen(),
-      ProfileScreen(user: widget.user, onSignOut: widget.onSignOut),
+      ProfileScreen(user: widget.user),
       if (widget.user.role == UserRole.provider)
         const ProviderDashboardScreen(),
       if (widget.user.role == UserRole.admin) const AdminDashboardScreen()
@@ -226,7 +227,7 @@ class _AppShellState extends State<AppShell> {
                 ),
                 onPressed: () async {
                   Navigator.of(context).pop();
-                  await widget.onSignOut();
+                  await Provider.of<AuthProvider>(context, listen: false).signOut();
                 },
                 icon: const Icon(Icons.logout_rounded, size: 18, color: Colors.white70),
                 label: const Text('Cerrar Sesión', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),

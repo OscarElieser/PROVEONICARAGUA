@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../core/theme/app_colors.dart';
 import '../models/models.dart';
+import '../services/ai/company_intelligence_service.dart';
 import '../services/firebase/firestore_repository.dart';
 import '../core/widgets/premium_header.dart';
 import '../core/widgets/premium_footer.dart';
@@ -15,6 +17,8 @@ class QuotationRequestScreen extends StatefulWidget {
 
 class _QuotationRequestScreenState extends State<QuotationRequestScreen> {
   int step = 0;
+  final _companyAi = CompanyIntelligenceService();
+  final Map<String, Future<CompanyIntelligenceReport>> _companyReports = {};
 
   // Form State
   final _productCtrl = TextEditingController(text: 'Empaque plástico termoformado y galoneras');
@@ -61,6 +65,45 @@ class _QuotationRequestScreenState extends State<QuotationRequestScreen> {
     },
   ];
 
+  Future<CompanyIntelligenceReport> _reportFor(Map<String, dynamic> provider) {
+    final name = provider['name'] as String;
+    return _companyReports.putIfAbsent(name, () {
+      return _companyAi.buildReport(
+        provider: ProviderModel(
+          id: name.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]+'), '_'),
+          name: name,
+          location: provider['location'] as String,
+          category: 'Empaques',
+          description: 'Proveedor candidato para cotizacion de empaques plasticos y soluciones B2B.',
+          logo: name.substring(0, 2).toUpperCase(),
+          rating: provider['rating'] as double,
+          reviews: name.contains('PlastiPack')
+              ? 128
+              : name.contains('Evanplast')
+                  ? 89
+                  : 64,
+          years: name.contains('PlastiPack')
+              ? 16
+              : name.contains('Evanplast')
+                  ? 12
+                  : 9,
+          responseTime: provider['response'] as String,
+          featured: provider['tag'] == 'Top Verificado',
+        ),
+        product: _productCtrl.text,
+        description: _descCtrl.text,
+        quantity: _quantityCtrl.text,
+        budget: _budgetCtrl.text,
+        deliveryLocation: _locationCtrl.text,
+        requirements: _selectedFeatures,
+      );
+    });
+  }
+
+  static Future<void> _openSource(String url) async {
+    await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+  }
+
   @override
   void dispose() {
     _productCtrl.dispose();
@@ -73,6 +116,7 @@ class _QuotationRequestScreenState extends State<QuotationRequestScreen> {
 
   void _next() {
     if (step < 2) {
+      if (step == 0) _companyReports.clear();
       setState(() => step++);
     } else {
       _submitQuotation();
@@ -90,14 +134,21 @@ class _QuotationRequestScreenState extends State<QuotationRequestScreen> {
   Future<void> _submitQuotation() async {
     final messenger = ScaffoldMessenger.of(context);
     final nav = Navigator.of(context);
+    final selectedProviders = _providers.where((p) => p['selected'] == true).toList();
+    final providerLabel = selectedProviders.isEmpty
+        ? 'Sin proveedor seleccionado'
+        : selectedProviders.map((p) => p['name']).join(' & ');
+    final bestRating = selectedProviders.isEmpty
+        ? 0.0
+        : selectedProviders.map((p) => p['rating'] as double).reduce((a, b) => a > b ? a : b);
 
     // Guardar cotización en Firestore
     await FirestoreRepository().saveQuotation(
       QuotationModel(
-        provider: 'PlastiPack & Evanplast (Solicitud Múltiple)',
+        provider: '$providerLabel (Solicitud IA reforzada)',
         price: 11500,
         deliveryDays: 4,
-        rating: 4.8,
+        rating: bestRating,
         distance: 8.2,
         status: 'Pendiente',
       ),
@@ -389,7 +440,9 @@ class _QuotationRequestScreenState extends State<QuotationRequestScreen> {
         const SizedBox(height: 14),
         ..._providers.map((p) {
           final isSelected = p['selected'] as bool;
-          return Container(
+          return Column(
+            children: [
+              Container(
             margin: const EdgeInsets.only(bottom: 12),
             decoration: BoxDecoration(
               color: isSelected ? AppColors.paleBlue : Colors.white,
@@ -404,11 +457,16 @@ class _QuotationRequestScreenState extends State<QuotationRequestScreen> {
               activeColor: AppColors.navy,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
               onChanged: (val) {
-                setState(() => p['selected'] = val ?? false);
+                setState(() {
+                  p['selected'] = val ?? false;
+                  if (p['selected'] == true) _reportFor(p);
+                });
               },
               title: Row(
                 children: [
-                  Text(p['name'] as String, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
+                  Expanded(
+                    child: Text(p['name'] as String, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
+                  ),
                   const SizedBox(width: 8),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
@@ -428,6 +486,18 @@ class _QuotationRequestScreenState extends State<QuotationRequestScreen> {
                 style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
               ),
             ),
+              ),
+              if (isSelected)
+                FutureBuilder<CompanyIntelligenceReport>(
+                  future: _reportFor(p),
+                  builder: (context, snapshot) {
+                    if (!snapshot.hasData) {
+                      return const _CompanyIntelligenceLoading();
+                    }
+                    return _CompanyIntelligencePanel(report: snapshot.data!);
+                  },
+                ),
+            ],
           );
         }),
       ],
@@ -487,12 +557,152 @@ class _QuotationRequestScreenState extends State<QuotationRequestScreen> {
           label: 'Proveedores:',
           value: _providers.where((p) => p['selected'] == true).map((p) => p['name']).join(', '),
         ),
+        const SizedBox(height: 18),
+        const Text('Checklist IA para compra satisfecha:', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14)),
+        const SizedBox(height: 10),
+        const _AiChecklistItem(text: 'Validar actividad de la empresa en Google, Facebook, Instagram, TikTok y YouTube.'),
+        const _AiChecklistItem(text: 'Solicitar muestra, ficha tecnica, MOQ, precio final y fecha exacta de entrega.'),
+        const _AiChecklistItem(text: 'Confirmar condiciones por escrito antes de emitir orden de compra.'),
       ],
     );
   }
 }
 
 // ── Fila de Resumen ───────────────────────────────────────────────────
+class _CompanyIntelligenceLoading extends StatelessWidget {
+  const _CompanyIntelligenceLoading();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: const Row(
+        children: [
+          SizedBox(
+            width: 16,
+            height: 16,
+            child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.trustGreen),
+          ),
+          SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              'IA fortaleciendo datos de empresa y preparando fuentes externas...',
+              style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CompanyIntelligencePanel extends StatelessWidget {
+  final CompanyIntelligenceReport report;
+
+  const _CompanyIntelligencePanel({required this.report});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 14),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.navy,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppColors.trustGreen.withValues(alpha: 0.5)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.auto_awesome_rounded, color: AppColors.trustGreen, size: 18),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'IA de respaldo: ${report.providerName}',
+                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 13.5),
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: AppColors.trustGreen,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  '${report.confidenceScore}% confianza',
+                  style: const TextStyle(color: Colors.white, fontSize: 10.5, fontWeight: FontWeight.w900),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Text(report.summary, style: const TextStyle(color: Colors.white, fontSize: 12.5, height: 1.45)),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: report.sources.map((source) {
+              return ActionChip(
+                avatar: const Icon(Icons.open_in_new_rounded, size: 14, color: AppColors.navy),
+                label: Text(source.name),
+                labelStyle: const TextStyle(color: AppColors.navy, fontSize: 11, fontWeight: FontWeight.w800),
+                backgroundColor: Colors.white,
+                side: BorderSide.none,
+                onPressed: () => _QuotationRequestScreenState._openSource(source.url),
+              );
+            }).toList(),
+          ),
+          const SizedBox(height: 12),
+          ...report.recommendedQuestions.take(2).map(
+                (question) => Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Icon(Icons.check_circle_outline_rounded, color: AppColors.trustGreen, size: 15),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(question, style: const TextStyle(color: Colors.white70, fontSize: 11.5, height: 1.35)),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AiChecklistItem extends StatelessWidget {
+  final String text;
+
+  const _AiChecklistItem({required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(Icons.task_alt_rounded, color: AppColors.trustGreen, size: 17),
+          const SizedBox(width: 8),
+          Expanded(child: Text(text, style: const TextStyle(color: AppColors.textSecondary, fontSize: 12.5))),
+        ],
+      ),
+    );
+  }
+}
+
 class _SummaryRow extends StatelessWidget {
   final String label;
   final String value;
@@ -607,3 +817,4 @@ class _Line extends StatelessWidget {
     );
   }
 }
+

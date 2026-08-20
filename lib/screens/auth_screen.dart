@@ -1,13 +1,9 @@
-// Importaciones necesarias para autenticación Firebase y UI de Flutter
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../core/theme/app_colors.dart';
 import '../core/widgets/proveo_logo.dart';
 import '../models/models.dart';
-import '../services/auth/auth_repository.dart';
-import '../services/auth/firebase_auth_repository.dart';
-import '../services/firebase/firebase_service.dart';
-import 'app_shell.dart';
+import '../core/providers/auth_provider.dart';
 
 /// Pantalla de acceso ultra-premium de PROVEO con soporte Firebase y modo explorador invitado.
 class AuthScreen extends StatefulWidget {
@@ -23,14 +19,8 @@ class _AuthScreenState extends State<AuthScreen> {
   final _name = TextEditingController();
   bool _isSignUp = false;
   bool _obscurePassword = true;
-  AuthRepository? _repository;
   bool _loading = false;
   String? _error;
-
-  AuthRepository get _authRepository =>
-      _repository ??= FirebaseService.isInitialized
-          ? FirebaseAuthRepository()
-          : MockAuthRepository();
 
   @override
   void dispose() {
@@ -40,37 +30,23 @@ class _AuthScreenState extends State<AuthScreen> {
     super.dispose();
   }
 
-  Future<void> _signIn(Future<AuthUser> Function() action) async {
-    setState(() {
-      _loading = true;
-      _error = null;
-    });
+  Future<void> _signIn() async {
+    setState(() { _loading = true; _error = null; });
     try {
-      final email = _email.text.trim();
-      final password = _password.text;
-
-      // Acceso de respaldo rápido si se ingresa cuenta demo
-      if (email.contains('demo') || email.endsWith('@demo.proveo')) {
-        final mock = MockAuthRepository();
-        final user = await mock.signIn(email, password);
-        if (!mounted) return;
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => AppShell(user: user, onSignOut: _signOut)),
+      final auth = Provider.of<AuthProvider>(context, listen: false);
+      if (_isSignUp) {
+        await auth.signUp(
+          _email.text.trim(),
+          _password.text,
+          _name.text.trim().isEmpty ? 'Nueva Empresa' : _name.text.trim(),
+          UserRole.entrepreneur,
         );
-        return;
+      } else {
+        await auth.signIn(_email.text.trim(), _password.text);
       }
-
-      final user = await action();
-      if (!mounted) return;
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => AppShell(user: user, onSignOut: _signOut)),
-      );
-    } on FirebaseAuthException catch (e) {
-      setState(() => _error = _friendlyError(e.code));
-    } on FirebaseException catch (e) {
-      setState(() => _error = 'Firebase: ${e.message ?? e.code}');
+      if (mounted && auth.errorMessage != null) {
+        setState(() => _error = auth.errorMessage);
+      }
     } catch (e) {
       setState(() => _error = 'Error al iniciar sesión: $e');
     } finally {
@@ -78,56 +54,28 @@ class _AuthScreenState extends State<AuthScreen> {
     }
   }
 
-  Future<void> _startGuestVisit() async {
-    setState(() => _loading = true);
-    // Sesión de visita guiada como emprendedor
-    const guestUser = AuthUser(
-      id: 'guest_session',
-      name: 'Visitante Invitado',
-      email: 'invitado@proveo.ni',
-      role: UserRole.entrepreneur,
-    );
-    await Future.delayed(const Duration(milliseconds: 350));
-    if (!mounted) return;
-    setState(() => _loading = false);
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (_) => AppShell(user: guestUser, onSignOut: _signOut)),
-    );
-  }
-
-  String _friendlyError(String code) {
-    switch (code) {
-      case 'invalid-credential':
-      case 'wrong-password':
-      case 'user-not-found':
-        return 'Correo o contraseña incorrectos. Verifica tus datos e intenta de nuevo.';
-      case 'email-already-in-use':
-        return 'Este correo ya tiene una cuenta registrada. Por favor inicia sesión.';
-      case 'invalid-email':
-        return 'Escribe un correo electrónico válido.';
-      case 'weak-password':
-        return 'La contraseña debe tener al menos 6 caracteres.';
-      case 'popup-blocked':
-        return 'Tu navegador bloqueó la ventana de Google. Habilita las ventanas emergentes.';
-      case 'popup-closed-by-user':
-      case 'cancelled-by-user':
-        return 'La autenticación con Google fue cancelada.';
-      case 'network-request-failed':
-        return 'Sin conexión con el servidor. Revisa tu red.';
-      default:
-        return 'No pudimos autenticarte en este momento. Intenta de nuevo.';
+  Future<void> _signInWithGoogle() async {
+    setState(() { _loading = true; _error = null; });
+    try {
+      final auth = Provider.of<AuthProvider>(context, listen: false);
+      await auth.signInWithGoogle();
+      if (mounted && auth.errorMessage != null) {
+        setState(() => _error = auth.errorMessage);
+      }
+    } catch (e) {
+      setState(() => _error = 'Error con Google: $e');
+    } finally {
+      if (mounted) setState(() => _loading = false);
     }
   }
 
-  Future<void> _signOut() async {
-    await _authRepository.signOut();
-    if (!mounted) return;
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(builder: (_) => const AuthScreen()),
-      (_) => false,
-    );
+  Future<void> _startGuestVisit() async {
+    setState(() => _loading = true);
+    try {
+      await Provider.of<AuthProvider>(context, listen: false).startGuestVisit();
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
   }
 
   @override
@@ -380,20 +328,7 @@ class _AuthScreenState extends State<AuthScreen> {
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                               elevation: 2,
                             ),
-                            onPressed: _loading
-                                ? null
-                                : () {
-                                    if (_isSignUp) {
-                                      _signIn(() => _authRepository.signUp(
-                                            _email.text.trim(),
-                                            _password.text,
-                                            _name.text.trim().isEmpty ? 'Nueva Empresa' : _name.text.trim(),
-                                            UserRole.entrepreneur,
-                                          ));
-                                    } else {
-                                      _signIn(() => _authRepository.signIn(_email.text.trim(), _password.text));
-                                    }
-                                  },
+                            onPressed: _loading ? null : _signIn,
                             child: _loading
                                 ? const SizedBox(
                                     width: 22,
@@ -414,7 +349,7 @@ class _AuthScreenState extends State<AuthScreen> {
                               side: const BorderSide(color: AppColors.border, width: 1.2),
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                             ),
-                            onPressed: _loading ? null : () => _signIn(_authRepository.signInWithGoogle),
+                            onPressed: _loading ? null : _signInWithGoogle,
                             icon: const Icon(Icons.g_mobiledata_rounded, size: 28, color: AppColors.navy),
                             label: const Text(
                               'Continuar con Google',

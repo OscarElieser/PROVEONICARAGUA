@@ -1,9 +1,9 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import '../models/models.dart';
-import '../services/auth/auth_repository.dart';
-import '../services/auth/firebase_auth_repository.dart';
-import '../services/firebase/firebase_service.dart';
+import '../../models/models.dart';
+import '../../services/auth/auth_repository.dart';
+import '../../services/auth/firebase_auth_repository.dart';
+import '../../services/firebase/firebase_service.dart';
 
 /// Define los posibles estados de la pantalla de autenticación.
 enum AuthState {
@@ -13,15 +13,15 @@ enum AuthState {
   error,
 }
 
-/// ViewModel para gestionar el estado y la lógica de autenticación en `AuthScreen`.
-class AuthScreenViewModel extends ChangeNotifier {
+/// Provider global para gestionar el estado y la lógica de autenticación.
+class AuthProvider extends ChangeNotifier {
   final AuthRepository _authRepository;
 
   AuthState _state = AuthState.initial;
   String? _errorMessage;
   AuthUser? _currentUser;
 
-  AuthScreenViewModel({AuthRepository? authRepository})
+  AuthProvider({AuthRepository? authRepository})
       : _authRepository = authRepository ??
             (FirebaseService.isInitialized
                 ? FirebaseAuthRepository()
@@ -31,22 +31,20 @@ class AuthScreenViewModel extends ChangeNotifier {
   String? get errorMessage => _errorMessage;
   AuthUser? get currentUser => _currentUser;
   bool get isLoading => _state == AuthState.loading;
+  bool get isAuthenticated => _state == AuthState.authenticated && _currentUser != null;
 
-  /// Establece el estado a cargando y limpia cualquier error previo.
   void _setLoading() {
     _state = AuthState.loading;
     _errorMessage = null;
     notifyListeners();
   }
 
-  /// Establece el estado a error con un mensaje específico.
   void _setError(String message) {
     _state = AuthState.error;
     _errorMessage = message;
     notifyListeners();
   }
 
-  /// Establece el estado a autenticado con el usuario actual.
   void _setAuthenticated(AuthUser user) {
     _state = AuthState.authenticated;
     _currentUser = user;
@@ -54,7 +52,6 @@ class AuthScreenViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Restablece el estado a inicial, útil después de cerrar sesión.
   void _resetState() {
     _state = AuthState.initial;
     _errorMessage = null;
@@ -62,7 +59,6 @@ class AuthScreenViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Intenta iniciar sesión con correo y contraseña.
   Future<void> signIn(String email, String password) async {
     _setLoading();
     try {
@@ -77,7 +73,20 @@ class AuthScreenViewModel extends ChangeNotifier {
     }
   }
 
-  /// Intenta iniciar sesión con Google.
+  Future<void> signUp(String email, String password, String name, UserRole role) async {
+    _setLoading();
+    try {
+      final user = await _authRepository.signUp(email, password, name, role);
+      _setAuthenticated(user);
+    } on FirebaseAuthException catch (error) {
+      _setError(_friendlyError(error.code));
+    } on FirebaseException catch (error) {
+      _setError('Firebase: ${error.message ?? error.code}');
+    } catch (_) {
+      _setError('No pudimos crear tu cuenta. Intenta nuevamente.');
+    }
+  }
+
   Future<void> signInWithGoogle() async {
     _setLoading();
     try {
@@ -92,18 +101,30 @@ class AuthScreenViewModel extends ChangeNotifier {
     }
   }
 
-  /// Cierra la sesión del usuario.
+  Future<void> startGuestVisit() async {
+    _setLoading();
+    await Future.delayed(const Duration(milliseconds: 350));
+    const guestUser = AuthUser(
+      id: 'guest_session',
+      name: 'Visitante Invitado',
+      email: 'invitado@proveo.ni',
+      role: UserRole.entrepreneur,
+    );
+    _setAuthenticated(guestUser);
+  }
+
   Future<void> signOut() async {
-    _setLoading(); // Opcional: mostrar carga mientras se cierra sesión
+    _setLoading();
     try {
-      await _authRepository.signOut();
-      _resetState(); // Restablece el estado después de cerrar sesión
+      if (_currentUser?.id != 'guest_session') {
+        await _authRepository.signOut();
+      }
+      _resetState();
     } catch (e) {
       _setError('Error al cerrar sesión: $e');
     }
   }
 
-  /// Mapea códigos de error de Firebase a mensajes amigables para el usuario.
   String _friendlyError(String code) {
     switch (code) {
       case 'invalid-credential':
@@ -127,7 +148,6 @@ class AuthScreenViewModel extends ChangeNotifier {
     }
   }
 
-  /// Limpia el mensaje de error actual.
   void clearError() {
     if (_errorMessage != null) {
       _errorMessage = null;

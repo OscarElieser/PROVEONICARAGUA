@@ -166,6 +166,8 @@ Un emprendedor/empresa completó PROVEO Match con estos criterios:
 - Ubicación: $_selectedLocation
 - Prioridad Estratégica: $_selectedPriority
 - Volumen Estimado: $_estimatedVolume
+Objetivo de la IA: actuar como asistente de compra completo para que el comprador pueda elegir, cotizar y comprar con confianza.
+Debe cubrir: compatibilidad del proveedor, validacion de datos, muestra, ficha tecnica, MOQ, entrega, precio final y siguiente paso de compra.
 ${_customNotes.isNotEmpty ? '- Requerimiento Específico: $_customNotes' : ''}
 
 Explica en un párrafo conciso y motivador (máximo 3 oraciones):
@@ -334,7 +336,7 @@ Explica en un párrafo conciso y motivador (máximo 3 oraciones):
                               },
                               icon: Icon(_step == 2 ? Icons.auto_awesome_rounded : Icons.arrow_forward_rounded, size: 20),
                               label: Text(
-                                _step == 2 ? '🚀 Encontrar Mis Proveedores con Gemini' : 'Siguiente Paso',
+                                _step == 2 ? 'IA: Encontrar proveedor y preparar compra' : 'Siguiente Paso',
                                 style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 15, letterSpacing: 0.3),
                               ),
                             ),

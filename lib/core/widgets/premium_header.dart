@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../theme/app_colors.dart';
+import '../providers/auth_provider.dart';
 import '../../screens/search_screen.dart';
 import '../../screens/match_screen.dart';
 import '../../screens/quotations_screen.dart';
@@ -7,6 +9,9 @@ import '../../screens/chat_screen.dart';
 import '../../screens/about_us_screen.dart';
 import '../../screens/quotation_request_screen.dart';
 import '../../screens/admin_dashboard_screen.dart';
+import '../../screens/auth_screen.dart';
+import '../../screens/notifications_screen.dart';
+import '../../screens/profile_screen.dart';
 
 /// Barra de Navegación Principal Universal para todas las pantallas de PROVEO.
 /// Proporciona acceso consistente al menú principal, logo interactivo y buscador.
@@ -182,6 +187,101 @@ class PremiumHeader extends StatelessWidget implements PreferredSizeWidget {
                     'Cotizar',
                     style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
                   ),
+                ),
+                const SizedBox(width: 16),
+                Container(width: 1, height: 30, color: AppColors.border),
+                const SizedBox(width: 16),
+                
+                // Zona de Usuario / Autenticación
+                Consumer<AuthProvider>(
+                  builder: (context, auth, _) {
+                    final isLoggedIn = auth.isAuthenticated && auth.currentUser?.id != 'guest_session';
+                    
+                    if (isLoggedIn) {
+                      final user = auth.currentUser!;
+                      return Row(
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.notifications_none_rounded, color: AppColors.navy),
+                            onPressed: () => _navigateTo(context, const NotificationsScreen()), // requires NotificationsScreen
+                          ),
+                          const SizedBox(width: 8),
+                          PopupMenuButton<int>(
+                            offset: const Offset(0, 50),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                            child: CircleAvatar(
+                              radius: 18,
+                              backgroundColor: AppColors.navy,
+                              child: Text(
+                                user.name.isNotEmpty ? user.name[0].toUpperCase() : 'U',
+                                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+                              ),
+                            ),
+                            itemBuilder: (context) => [
+                              PopupMenuItem(
+                                value: 1,
+                                child: const Row(
+                                  children: [
+                                    Icon(Icons.person_outline, color: AppColors.navy, size: 20),
+                                    SizedBox(width: 12),
+                                    Text('Mi Perfil', style: TextStyle(fontWeight: FontWeight.w600)),
+                                  ],
+                                ),
+                              ),
+                              PopupMenuItem(
+                                value: 2,
+                                child: const Row(
+                                  children: [
+                                    Icon(Icons.history_rounded, color: AppColors.teal, size: 20),
+                                    SizedBox(width: 12),
+                                    Text('Historial de Cotizaciones', style: TextStyle(fontWeight: FontWeight.w600)),
+                                  ],
+                                ),
+                              ),
+                              const PopupMenuDivider(),
+                              PopupMenuItem(
+                                value: 3,
+                                child: const Row(
+                                  children: [
+                                    Icon(Icons.logout_rounded, color: AppColors.error, size: 20),
+                                    SizedBox(width: 12),
+                                    Text('Cerrar Sesión', style: TextStyle(fontWeight: FontWeight.w600, color: AppColors.error)),
+                                  ],
+                                ),
+                              ),
+                            ],
+                            onSelected: (value) async {
+                              if (value == 1) {
+                                _navigateTo(context, ProfileScreen(user: user));
+                              } else if (value == 2) {
+                                _navigateTo(context, const QuotationsScreen());
+                              } else if (value == 3) {
+                                await auth.signOut();
+                              }
+                            },
+                          ),
+                        ],
+                      );
+                    } else {
+                      return FilledButton.tonalIcon(
+                        style: FilledButton.styleFrom(
+                          backgroundColor: AppColors.paleBlue,
+                          foregroundColor: AppColors.navy,
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        onPressed: () => Navigator.pushAndRemoveUntil(
+                          context,
+                          MaterialPageRoute(builder: (_) => const AuthScreen()),
+                          (route) => false,
+                        ),
+                        icon: const Icon(Icons.login_rounded, size: 18),
+                        label: const Text('Ingresar', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13)),
+                      );
+                    }
+                  },
                 ),
               ],
 

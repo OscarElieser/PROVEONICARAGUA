@@ -1,14 +1,41 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../core/theme/app_colors.dart';
 import '../models/models.dart';
 import '../core/widgets/premium_header.dart';
 import '../core/widgets/premium_footer.dart';
+import '../core/providers/auth_provider.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   final AuthUser user;
-  final Future<void> Function() onSignOut;
 
-  const ProfileScreen({super.key, required this.user, required this.onSignOut});
+  const ProfileScreen({super.key, required this.user});
+
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  bool _isEditing = false;
+  late TextEditingController _nameCtrl;
+  late TextEditingController _phoneCtrl;
+  late TextEditingController _addressCtrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameCtrl = TextEditingController(text: widget.user.name);
+    _phoneCtrl = TextEditingController(text: '+505 8888 8888'); // Mock phone
+    _addressCtrl = TextEditingController(text: 'Managua, Nicaragua'); // Mock address
+  }
+
+  @override
+  void dispose() {
+    _nameCtrl.dispose();
+    _phoneCtrl.dispose();
+    _addressCtrl.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -85,7 +112,7 @@ class ProfileScreen extends StatelessWidget {
                           ),
                           const SizedBox(height: 10),
                           Text(
-                            user.name,
+                            _isEditing ? 'Editando Perfil' : widget.user.name,
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: 19,
@@ -126,166 +153,216 @@ class ProfileScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  // Botón flotante para editar
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: FilledButton.icon(
+                      style: FilledButton.styleFrom(
+                        backgroundColor: _isEditing ? AppColors.trustGreen : AppColors.blue,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          if (_isEditing) {
+                            // Save logic here
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Perfil guardado exitosamente')),
+                            );
+                          }
+                          _isEditing = !_isEditing;
+                        });
+                      },
+                      icon: Icon(_isEditing ? Icons.check : Icons.edit),
+                      label: Text(_isEditing ? 'Guardar Cambios' : 'Editar Perfil'),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
                   // Tarjeta de información de cuenta
                   _SectionCard(
                     title: 'Información de Cuenta',
                     icon: Icons.manage_accounts_outlined,
                     child: Column(
                       children: [
-                        _InfoRow(
-                          icon: Icons.email_outlined,
-                          label: 'Correo electrónico',
-                          value: user.email,
-                        ),
-                        const Divider(height: 1),
-                        _InfoRow(
-                          icon: Icons.verified_user_outlined,
-                          label: 'Rol en PROVEO',
-                          value: _roleName,
-                          valueColor: AppColors.trustGreen,
-                        ),
-                        const Divider(height: 1),
-                        const _InfoRow(
-                          icon: Icons.shield_outlined,
-                          label: 'Estado de cuenta',
-                          value: 'Activo y verificado',
-                          valueColor: AppColors.trustGreen,
-                        ),
+                        if (!_isEditing) ...[
+                          _InfoRow(icon: Icons.business_outlined, label: 'Nombre de la Empresa', value: _nameCtrl.text),
+                          const Divider(height: 1),
+                          _InfoRow(icon: Icons.email_outlined, label: 'Correo electrónico', value: widget.user.email),
+                          const Divider(height: 1),
+                          _InfoRow(icon: Icons.phone_outlined, label: 'Teléfono', value: _phoneCtrl.text),
+                          const Divider(height: 1),
+                          _InfoRow(icon: Icons.location_on_outlined, label: 'Dirección', value: _addressCtrl.text),
+                        ] else ...[
+                          Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Column(
+                              children: [
+                                TextField(
+                                  controller: _nameCtrl,
+                                  decoration: const InputDecoration(labelText: 'Nombre de la Empresa', border: OutlineInputBorder()),
+                                ),
+                                const SizedBox(height: 12),
+                                TextField(
+                                  controller: TextEditingController(text: widget.user.email),
+                                  enabled: false,
+                                  decoration: const InputDecoration(labelText: 'Correo electrónico (Solo Lectura)', border: OutlineInputBorder()),
+                                ),
+                                const SizedBox(height: 12),
+                                TextField(
+                                  controller: _phoneCtrl,
+                                  decoration: const InputDecoration(labelText: 'Teléfono', border: OutlineInputBorder()),
+                                ),
+                                const SizedBox(height: 12),
+                                TextField(
+                                  controller: _addressCtrl,
+                                  decoration: const InputDecoration(labelText: 'Dirección', border: OutlineInputBorder()),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ],
                     ),
                   ),
                   const SizedBox(height: 16),
 
-                  // Estadísticas de actividad
-                  _SectionCard(
-                    title: 'Mi Actividad',
-                    icon: Icons.bar_chart_outlined,
-                    child: Row(
-                      children: [
-                        const Expanded(
-                          child: _StatCell(
-                            value: '12',
-                            label: 'Búsquedas',
-                            icon: Icons.search_rounded,
+                  if (!_isEditing) ...[
+                    // Estadísticas de actividad
+                    _SectionCard(
+                      title: 'Mi Actividad',
+                      icon: Icons.bar_chart_outlined,
+                      child: Row(
+                        children: [
+                          const Expanded(
+                            child: _StatCell(
+                              value: '12',
+                              label: 'Búsquedas',
+                              icon: Icons.search_rounded,
+                              color: AppColors.blue,
+                            ),
+                          ),
+                          Container(width: 1, height: 60, color: AppColors.border),
+                          const Expanded(
+                            child: _StatCell(
+                              value: '8',
+                              label: 'Guardados',
+                              icon: Icons.bookmark_rounded,
+                              color: AppColors.trustGreen,
+                            ),
+                          ),
+                          Container(width: 1, height: 60, color: AppColors.border),
+                          const Expanded(
+                            child: _StatCell(
+                              value: '3',
+                              label: 'Cotizaciones',
+                              icon: Icons.receipt_long_rounded,
+                              color: AppColors.teal,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Acciones rápidas
+                    _SectionCard(
+                      title: 'Acciones',
+                      icon: Icons.bolt_outlined,
+                      child: Column(
+                        children: [
+                          _ActionTile(
+                            icon: Icons.notifications_outlined,
+                            label: 'Notificaciones',
+                            subtitle: 'Configurar alertas de proveedores',
                             color: AppColors.blue,
+                            onTap: () {
+                              Navigator.pushNamed(context, '/notifications');
+                            },
                           ),
-                        ),
-                        Container(width: 1, height: 60, color: AppColors.border),
-                        const Expanded(
-                          child: _StatCell(
-                            value: '8',
-                            label: 'Guardados',
-                            icon: Icons.bookmark_rounded,
-                            color: AppColors.trustGreen,
-                          ),
-                        ),
-                        Container(width: 1, height: 60, color: AppColors.border),
-                        const Expanded(
-                          child: _StatCell(
-                            value: '3',
-                            label: 'Cotizaciones',
-                            icon: Icons.receipt_long_rounded,
+                          const Divider(height: 1),
+                          _ActionTile(
+                            icon: Icons.history_rounded,
+                            label: 'Historial de Cotizaciones',
+                            subtitle: 'Ver todas tus cotizaciones pasadas',
                             color: AppColors.teal,
+                            onTap: () {
+                              Navigator.pushNamed(context, '/quotations');
+                            },
                           ),
-                        ),
-                      ],
+                          const Divider(height: 1),
+                          _ActionTile(
+                            icon: Icons.help_outline,
+                            label: 'Centro de ayuda',
+                            subtitle: 'Guías y soporte PROVEO',
+                            color: AppColors.teal,
+                            onTap: () {
+                               Navigator.pushNamed(context, '/help');
+                            },
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 16),
+                    const SizedBox(height: 24),
 
-                  // Acciones rápidas
-                  _SectionCard(
-                    title: 'Acciones',
-                    icon: Icons.bolt_outlined,
-                    child: Column(
-                      children: [
-                        _ActionTile(
-                          icon: Icons.notifications_outlined,
-                          label: 'Notificaciones',
-                          subtitle: 'Configurar alertas de proveedores',
-                          color: AppColors.blue,
-                          onTap: () {},
-                        ),
-                        const Divider(height: 1),
-                        _ActionTile(
-                          icon: Icons.help_outline,
-                          label: 'Centro de ayuda',
-                          subtitle: 'Guías y soporte PROVEO',
-                          color: AppColors.teal,
-                          onTap: () {},
-                        ),
-                        const Divider(height: 1),
-                        _ActionTile(
-                          icon: Icons.privacy_tip_outlined,
-                          label: 'Privacidad y Términos',
-                          subtitle: 'Políticas de uso de datos',
-                          color: AppColors.textSecondary,
-                          onTap: () {},
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-
-                  // Botón de cerrar sesión
-                  ElevatedButton.icon(
-                    onPressed: () async {
-                      final confirmed = await showDialog<bool>(
-                        context: context,
-                        builder: (dialogCtx) => AlertDialog(
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                          title: const Text('¿Cerrar sesión?',
-                              style: TextStyle(fontWeight: FontWeight.w800)),
-                          content: const Text('Se cerrará tu sesión activa en PROVEO.'),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.pop(dialogCtx, false),
-                              child: const Text('Cancelar'),
-                            ),
-                            FilledButton(
-                              style: FilledButton.styleFrom(
-                                backgroundColor: AppColors.error,
+                    // Botón de cerrar sesión
+                    ElevatedButton.icon(
+                      onPressed: () async {
+                        final confirmed = await showDialog<bool>(
+                          context: context,
+                          builder: (dialogCtx) => AlertDialog(
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                            title: const Text('¿Cerrar sesión?',
+                                style: TextStyle(fontWeight: FontWeight.w800)),
+                            content: const Text('Se cerrará tu sesión activa en PROVEO.'),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(dialogCtx, false),
+                                child: const Text('Cancelar'),
                               ),
-                              onPressed: () => Navigator.pop(dialogCtx, true),
-                              child: const Text('Sí, cerrar sesión'),
-                            ),
-                          ],
+                              FilledButton(
+                                style: FilledButton.styleFrom(
+                                  backgroundColor: AppColors.error,
+                                ),
+                                onPressed: () => Navigator.pop(dialogCtx, true),
+                                child: const Text('Sí, cerrar sesión'),
+                              ),
+                            ],
+                          ),
+                        );
+                        if (confirmed == true && context.mounted) {
+                          await Provider.of<AuthProvider>(context, listen: false).signOut();
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.error.withValues(alpha: 0.08),
+                        foregroundColor: AppColors.error,
+                        elevation: 0,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        side: BorderSide(color: AppColors.error.withValues(alpha: 0.3), width: 1.5),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
                         ),
-                      );
-                      if (confirmed == true) {
-                        await onSignOut();
-                      }
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.error.withValues(alpha: 0.08),
-                      foregroundColor: AppColors.error,
-                      elevation: 0,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      side: BorderSide(color: AppColors.error.withValues(alpha: 0.3), width: 1.5),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      icon: const Icon(Icons.logout_rounded, size: 22),
+                      label: const Text(
+                        'Cerrar sesión',
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
                       ),
                     ),
-                    icon: const Icon(Icons.logout_rounded, size: 22),
-                    label: const Text(
-                      'Cerrar sesión',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
+                    const SizedBox(height: 12),
 
-                  // Versión de app
-                  const Center(
-                    child: Text(
-                      'PROVEO Nicaragua • v1.0.0',
-                      style: TextStyle(
-                        color: AppColors.textSecondary,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w500,
+                    // Versión de app
+                    const Center(
+                      child: Text(
+                        'PROVEO Nicaragua • v1.0.0',
+                        style: TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 20),
+                    const SizedBox(height: 20),
+                  ],
                 ],
               ),
             ),
@@ -297,13 +374,13 @@ class ProfileScreen extends StatelessWidget {
   }
 
   String get _initials {
-    final names = user.name.trim().split(RegExp(r'\s+'));
+    final names = widget.user.name.trim().split(RegExp(r'\s+'));
     if (names.length == 1) return names.first.substring(0, names.first.length.clamp(0, 2)).toUpperCase();
     return '${names.first[0]}${names.last[0]}'.toUpperCase();
   }
 
   String get _roleName {
-    switch (user.role) {
+    switch (widget.user.role) {
       case UserRole.admin:
         return 'Administrador';
       case UserRole.provider:
@@ -374,8 +451,7 @@ class _InfoRow extends StatelessWidget {
   final IconData icon;
   final String label;
   final String value;
-  final Color? valueColor;
-  const _InfoRow({required this.icon, required this.label, required this.value, this.valueColor});
+  const _InfoRow({required this.icon, required this.label, required this.value});
 
   @override
   Widget build(BuildContext context) {
@@ -391,11 +467,7 @@ class _InfoRow extends StatelessWidget {
               children: [
                 Text(label, style: const TextStyle(color: AppColors.textSecondary, fontSize: 11, fontWeight: FontWeight.w600)),
                 const SizedBox(height: 2),
-                Text(value,
-                    style: TextStyle(
-                        color: valueColor ?? AppColors.textPrimary,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 13)),
+                Text(value, style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w700, fontSize: 13)),
               ],
             ),
           ),

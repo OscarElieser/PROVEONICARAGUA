@@ -3,7 +3,8 @@ import 'package:provider/provider.dart';
 import 'core/theme/app_theme.dart';
 import 'services/firebase/firebase_service.dart';
 import 'screens/auth_screen.dart';
-import 'screens/auth_screen_viewmodel.dart';
+import 'core/providers/auth_provider.dart';
+import 'screens/app_shell.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -14,11 +15,24 @@ Future<void> main() async {
 class ProveoApp extends StatelessWidget {
   const ProveoApp({super.key});
   @override
-  Widget build(BuildContext context) => MaterialApp(
+  Widget build(BuildContext context) {
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => AuthProvider()),
+      ],
+      child: MaterialApp(
         debugShowCheckedModeBanner: false,
         title: 'PROVEO Premium',
         theme: AppTheme.light,
-        home: ChangeNotifierProvider(
-            create: (_) => AuthScreenViewModel(), child: const AuthScreen()),
-      );
+        home: Consumer<AuthProvider>(
+          builder: (context, auth, _) {
+            if (auth.isAuthenticated) {
+              return AppShell(user: auth.currentUser!);
+            }
+            return const AuthScreen();
+          },
+        ),
+      ),
+    );
+  }
 }
