@@ -1,12 +1,11 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../core/theme/app_colors.dart';
 import '../core/widgets/proveo_logo.dart';
 import '../models/models.dart';
-import '../services/auth/auth_repository.dart';
-import '../services/auth/firebase_auth_repository.dart';
-import '../services/firebase/firebase_service.dart';
 import 'app_shell.dart';
+import 'auth_screen_viewmodel.dart';
 
 /// Acceso real a PROVEO mediante Firebase Authentication.
 class AuthScreen extends StatefulWidget {

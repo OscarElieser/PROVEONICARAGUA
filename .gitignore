@@ -1,17 +1,40 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# General
+*.log
+*.lock
+*.DS_Store
+.env
+.env.*
+!.env.example
+
+# Flutter and Dart
 .dart_tool/
 .packages
+.pub-cache/
 build/
-.flutter-plugins
-.flutter-plugins-dependencies
 pubspec.lock
+
+# IDE-specific files
 .idea/
 .vscode/
-node_modules/
-package-lock.json
-package.json
-*.service-account.json
-service-account*.json
+*.iml
+*.ipr
+*.iws
+
+# Sensitive Firebase configuration files
 google-services.json
 GoogleService-Info.plist
+*.service-account.json
+service-account*.json
+
+# Firebase local development files
 .firebase/
-*.log
+
+# Web development files (if you use npm/yarn in your project)
+node_modules/
+package-lock.json
+
+# Deprecated Flutter files (good to keep for older project compatibility)
+.flutter-plugins
+.flutter-plugins-dependencies

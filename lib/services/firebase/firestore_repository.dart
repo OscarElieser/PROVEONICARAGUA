@@ -11,22 +11,25 @@ class FirestoreRepository {
   FirestoreRepository({FirebaseFirestore? firestore})
       : _firestore = firestore ?? (FirebaseService.isInitialized ? FirebaseService.firestore : null);
 
-  CollectionReference<Map<String, dynamic>> _collection(String name) =>
-      _firestore!.collection(name);
+  CollectionReference<T> _collection<T>(
+    String name, {
+    required T Function(DocumentSnapshot<Map<String, dynamic>>, SnapshotOptions?) fromFirestore,
+    required Map<String, Object?> Function(T, SetOptions?) toFirestore,
+  }) =>
+      _firestore!.collection(name).withConverter<T>(
+            fromFirestore: fromFirestore,
+            toFirestore: toFirestore,
+          );
 
   Future<List<ProviderModel>> getProviders() async {
     if (_firestore == null) throw StateError('Firebase Firestore no está inicializado.');
-    try {
-      final snapshot = await _collection('providers').get();
-      return snapshot.docs.map(_providerFromDocument).toList();
-    } on FirebaseException {
-      rethrow;
-    }
+    final snapshot = await _providersCollection.get();
+    return snapshot.docs.map((doc) => doc.data()).toList();
   }
 
   Future<List<QuotationModel>> getQuotations() async {
     if (_firestore == null) throw StateError('Firebase Firestore no está inicializado.');
-    final snapshot = await _collection('quotations').get();
+    final snapshot = await _firestore!.collection('quotations').get();
     return snapshot.docs.map((document) {
       final data = document.data();
       return QuotationModel(
@@ -42,16 +45,16 @@ class FirestoreRepository {
 
   Stream<List<ProviderModel>> watchProviders() {
     if (_firestore == null) return Stream.error(StateError('Firebase Firestore no está inicializado.'));
-    return _collection('providers').snapshots().map((snapshot) {
-      return snapshot.docs.map(_providerFromDocument).toList();
+    return _providersCollection.snapshots().map((snapshot) {
+      return snapshot.docs.map((doc) => doc.data()).toList();
     });
   }
 
-  Future<void> saveProvider(ProviderModel provider) => _collection('providers')
+  Future<void> saveProvider(ProviderModel provider) => _providersCollection
       .doc(provider.id)
-      .set(_providerToMap(provider), SetOptions(merge: true));
+      .set(provider, SetOptions(merge: true));
 
-  Future<void> saveUser(AuthUser user) => _collection('users').doc(user.id).set({
+  Future<void> saveUser(AuthUser user) => _firestore!.collection('users').doc(user.id).set({
         'name': user.name,
         'email': user.email,
         'role': user.role.name,
@@ -60,7 +63,7 @@ class FirestoreRepository {
 
   Future<UserRole?> getUserRole(String userId) async {
     if (_firestore == null) return null;
-    final document = await _collection('users').doc(userId).get();
+    final document = await _firestore!.collection('users').doc(userId).get();
     final value = document.data()?['role'] as String?;
     for (final role in UserRole.values) {
       if (role.name == value) return role;
@@ -68,7 +71,7 @@ class FirestoreRepository {
     return null;
   }
 
-  Future<void> saveProduct(ProductModel product) => _collection('products')
+  Future<void> saveProduct(ProductModel product) => _firestore!.collection('products')
       .doc(product.id)
       .set({
         'name': product.name,
@@ -81,7 +84,7 @@ class FirestoreRepository {
       }, SetOptions(merge: true));
 
   Future<void> saveQuotation(QuotationModel quotation, {String? id}) =>
-      _collection('quotations').doc(id).set({
+      _firestore!.collection('quotations').doc(id).set({
         'provider': quotation.provider,
         'price': quotation.price,
         'deliveryDays': quotation.deliveryDays,
@@ -92,55 +95,32 @@ class FirestoreRepository {
       }, SetOptions(merge: true));
 
   Future<void> saveMessage({required String chatId, required String senderId, required String text}) =>
-      _collection('chats').doc(chatId).collection('messages').add({
+      _firestore!.collection('chats').doc(chatId).collection('messages').add({
         'senderId': senderId,
         'text': text,
         'createdAt': FieldValue.serverTimestamp(),
       });
 
   Future<void> saveFavorite({required String userId, required String itemId, required String itemType}) =>
-      _collection('users').doc(userId).collection('favorites').doc(itemId).set({
+      _firestore!.collection('users').doc(userId).collection('favorites').doc(itemId).set({
         'itemId': itemId,
         'itemType': itemType,
         'createdAt': FieldValue.serverTimestamp(),
       });
 
   Future<void> saveNotification({required String userId, required String title, required String message}) =>
-      _collection('users').doc(userId).collection('notifications').add({
+      _firestore!.collection('users').doc(userId).collection('notifications').add({
         'title': title,
         'message': message,
         'read': false,
         'createdAt': FieldValue.serverTimestamp(),
       });
 
-  Map<String, dynamic> _providerToMap(ProviderModel provider) => {
-        'name': provider.name,
-        'location': provider.location,
-        'category': provider.category,
-        'description': provider.description,
-        'logo': provider.logo,
-        'rating': provider.rating,
-        'reviews': provider.reviews,
-        'years': provider.years,
-        'responseTime': provider.responseTime,
-        'featured': provider.featured,
-        'updatedAt': FieldValue.serverTimestamp(),
-      };
-
-  ProviderModel _providerFromDocument(QueryDocumentSnapshot<Map<String, dynamic>> document) {
-    final data = document.data();
-    return ProviderModel(
-      id: document.id,
-      name: data['name'] as String? ?? '',
-      location: data['location'] as String? ?? '',
-      category: data['category'] as String? ?? '',
-      description: data['description'] as String? ?? '',
-      logo: data['logo'] as String? ?? '',
-      rating: (data['rating'] as num?)?.toDouble() ?? 0,
-      reviews: (data['reviews'] as num?)?.toInt() ?? 0,
-      years: (data['years'] as num?)?.toInt() ?? 0,
-      responseTime: data['responseTime'] as String? ?? '',
-      featured: data['featured'] as bool? ?? false,
-    );
-  }
+  // Helper para la colección de proveedores con su conversor.
+  CollectionReference<ProviderModel> get _providersCollection =>
+      _collection<ProviderModel>(
+        'providers',
+        fromFirestore: (snap, _) => ProviderModel.fromFirestore(snap, _),
+        toFirestore: (provider, _) => provider.toFirestore(),
+      );
 }
