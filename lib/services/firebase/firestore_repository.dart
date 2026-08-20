@@ -1,12 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../data/mock_data.dart';
 import '../../models/models.dart';
 import 'firebase_service.dart';
 
 /// Fuente de datos persistente de PROVEO.
 ///
-/// Cada dominio tiene su propia coleccion. Los metodos de lectura conservan
-/// un fallback local para que la demo siga arrancando sin Firebase.
+/// Cada dominio tiene su propia coleccion para el producto en producción.
 class FirestoreRepository {
   final FirebaseFirestore? _firestore;
 
@@ -17,20 +15,34 @@ class FirestoreRepository {
       _firestore!.collection(name);
 
   Future<List<ProviderModel>> getProviders() async {
-    if (_firestore == null) return MockData.providers;
+    if (_firestore == null) throw StateError('Firebase Firestore no está inicializado.');
     try {
       final snapshot = await _collection('providers').get();
-      if (snapshot.docs.isEmpty) return MockData.providers;
       return snapshot.docs.map(_providerFromDocument).toList();
     } on FirebaseException {
-      return MockData.providers;
+      rethrow;
     }
   }
 
+  Future<List<QuotationModel>> getQuotations() async {
+    if (_firestore == null) throw StateError('Firebase Firestore no está inicializado.');
+    final snapshot = await _collection('quotations').get();
+    return snapshot.docs.map((document) {
+      final data = document.data();
+      return QuotationModel(
+        provider: data['provider'] as String? ?? '',
+        price: (data['price'] as num?)?.toDouble() ?? 0,
+        deliveryDays: (data['deliveryDays'] as num?)?.toInt() ?? 0,
+        rating: (data['rating'] as num?)?.toDouble() ?? 0,
+        distance: (data['distance'] as num?)?.toDouble() ?? 0,
+        status: data['status'] as String? ?? 'Pendiente',
+      );
+    }).toList();
+  }
+
   Stream<List<ProviderModel>> watchProviders() {
-    if (_firestore == null) return Stream.value(MockData.providers);
+    if (_firestore == null) return Stream.error(StateError('Firebase Firestore no está inicializado.'));
     return _collection('providers').snapshots().map((snapshot) {
-      if (snapshot.docs.isEmpty) return MockData.providers;
       return snapshot.docs.map(_providerFromDocument).toList();
     });
   }
@@ -90,55 +102,6 @@ class FirestoreRepository {
         'read': false,
         'createdAt': FieldValue.serverTimestamp(),
       });
-
-  Future<void> seedDemoProviders() async {
-    await _seedCollectionIfEmpty('providers', MockData.providers.map((provider) => MapEntry(provider.id, {..._providerToMap(provider), 'demo': true})));
-  }
-
-  /// Carga el contenido demostrativo para que la consola no aparezca vacia.
-  /// Nunca sobreescribe documentos existentes en Firestore.
-  Future<void> seedDemoData() async {
-    if (_firestore == null) return;
-    try {
-      await seedDemoProviders();
-      await _seedCollectionIfEmpty('products', MockData.products.map((product) => MapEntry(product.id, {
-            'name': product.name,
-            'description': product.description,
-            'provider': product.provider,
-            'category': product.category,
-            'availability': product.availability,
-            'price': product.price,
-            'demo': true,
-          })));
-      await _seedCollectionIfEmpty('quotations', MockData.quotations.asMap().map((index, quotation) => MapEntry('demo-${index + 1}', {
-            'provider': quotation.provider,
-            'price': quotation.price,
-            'deliveryDays': quotation.deliveryDays,
-            'rating': quotation.rating,
-            'distance': quotation.distance,
-            'status': quotation.status,
-            'demo': true,
-          })).entries);
-      await _seedCollectionIfEmpty('categories', const [
-        'Materias primas', 'Productos terminados', 'Servicios profesionales',
-        'Tecnología', 'Equipos', 'Transporte', 'Construcción', 'Agricultura',
-        'Alimentación', 'Empaques', 'Marketing', 'Servicios empresariales',
-      ].asMap().map((index, name) => MapEntry('category-${index + 1}', {'name': name, 'demo': true})).entries);
-    } on FirebaseException {
-      // La app sigue funcionando con MockData si Firestore aun no tiene acceso.
-    }
-  }
-
-  Future<void> _seedCollectionIfEmpty(String name, Iterable<MapEntry<String, Map<String, dynamic>>> documents) async {
-    final collection = _collection(name);
-    final existing = await collection.limit(1).get();
-    if (existing.docs.isNotEmpty) return;
-    final batch = _firestore!.batch();
-    for (final document in documents) {
-      batch.set(collection.doc(document.key), {...document.value, 'createdAt': FieldValue.serverTimestamp()});
-    }
-    await batch.commit();
-  }
 
   Map<String, dynamic> _providerToMap(ProviderModel provider) => {
         'name': provider.name,

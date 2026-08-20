@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
 import 'core/theme/app_theme.dart';
 import 'services/firebase/firebase_service.dart';
-import 'services/firebase/firestore_repository.dart';
-import 'screens/splash_screen.dart';
+import 'screens/auth_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await FirebaseService.initialize();
-  await FirestoreRepository().seedDemoData();
   runApp(const ProveoApp());
 }
 
@@ -18,6 +16,6 @@ class ProveoApp extends StatelessWidget {
     debugShowCheckedModeBanner: false,
     title: 'PROVEO Premium',
     theme: AppTheme.light,
-    home: const SplashScreen(),
+    home: const AuthScreen(),
   );
 }

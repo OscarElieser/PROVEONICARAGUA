@@ -1,5 +1,4 @@
 import 'package:firebase_analytics/firebase_analytics.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -8,8 +7,7 @@ import '../../firebase_options.dart';
 
 /// Inicializacion central de Firebase.
 ///
-/// La aplicacion continua funcionando con MockData si la plataforma aun no
-/// tiene opciones nativas generadas por FlutterFire.
+/// Inicializa los servicios Firebase necesarios para producción.
 class FirebaseService {
   static FirebaseAnalytics? _analytics;
   static bool _initialized = false;
@@ -27,9 +25,6 @@ class FirebaseService {
       }
       _initialized = true;
       await _activateAppCheck();
-      if (FirebaseAuth.instance.currentUser == null) {
-        await FirebaseAuth.instance.signInAnonymously();
-      }
       _analytics = FirebaseAnalytics.instance;
       await _analytics!.logAppOpen();
       return true;
