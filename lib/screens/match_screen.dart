@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../core/theme/app_colors.dart';
-import '../core/widgets/premium_widgets.dart';
 import '../models/models.dart';
 import '../services/ai/gemini_recommendation_service.dart';
 import '../services/firebase/firestore_repository.dart';
@@ -55,21 +54,21 @@ class _MatchScreenState extends State<MatchScreen> {
       'subtitle': 'Corrugado reforzado, microcorrugado con branding e inserts.',
       'tag': 'Logística Segura',
       'icon': Icons.all_inbox_rounded,
-      'color': Color(0xFFC07020),
+      'color': const Color(0xFFC07020),
     },
     {
       'title': 'Materia Prima y Polímeros',
       'subtitle': 'Resinas vírgenes, masterbatch de color, polietileno y polipropileno.',
       'tag': 'Uso Industrial',
       'icon': Icons.science_rounded,
-      'color': Color(0xFF6B46C1),
+      'color': const Color(0xFF6B46C1),
     },
     {
       'title': 'Empaques para Café y Alimentos',
       'subtitle': 'Bolsas doypack con zipper, trilaminadas con válvula desgasificadora.',
       'tag': 'Grado Alimenticio',
       'icon': Icons.coffee_rounded,
-      'color': Color(0xFF8D5B4C),
+      'color': const Color(0xFF8D5B4C),
     },
   ];
 
@@ -138,7 +137,7 @@ class _MatchScreenState extends State<MatchScreen> {
       'desc': 'Inventario disponible en bodega listo para entrega en menos de 48 horas.',
       'badge': 'Express 24/48h',
       'icon': Icons.bolt_rounded,
-      'color': Color(0xFFDD6B20),
+      'color': const Color(0xFFDD6B20),
     },
     {
       'title': 'Cercanía Geográfica y Soporte',
@@ -1072,14 +1071,14 @@ class _ProviderMatchCard extends StatelessWidget {
                       const SizedBox(height: 4),
                       Row(
                         children: [
-                          Icon(Icons.star_rounded, color: AppColors.warning, size: 16),
+                          const Icon(Icons.star_rounded, color: AppColors.warning, size: 16),
                           const SizedBox(width: 3),
                           Text('${provider.rating} (${provider.reviews} valoraciones)',
                               style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12, color: AppColors.textPrimary)),
                           const SizedBox(width: 10),
                           const Text('•', style: TextStyle(color: AppColors.textSecondary)),
                           const SizedBox(width: 10),
-                          Icon(Icons.location_on_outlined, color: AppColors.textSecondary, size: 14),
+                          const Icon(Icons.location_on_outlined, color: AppColors.textSecondary, size: 14),
                           const SizedBox(width: 2),
                           Text(provider.location, style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
                         ],

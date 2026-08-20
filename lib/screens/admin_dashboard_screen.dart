@@ -248,9 +248,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> with Single
             return Card(
               margin: const EdgeInsets.only(bottom: 12),
               child: ListTile(
-                leading: CircleAvatar(
+                leading: const CircleAvatar(
                   backgroundColor: AppColors.paleGreen,
-                  child: const Icon(Icons.receipt_long, color: AppColors.trustGreen),
+                  child: Icon(Icons.receipt_long, color: AppColors.trustGreen),
                 ),
                 title: Text('Cotización para: ${q.provider}', style: const TextStyle(fontWeight: FontWeight.bold)),
                 subtitle: Text('Monto: C\$ ${q.price.toStringAsFixed(2)} • Entrega: ${q.deliveryDays} días • Estado: ${q.status}'),
@@ -285,9 +285,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> with Single
         return Card(
           margin: const EdgeInsets.only(bottom: 12),
           child: ListTile(
-            leading: CircleAvatar(
+            leading: const CircleAvatar(
               backgroundColor: AppColors.navy,
-              child: const Icon(Icons.person, color: Colors.white),
+              child: Icon(Icons.person, color: Colors.white),
             ),
             title: Text(u['name']!, style: const TextStyle(fontWeight: FontWeight.bold)),
             subtitle: Text('${u['email']} • Rol: ${u['role']}'),

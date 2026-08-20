@@ -146,7 +146,7 @@ class ProfileScreen extends StatelessWidget {
                           valueColor: AppColors.trustGreen,
                         ),
                         const Divider(height: 1),
-                        _InfoRow(
+                        const _InfoRow(
                           icon: Icons.shield_outlined,
                           label: 'Estado de cuenta',
                           value: 'Activo y verificado',
@@ -163,7 +163,7 @@ class ProfileScreen extends StatelessWidget {
                     icon: Icons.bar_chart_outlined,
                     child: Row(
                       children: [
-                        Expanded(
+                        const Expanded(
                           child: _StatCell(
                             value: '12',
                             label: 'Búsquedas',
@@ -172,7 +172,7 @@ class ProfileScreen extends StatelessWidget {
                           ),
                         ),
                         Container(width: 1, height: 60, color: AppColors.border),
-                        Expanded(
+                        const Expanded(
                           child: _StatCell(
                             value: '8',
                             label: 'Guardados',
@@ -181,7 +181,7 @@ class ProfileScreen extends StatelessWidget {
                           ),
                         ),
                         Container(width: 1, height: 60, color: AppColors.border),
-                        Expanded(
+                        const Expanded(
                           child: _StatCell(
                             value: '3',
                             label: 'Cotizaciones',

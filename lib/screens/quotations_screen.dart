@@ -128,7 +128,7 @@ class QuotationsScreen extends StatelessWidget {
               future: FirestoreRepository().getQuotations(),
               builder: (context, snapshot) {
                 if (snapshot.hasError) {
-                  return _EmptyState(
+                  return const _EmptyState(
                     icon: Icons.error_outline_rounded,
                     title: 'No pudimos cargar tus cotizaciones',
                     subtitle: 'Revisa tu conexión e intenta de nuevo.',
@@ -147,7 +147,7 @@ class QuotationsScreen extends StatelessWidget {
                 }
                 final quotations = snapshot.data!;
                 if (quotations.isEmpty) {
-                  return _EmptyState(
+                  return const _EmptyState(
                     icon: Icons.inbox_rounded,
                     title: 'Aún no tienes cotizaciones',
                     subtitle: 'Busca proveedores y solicita tu primera cotización.',
