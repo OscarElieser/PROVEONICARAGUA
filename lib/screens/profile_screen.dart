@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../core/theme/app_colors.dart';
-import '../core/widgets/premium_widgets.dart';
 import '../models/models.dart';
 
 class ProfileScreen extends StatelessWidget {
@@ -10,69 +9,473 @@ class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key, required this.user, required this.onSignOut});
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(title: const Text('Mi perfil')),
-        body: ListView(
-          padding: const EdgeInsets.all(24),
-          children: [
-            PremiumCard(
-              child: Row(
-                children: [
-                  CircleAvatar(
-                    radius: 34,
-                    backgroundColor: AppColors.paleBlue,
-                    child: Text(
-                      _initials,
-                      style: const TextStyle(
-                        color: AppColors.navy,
-                        fontWeight: FontWeight.w900,
-                        fontSize: 20,
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      body: CustomScrollView(
+        slivers: [
+          // Hero Banner con gradiente
+          SliverAppBar(
+            expandedHeight: 220,
+            pinned: true,
+            backgroundColor: AppColors.navy,
+            flexibleSpace: FlexibleSpaceBar(
+              background: Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [AppColors.navy, AppColors.blue, AppColors.teal],
+                  ),
+                ),
+                child: Stack(
+                  children: [
+                    // Patrón decorativo de fondo
+                    Positioned(
+                      right: -30,
+                      top: -30,
+                      child: Container(
+                        width: 180,
+                        height: 180,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.white.withValues(alpha: 0.05),
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
+                    Positioned(
+                      left: -20,
+                      bottom: -20,
+                      child: Container(
+                        width: 120,
+                        height: 120,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.white.withValues(alpha: 0.05),
+                        ),
+                      ),
+                    ),
+                    // Avatar e info en el hero
+                    Align(
+                      alignment: Alignment.center,
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: 40),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Colors.white.withValues(alpha: 0.2),
+                              ),
+                              child: CircleAvatar(
+                                radius: 44,
+                                backgroundColor: AppColors.teal,
+                                child: Text(
+                                  _initials,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w900,
+                                    fontSize: 30,
+                                    letterSpacing: 1.5,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              user.name,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 20,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: 0.5,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 4),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: AppColors.trustGreen.withValues(alpha: 0.9),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Text(
+                                _roleName,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: 0.8,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Tarjeta de información de cuenta
+                  _SectionCard(
+                    title: 'Información de Cuenta',
+                    icon: Icons.manage_accounts_outlined,
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(user.name,
-                            style: Theme.of(context).textTheme.titleLarge),
-                        Text('${user.role.name}  •  ${user.email}'),
+                        _InfoRow(
+                          icon: Icons.email_outlined,
+                          label: 'Correo electrónico',
+                          value: user.email,
+                        ),
+                        const Divider(height: 1),
+                        _InfoRow(
+                          icon: Icons.verified_user_outlined,
+                          label: 'Rol en PROVEO',
+                          value: _roleName,
+                          valueColor: AppColors.trustGreen,
+                        ),
+                        const Divider(height: 1),
+                        _InfoRow(
+                          icon: Icons.shield_outlined,
+                          label: 'Estado de cuenta',
+                          value: 'Activo y verificado',
+                          valueColor: AppColors.trustGreen,
+                        ),
                       ],
                     ),
                   ),
+                  const SizedBox(height: 16),
+
+                  // Estadísticas de actividad
+                  _SectionCard(
+                    title: 'Mi Actividad',
+                    icon: Icons.bar_chart_outlined,
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: _StatCell(
+                            value: '12',
+                            label: 'Búsquedas',
+                            icon: Icons.search_rounded,
+                            color: AppColors.blue,
+                          ),
+                        ),
+                        Container(width: 1, height: 60, color: AppColors.border),
+                        Expanded(
+                          child: _StatCell(
+                            value: '8',
+                            label: 'Guardados',
+                            icon: Icons.bookmark_rounded,
+                            color: AppColors.trustGreen,
+                          ),
+                        ),
+                        Container(width: 1, height: 60, color: AppColors.border),
+                        Expanded(
+                          child: _StatCell(
+                            value: '3',
+                            label: 'Cotizaciones',
+                            icon: Icons.receipt_long_rounded,
+                            color: AppColors.teal,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Acciones rápidas
+                  _SectionCard(
+                    title: 'Acciones',
+                    icon: Icons.bolt_outlined,
+                    child: Column(
+                      children: [
+                        _ActionTile(
+                          icon: Icons.notifications_outlined,
+                          label: 'Notificaciones',
+                          subtitle: 'Configurar alertas de proveedores',
+                          color: AppColors.blue,
+                          onTap: () {},
+                        ),
+                        const Divider(height: 1),
+                        _ActionTile(
+                          icon: Icons.help_outline,
+                          label: 'Centro de ayuda',
+                          subtitle: 'Guías y soporte PROVEO',
+                          color: AppColors.teal,
+                          onTap: () {},
+                        ),
+                        const Divider(height: 1),
+                        _ActionTile(
+                          icon: Icons.privacy_tip_outlined,
+                          label: 'Privacidad y Términos',
+                          subtitle: 'Políticas de uso de datos',
+                          color: AppColors.textSecondary,
+                          onTap: () {},
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Botón de cerrar sesión
+                  ElevatedButton.icon(
+                    onPressed: () async {
+                      final confirmed = await showDialog<bool>(
+                        context: context,
+                        builder: (dialogCtx) => AlertDialog(
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                          title: const Text('¿Cerrar sesión?',
+                              style: TextStyle(fontWeight: FontWeight.w800)),
+                          content: const Text('Se cerrará tu sesión activa en PROVEO.'),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(dialogCtx, false),
+                              child: const Text('Cancelar'),
+                            ),
+                            FilledButton(
+                              style: FilledButton.styleFrom(
+                                backgroundColor: AppColors.error,
+                              ),
+                              onPressed: () => Navigator.pop(dialogCtx, true),
+                              child: const Text('Sí, cerrar sesión'),
+                            ),
+                          ],
+                        ),
+                      );
+                      if (confirmed == true) {
+                        await onSignOut();
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.error.withValues(alpha: 0.08),
+                      foregroundColor: AppColors.error,
+                      elevation: 0,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      side: BorderSide(color: AppColors.error.withValues(alpha: 0.3), width: 1.5),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                    icon: const Icon(Icons.logout_rounded, size: 22),
+                    label: const Text(
+                      'Cerrar sesión',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+
+                  // Versión de app
+                  const Center(
+                    child: Text(
+                      'PROVEO Nicaragua • v1.0.0',
+                      style: TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
                 ],
               ),
             ),
-            const SizedBox(height: 16),
-            const SectionTitle(title: 'Mi actividad'),
-            const SizedBox(height: 12),
-            const StatCard(
-                value: '12', label: 'Búsquedas activas', icon: Icons.search),
-            const SizedBox(height: 12),
-            const StatCard(
-              value: '8',
-              label: 'Proveedores guardados',
-              icon: Icons.bookmark_outline,
-              accent: AppColors.trustGreen,
-            ),
-            const SizedBox(height: 24),
-            OutlinedButton.icon(
-              onPressed: onSignOut,
-              icon: const Icon(Icons.logout),
-              label: const Text('Cerrar sesión'),
-            ),
-          ],
-        ),
-      );
+          ),
+        ],
+      ),
+    );
+  }
 
   String get _initials {
     final names = user.name.trim().split(RegExp(r'\s+'));
-    if (names.length == 1) {
-      return names.first
-          .substring(0, names.first.length.clamp(0, 2))
-          .toUpperCase();
-    }
+    if (names.length == 1) return names.first.substring(0, names.first.length.clamp(0, 2)).toUpperCase();
     return '${names.first[0]}${names.last[0]}'.toUpperCase();
+  }
+
+  String get _roleName {
+    switch (user.role) {
+      case UserRole.admin:
+        return 'Administrador';
+      case UserRole.provider:
+        return 'Proveedor Verificado';
+      case UserRole.auditor:
+        return 'Auditor';
+      default:
+        return 'Emprendedor';
+    }
+  }
+}
+
+// ── Sección card con encabezado ──────────────────────────────────────
+class _SectionCard extends StatelessWidget {
+  final String title;
+  final IconData icon;
+  final Widget child;
+  const _SectionCard({required this.title, required this.icon, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.06),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(18, 16, 18, 12),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: AppColors.paleBlue,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(icon, size: 16, color: AppColors.blue),
+                ),
+                const SizedBox(width: 10),
+                Text(title,
+                    style: const TextStyle(
+                        fontWeight: FontWeight.w800,
+                        color: AppColors.textPrimary,
+                        fontSize: 14)),
+              ],
+            ),
+          ),
+          const Divider(height: 1),
+          child,
+        ],
+      ),
+    );
+  }
+}
+
+// ── Fila de información ───────────────────────────────────────────────
+class _InfoRow extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+  final Color? valueColor;
+  const _InfoRow({required this.icon, required this.label, required this.value, this.valueColor});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+      child: Row(
+        children: [
+          Icon(icon, size: 18, color: AppColors.textSecondary),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label, style: const TextStyle(color: AppColors.textSecondary, fontSize: 11, fontWeight: FontWeight.w600)),
+                const SizedBox(height: 2),
+                Text(value,
+                    style: TextStyle(
+                        color: valueColor ?? AppColors.textPrimary,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 13)),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Celda de estadística ──────────────────────────────────────────────
+class _StatCell extends StatelessWidget {
+  final String value;
+  final String label;
+  final IconData icon;
+  final Color color;
+  const _StatCell({required this.value, required this.label, required this.icon, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 12),
+      child: Column(
+        children: [
+          Icon(icon, color: color, size: 22),
+          const SizedBox(height: 6),
+          Text(value,
+              style: TextStyle(
+                  color: color, fontSize: 22, fontWeight: FontWeight.w900)),
+          const SizedBox(height: 2),
+          Text(label,
+              style: const TextStyle(
+                  color: AppColors.textSecondary, fontSize: 11, fontWeight: FontWeight.w600)),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Fila de acción ─────────────────────────────────────────────────────
+class _ActionTile extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String subtitle;
+  final Color color;
+  final VoidCallback onTap;
+  const _ActionTile({required this.icon, required this.label, required this.subtitle, required this.color, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(icon, size: 18, color: color),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(label,
+                      style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: AppColors.textPrimary)),
+                  const SizedBox(height: 2),
+                  Text(subtitle,
+                      style: const TextStyle(color: AppColors.textSecondary, fontSize: 11)),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right, color: AppColors.textSecondary, size: 18),
+          ],
+        ),
+      ),
+    );
   }
 }
