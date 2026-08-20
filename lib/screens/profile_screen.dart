@@ -1,0 +1,5 @@
+import 'package:flutter/material.dart';
+import '../core/theme/app_colors.dart';
+import '../core/widgets/premium_widgets.dart';
+
+class ProfileScreen extends StatelessWidget { const ProfileScreen({super.key}); @override Widget build(BuildContext context) => Scaffold(appBar: AppBar(title: const Text('Mi perfil')), body: ListView(padding: const EdgeInsets.all(24), children: [PremiumCard(child: Row(children: [const CircleAvatar(radius: 34, backgroundColor: AppColors.paleBlue, child: Text('CG', style: TextStyle(color: AppColors.navy, fontWeight: FontWeight.w900, fontSize: 20))), const SizedBox(width: 16), Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text('Carlos González', style: Theme.of(context).textTheme.titleLarge), const Text('Emprendedor  •  Managua')])])), const SizedBox(height: 16), const SectionTitle(title: 'Mi actividad'), const SizedBox(height: 12), const StatCard(value: '12', label: 'Búsquedas activas', icon: Icons.search), const SizedBox(height: 12), const StatCard(value: '8', label: 'Proveedores guardados', icon: Icons.bookmark_outline, accent: AppColors.trustGreen)]) ); }

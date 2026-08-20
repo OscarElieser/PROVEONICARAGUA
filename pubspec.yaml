@@ -1,0 +1,29 @@
+name: proveo_premium
+publish_to: "none"
+description: PROVEO Premium - Plataforma inteligente para conectar emprendedores y proveedores.
+version: 1.0.0+1
+environment:
+  sdk: '>=3.4.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.8
+  firebase_core: ^3.15.2
+  firebase_analytics: ^11.5.0
+  firebase_auth: ^5.6.2
+  cloud_firestore: ^5.6.12
+  google_sign_in: ^6.2.2
+  firebase_ai: ^2.3.0
+  firebase_app_check: ^0.3.2+10
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/logo/proveo_logo.png

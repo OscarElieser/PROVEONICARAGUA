@@ -1,0 +1,15 @@
+.dart_tool/
+.packages
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+pubspec.lock
+.idea/
+.vscode/
+node_modules/
+package-lock.json
+package.json
+*.service-account.json
+service-account*.json
+google-services.json
+GoogleService-Info.plist
