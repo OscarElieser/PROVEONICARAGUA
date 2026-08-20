@@ -9,10 +9,10 @@ class MockData {
   ];
 
   static final products = <ProductModel>[
-    ProductModel(id: '1', name: 'Bolsa transparente 500 ml', description: 'Empaque plástico transparente con tapa, apto para alimentos.', provider: 'PlastiPack Nicaragua', category: 'Empaques', availability: 'Disponible', price: 0.18),
-    ProductModel(id: '2', name: 'Bolsa biodegradable', description: 'Alternativa sostenible para comercio y alimentos.', provider: 'Innoplast', category: 'Sostenibles', availability: 'Bajo pedido', price: 0.24),
-    ProductModel(id: '3', name: 'Envase PET 1 litro', description: 'Envase resistente para bebidas y productos líquidos.', provider: 'Evanplast S.A.', category: 'Envases', availability: 'Disponible', price: 0.31),
-    ProductModel(id: '4', name: 'Etiqueta adhesiva premium', description: 'Etiquetas personalizadas para productos y marcas.', provider: 'Pack Solutions', category: 'Etiquetas', availability: 'Disponible', price: 0.08),
+    const ProductModel(id: '1', name: 'Bolsa transparente 500 ml', description: 'Empaque plástico transparente con tapa, apto para alimentos.', provider: 'PlastiPack Nicaragua', category: 'Empaques', availability: 'Disponible', price: 0.18),
+    const ProductModel(id: '2', name: 'Bolsa biodegradable', description: 'Alternativa sostenible para comercio y alimentos.', provider: 'Innoplast', category: 'Sostenibles', availability: 'Bajo pedido', price: 0.24),
+    const ProductModel(id: '3', name: 'Envase PET 1 litro', description: 'Envase resistente para bebidas y productos líquidos.', provider: 'Evanplast S.A.', category: 'Envases', availability: 'Disponible', price: 0.31),
+    const ProductModel(id: '4', name: 'Etiqueta adhesiva premium', description: 'Etiquetas personalizadas para productos y marcas.', provider: 'Pack Solutions', category: 'Etiquetas', availability: 'Disponible', price: 0.08),
   ];
 
   static final quotations = <QuotationModel>[

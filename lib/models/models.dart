@@ -26,9 +26,47 @@ class ProviderModel {
 }
 
 class ProductModel {
-  final String id, name, description, provider, category, availability;
+  final String id;
+  final String name;
+  final String model;
+  final String description;
+  final String provider;
+  final String category;
+  final String availability;
+  final String currency;
   final double price;
-  ProductModel({required this.id, required this.name, required this.description, required this.provider, required this.category, required this.availability, required this.price});
+  final double? maxPrice;
+  final int moq;
+  final String unit;
+  final List<String> characteristics;
+  final String imageUrl;
+  final double discount;
+  final bool isNew;
+
+  const ProductModel({
+    required this.id,
+    required this.name,
+    this.model = '',
+    required this.description,
+    required this.provider,
+    required this.category,
+    this.availability = 'Disponible',
+    this.currency = 'C\$',
+    required this.price,
+    this.maxPrice,
+    this.moq = 1,
+    this.unit = 'unidad',
+    this.characteristics = const [],
+    this.imageUrl = '',
+    this.discount = 0,
+    this.isNew = false,
+  });
+
+  String get priceDisplay {
+    final base = '$currency ${price.toStringAsFixed(2)}';
+    if (maxPrice != null) return '$base - $currency ${maxPrice!.toStringAsFixed(2)} / $unit';
+    return '$base / $unit';
+  }
 }
 
 class QuotationModel {
