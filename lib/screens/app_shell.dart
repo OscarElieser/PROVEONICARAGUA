@@ -9,6 +9,7 @@ import 'match_screen.dart';
 import 'profile_screen.dart';
 import 'quotations_screen.dart';
 import 'search_screen.dart';
+import 'about_us_screen.dart';
 
 /// Contenedor principal con navegación en modo Hamburguesa Desplegable (Drawer)
 /// para dar 100% de visibilidad panorámica a las páginas principales.
@@ -283,6 +284,8 @@ class _AppShellState extends State<AppShell> {
                     _drawerItem(Icons.storefront_outlined, Icons.storefront_rounded, 'Panel de Empresa', 6),
                   if (widget.user.role == UserRole.admin)
                     _drawerItem(Icons.admin_panel_settings_outlined, Icons.admin_panel_settings_rounded, 'Panel de Administración', 7),
+                  const Divider(color: Colors.white24, height: 32),
+                  _drawerItem(Icons.info_outline_rounded, Icons.info_rounded, 'Acerca de PROVEO', 99),
                 ],
               ),
             ),
@@ -348,7 +351,14 @@ class _AppShellState extends State<AppShell> {
             : null,
         selected: isSelected,
         selectedTileColor: Colors.white.withValues(alpha: 0.12),
-        onTap: () => _onSelectDestination(value),
+        onTap: () {
+          if (value == 99) {
+            Navigator.of(context).pop(); // Cierra el drawer
+            Navigator.push(context, MaterialPageRoute(builder: (_) => const AboutUsScreen()));
+          } else {
+            _onSelectDestination(value);
+          }
+        },
       ),
     );
   }

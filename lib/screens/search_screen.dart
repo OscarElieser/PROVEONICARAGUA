@@ -5,6 +5,7 @@ import '../models/models.dart';
 import '../services/firebase/firestore_repository.dart';
 import 'provider_profile_screen.dart';
 import 'quotation_request_screen.dart';
+import '../core/widgets/premium_footer.dart';
 
 /// Buscador B2B responsive con filtros y resultados premium.
 class SearchScreen extends StatelessWidget {
@@ -15,9 +16,16 @@ class SearchScreen extends StatelessWidget {
         body: LayoutBuilder(builder: (context, constraints) {
           final desktop = constraints.maxWidth >= 900;
           const results = _ResultsPanel(); // Constante en tiempo de compilacion para evitar reconstrucciones innecesarias
-          if (!desktop) return ListView(padding: const EdgeInsets.all(20), children: [const TextField(decoration: InputDecoration(prefixIcon: Icon(Icons.search), hintText: 'Buscar productos, servicios o proveedores')), const SizedBox(height: 14), OutlinedButton.icon(onPressed: () {}, icon: const Icon(Icons.tune), label: const Text('Filtros y orden')), const SizedBox(height: 20), results]);
+          if (!desktop) return ListView(children: const [Padding(padding: EdgeInsets.all(20), child: results), PremiumFooter()]);
           // Retorna layout de dos columnas: panel de filtros a la izquierda y resultados a la derecha
-          return const Row(crossAxisAlignment: CrossAxisAlignment.start, children: [SizedBox(width: 250, child: _FiltersPanel()), Expanded(child: Padding(padding: EdgeInsets.only(left: 24), child: results))]);
+          return const SingleChildScrollView(
+            child: Column(
+              children: [
+                Row(crossAxisAlignment: CrossAxisAlignment.start, children: [SizedBox(width: 250, child: _FiltersPanel()), Expanded(child: Padding(padding: EdgeInsets.all(24), child: results))]),
+                PremiumFooter(),
+              ],
+            ),
+          );
         }),
       );
 }
@@ -81,7 +89,91 @@ class _FiltersPanel extends StatelessWidget {
 class _ResultsPanel extends StatelessWidget {
   const _ResultsPanel();
   @override
-  Widget build(BuildContext context) => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [const TextField(decoration: InputDecoration(prefixIcon: Icon(Icons.search), hintText: 'Buscar productos, servicios o proveedores')), const SizedBox(height: 18), Row(children: [Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text('Resultados para “empaque plástico”', style: Theme.of(context).textTheme.titleLarge), const Text('Proveedores confiables encontrados', style: TextStyle(color: AppColors.textSecondary))])), const Chip(label: Text('Más relevantes'))]), const SizedBox(height: 16), FutureBuilder<List<ProviderModel>>(future: FirestoreRepository().getProviders(), builder: (context, snapshot) { if (!snapshot.hasData) return const Center(child: CircularProgressIndicator()); return Column(children: snapshot.data!.map((provider) => _ProviderResult(provider: provider)).toList()); })]);
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start, 
+    children: [
+      const Text('Explorar por Categorías', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
+      const SizedBox(height: 16),
+      SizedBox(
+        height: 110,
+        child: ListView(
+          scrollDirection: Axis.horizontal,
+          children: const [
+            _CategoryCard(icon: Icons.inventory_2_outlined, name: 'Empaques\ny Envases', color: AppColors.trustGreen, active: true),
+            _CategoryCard(icon: Icons.eco_outlined, name: 'Materia\nPrima', color: AppColors.teal),
+            _CategoryCard(icon: Icons.local_shipping_outlined, name: 'Logística\ny Transporte', color: AppColors.navy),
+            _CategoryCard(icon: Icons.print_outlined, name: 'Etiquetas\ny Publicidad', color: AppColors.blue),
+            _CategoryCard(icon: Icons.computer_outlined, name: 'Tecnología\nB2B', color: AppColors.warning),
+          ],
+        ),
+      ),
+      const SizedBox(height: 24),
+      const TextField(decoration: InputDecoration(prefixIcon: Icon(Icons.search), hintText: 'Buscar productos, servicios o proveedores')), 
+      const SizedBox(height: 18), 
+      Row(children: [
+        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text('Resultados de Empaques', style: Theme.of(context).textTheme.titleLarge), const Text('Proveedores confiables encontrados', style: TextStyle(color: AppColors.textSecondary))])), 
+        const Chip(label: Text('Más relevantes'))
+      ]), 
+      const SizedBox(height: 16), 
+      FutureBuilder<List<ProviderModel>>(
+        future: FirestoreRepository().getProviders(), 
+        builder: (context, snapshot) { 
+          if (!snapshot.hasData) return const Center(child: CircularProgressIndicator()); 
+          return Column(children: snapshot.data!.map((provider) => _ProviderResult(provider: provider)).toList()); 
+        }
+      )
+    ]
+  );
+}
+
+class _CategoryCard extends StatelessWidget {
+  final IconData icon;
+  final String name;
+  final Color color;
+  final bool active;
+
+  const _CategoryCard({required this.icon, required this.name, required this.color, this.active = false});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 120,
+      margin: const EdgeInsets.only(right: 12),
+      decoration: BoxDecoration(
+        color: active ? color : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: active ? color : AppColors.border),
+        boxShadow: active ? [BoxShadow(color: color.withValues(alpha: 0.3), blurRadius: 8, offset: const Offset(0, 4))] : [],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: () {},
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(icon, color: active ? Colors.white : color, size: 28),
+                const SizedBox(height: 8),
+                Text(
+                  name,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: active ? Colors.white : AppColors.navy,
+                    fontWeight: active ? FontWeight.w900 : FontWeight.w700,
+                    fontSize: 11,
+                    height: 1.2,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class _ProviderResult extends StatelessWidget {

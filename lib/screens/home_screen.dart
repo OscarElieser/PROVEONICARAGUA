@@ -8,6 +8,8 @@ import 'chat_screen.dart';
 import 'match_screen.dart';
 import 'provider_profile_screen.dart';
 import 'search_screen.dart';
+import 'dart:async';
+import '../core/widgets/premium_footer.dart';
 
 /// Home premium centrada en confianza, descubrimiento y PROVEO Match.
 class HomeScreen extends StatelessWidget {
@@ -18,7 +20,7 @@ class HomeScreen extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final desktop = constraints.maxWidth >= 1000;
-        return SingleChildScrollView(
+        final mainContent = Padding(
           padding: EdgeInsets.symmetric(horizontal: desktop ? 36 : 20, vertical: 18),
           child: Center(
             child: ConstrainedBox(
@@ -31,7 +33,9 @@ class HomeScreen extends StatelessWidget {
                   _Hero(desktop: desktop),
                   const SizedBox(height: 18),
                   const _Metrics(),
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 48),
+                  const _BrandGallery(),
+                  const SizedBox(height: 48),
                   const SectionTitle(title: '¿Cómo funciona PROVEO?', subtitle: 'Una forma más clara de encontrar y elegir proveedores'),
                   const SizedBox(height: 16),
                   const Wrap(spacing: 12, runSpacing: 12, children: [
@@ -40,13 +44,25 @@ class HomeScreen extends StatelessWidget {
                     _Step(number: '3', icon: Icons.description_outlined, title: 'Compara y cotiza', text: 'Analiza precio y reputación.'),
                     _Step(number: '4', icon: Icons.handshake_outlined, title: 'Conecta y decide', text: 'Elige con mayor confianza.'),
                   ]),
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 64),
+                  const _Testimonials(),
+                  const SizedBox(height: 64),
                   const SectionTitle(title: 'Proveedores destacados', subtitle: 'Empresas verificadas con reputación comprobada'),
                   const SizedBox(height: 16),
                   const _FeaturedProviders(),
+                  const SizedBox(height: 64),
                 ],
               ),
             ),
+          ),
+        );
+        
+        return SingleChildScrollView(
+          child: Column(
+            children: [
+              mainContent,
+              const PremiumFooter(),
+            ],
           ),
         );
       },
@@ -416,6 +432,215 @@ class _FeaturedProviders extends StatelessWidget {
         }).toList();
         return Wrap(spacing: 14, runSpacing: 14, children: cards);
       },
+    );
+  }
+}
+
+// ── Galería de Marcas (Auto-scroll) ──────────────────────────────────────────
+class _BrandGallery extends StatefulWidget {
+  const _BrandGallery();
+  @override
+  State<_BrandGallery> createState() => _BrandGalleryState();
+}
+
+class _BrandGalleryState extends State<_BrandGallery> {
+  final ScrollController _scrollController = ScrollController();
+  Timer? _timer;
+
+  final List<Map<String, dynamic>> _brands = [
+    {'name': 'PlastiPack', 'icon': Icons.local_shipping_outlined},
+    {'name': 'LogisNica', 'icon': Icons.map_outlined},
+    {'name': 'AgroTech', 'icon': Icons.eco_outlined},
+    {'name': 'CacaoNica', 'icon': Icons.coffee_outlined},
+    {'name': 'Empaques SA', 'icon': Icons.inventory_2_outlined},
+    {'name': 'Distribuidora', 'icon': Icons.storefront_outlined},
+    {'name': 'TechSolutions', 'icon': Icons.computer_outlined},
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _startAutoScroll();
+    });
+  }
+
+  void _startAutoScroll() {
+    _timer = Timer.periodic(const Duration(milliseconds: 50), (timer) {
+      if (_scrollController.hasClients) {
+        double maxScroll = _scrollController.position.maxScrollExtent;
+        double currentScroll = _scrollController.position.pixels;
+        double delta = 2.0;
+
+        if (currentScroll >= maxScroll) {
+          _scrollController.jumpTo(0);
+        } else {
+          _scrollController.jumpTo(currentScroll + delta);
+        }
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        const Text(
+          'Marcas que confían y se promocionan con nosotros',
+          style: TextStyle(color: AppColors.textSecondary, fontWeight: FontWeight.w700, fontSize: 13, letterSpacing: 0.5),
+        ),
+        const SizedBox(height: 24),
+        SizedBox(
+          height: 80,
+          child: ListView.builder(
+            controller: _scrollController,
+            scrollDirection: Axis.horizontal,
+            itemCount: 1000, // Ciclo infinito simulado
+            itemBuilder: (context, index) {
+              final brand = _brands[index % _brands.length];
+              return Container(
+                width: 180,
+                margin: const EdgeInsets.only(right: 24),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: AppColors.border),
+                  boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 8, offset: const Offset(0, 4))],
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(brand['icon'] as IconData, color: AppColors.navy.withValues(alpha: 0.5), size: 28),
+                    const SizedBox(width: 10),
+                    Text(
+                      brand['name'] as String,
+                      style: TextStyle(color: AppColors.navy.withValues(alpha: 0.8), fontWeight: FontWeight.w900, fontSize: 15),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ── Testimonios ──────────────────────────────────────────────────────────────
+class _Testimonials extends StatelessWidget {
+  const _Testimonials();
+
+  @override
+  Widget build(BuildContext context) {
+    final desktop = MediaQuery.of(context).size.width >= 900;
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const SectionTitle(title: 'Lo que dicen nuestros usuarios', subtitle: 'Experiencias reales construyendo negocios con PROVEO'),
+        const SizedBox(height: 24),
+        Flex(
+          direction: desktop ? Axis.horizontal : Axis.vertical,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: const [
+            Expanded(
+              child: _TestimonialCard(
+                quote: "PROVEO revolucionó nuestras compras. Encontrar empaques de calidad nos tomaba semanas, ahora con IA Match conseguimos 3 cotizaciones en 2 horas.",
+                author: "Carlos Méndez",
+                role: "Emprendedor, Café Nica",
+                rating: 5,
+              ),
+            ),
+            SizedBox(width: 24, height: 24),
+            Expanded(
+              child: _TestimonialCard(
+                quote: "Como proveedores, hemos aumentado nuestras ventas corporativas en un 40%. La plataforma nos conecta con clientes que buscan exactamente lo que ofrecemos.",
+                author: "Laura Castillo",
+                role: "Gerente, PlastiPack",
+                rating: 5,
+              ),
+            ),
+            SizedBox(width: 24, height: 24),
+            Expanded(
+              child: _TestimonialCard(
+                quote: "La verificación de empresas nos da mucha paz mental. Saber que estás negociando con entidades registradas y evaluadas no tiene precio.",
+                author: "Roberto Silva",
+                role: "Director de Compras, Distribuidora RS",
+                rating: 4,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _TestimonialCard extends StatelessWidget {
+  final String quote;
+  final String author;
+  final String role;
+  final int rating;
+
+  const _TestimonialCard({required this.quote, required this.author, required this.role, required this.rating});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: AppColors.border),
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 12, offset: const Offset(0, 6))],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: List.generate(5, (index) => Icon(
+              Icons.star_rounded, 
+              color: index < rating ? AppColors.warning : AppColors.border, 
+              size: 18
+            )),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            '"$quote"',
+            style: const TextStyle(fontSize: 14.5, height: 1.5, color: AppColors.textPrimary, fontStyle: FontStyle.italic),
+          ),
+          const SizedBox(height: 24),
+          Row(
+            children: [
+              CircleAvatar(
+                radius: 18,
+                backgroundColor: AppColors.paleBlue,
+                child: Text(author[0], style: const TextStyle(color: AppColors.navy, fontWeight: FontWeight.bold)),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(author, style: const TextStyle(fontWeight: FontWeight.w800, color: AppColors.navy, fontSize: 13)),
+                    Text(role, style: const TextStyle(color: AppColors.textSecondary, fontSize: 11)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../core/theme/app_colors.dart';
 import '../models/models.dart';
+import '../core/widgets/premium_footer.dart';
 import 'chat_screen.dart';
 import 'quotation_request_screen.dart';
 
@@ -508,6 +509,7 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
               ),
             ),
           ),
+          const SliverToBoxAdapter(child: PremiumFooter()),
         ],
       ),
     );
