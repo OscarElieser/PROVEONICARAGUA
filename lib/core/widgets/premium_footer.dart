@@ -1,5 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../screens/about_us_screen.dart';
+import '../../screens/contact_screen.dart';
+import '../../screens/help_center_screen.dart';
+import '../../screens/match_screen.dart';
+import '../../screens/privacy_policy_screen.dart';
+import '../../screens/search_screen.dart';
+import '../../screens/terms_conditions_screen.dart';
 import '../theme/app_colors.dart';
 
 class PremiumFooter extends StatelessWidget {
@@ -82,8 +89,22 @@ class PremiumFooter extends StatelessWidget {
                         title: 'Plataforma',
                         links: [
                           _FooterLinkItem(label: 'Inicio', onTap: () => Navigator.popUntil(context, (route) => route.isFirst)),
-                          _FooterLinkItem(label: 'Proveedores', onTap: () {}), // Delegado a UI superior o ruta directa si es necesario
-                          _FooterLinkItem(label: 'PROVEO Match IA', onTap: () {}),
+                          _FooterLinkItem(
+                            label: 'Proveedores', 
+                            onTap: () {
+                              if (ModalRoute.of(context)?.settings.name != '/search') {
+                                Navigator.push(context, MaterialPageRoute(builder: (_) => const SearchScreen(), settings: const RouteSettings(name: '/search')));
+                              }
+                            }
+                          ),
+                          _FooterLinkItem(
+                            label: 'PROVEO Match IA', 
+                            onTap: () {
+                              if (ModalRoute.of(context)?.settings.name != '/match') {
+                                Navigator.push(context, MaterialPageRoute(builder: (_) => const MatchScreen(), settings: const RouteSettings(name: '/match')));
+                              }
+                            }
+                          ),
                         ],
                       ),
                       _FooterLinkColumn(
@@ -92,7 +113,6 @@ class PremiumFooter extends StatelessWidget {
                           _FooterLinkItem(
                             label: 'Acerca de nosotros',
                             onTap: () {
-                              // Si ya estamos en AboutUs, no hacemos push
                               if (ModalRoute.of(context)?.settings.name != '/about') {
                                 Navigator.push(context, MaterialPageRoute(
                                   settings: const RouteSettings(name: '/about'),
@@ -101,15 +121,43 @@ class PremiumFooter extends StatelessWidget {
                               }
                             },
                           ),
-                          _FooterLinkItem(label: 'Términos y Condiciones', onTap: () {}),
-                          _FooterLinkItem(label: 'Política de Privacidad', onTap: () {}),
+                          _FooterLinkItem(
+                            label: 'Términos y Condiciones', 
+                            onTap: () {
+                              if (ModalRoute.of(context)?.settings.name != '/terms') {
+                                Navigator.push(context, MaterialPageRoute(builder: (_) => const TermsConditionsScreen(), settings: const RouteSettings(name: '/terms')));
+                              }
+                            }
+                          ),
+                          _FooterLinkItem(
+                            label: 'Política de Privacidad', 
+                            onTap: () {
+                              if (ModalRoute.of(context)?.settings.name != '/privacy') {
+                                Navigator.push(context, MaterialPageRoute(builder: (_) => const PrivacyPolicyScreen(), settings: const RouteSettings(name: '/privacy')));
+                              }
+                            }
+                          ),
                         ],
                       ),
                       _FooterLinkColumn(
                         title: 'Soporte',
                         links: [
-                          _FooterLinkItem(label: 'Centro de Ayuda', onTap: () {}),
-                          _FooterLinkItem(label: 'Contacto', onTap: () {}),
+                          _FooterLinkItem(
+                            label: 'Centro de Ayuda', 
+                            onTap: () {
+                              if (ModalRoute.of(context)?.settings.name != '/help') {
+                                Navigator.push(context, MaterialPageRoute(builder: (_) => const HelpCenterScreen(), settings: const RouteSettings(name: '/help')));
+                              }
+                            }
+                          ),
+                          _FooterLinkItem(
+                            label: 'Contacto', 
+                            onTap: () {
+                              if (ModalRoute.of(context)?.settings.name != '/contact') {
+                                Navigator.push(context, MaterialPageRoute(builder: (_) => const ContactScreen(), settings: const RouteSettings(name: '/contact')));
+                              }
+                            }
+                          ),
                         ],
                       ),
                     ],
@@ -126,13 +174,22 @@ class PremiumFooter extends StatelessWidget {
                     '© ${DateTime.now().year} PROVEO Nicaragua. Todos los derechos reservados.',
                     style: const TextStyle(color: Colors.white54, fontSize: 12),
                   ),
-                  Row(
+                  const Row(
                     children: [
-                      Icon(Icons.facebook, color: Colors.white.withValues(alpha: 0.5), size: 20),
-                      const SizedBox(width: 16),
-                      Icon(Icons.camera_alt_outlined, color: Colors.white.withValues(alpha: 0.5), size: 20),
-                      const SizedBox(width: 16),
-                      Icon(Icons.work_outline, color: Colors.white.withValues(alpha: 0.5), size: 20),
+                      _SocialIcon(
+                        icon: Icons.facebook, 
+                        url: 'https://facebook.com/proveonicaragua',
+                      ),
+                      SizedBox(width: 16),
+                      _SocialIcon(
+                        icon: Icons.camera_alt_outlined, 
+                        url: 'https://instagram.com/proveonicaragua',
+                      ),
+                      SizedBox(width: 16),
+                      _SocialIcon(
+                        icon: Icons.work_outline, 
+                        url: 'https://linkedin.com/company/proveonicaragua',
+                      ),
                     ],
                   ),
                 ],
@@ -191,6 +248,36 @@ class _FooterLinkItem extends StatelessWidget {
             fontWeight: FontWeight.w500,
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _SocialIcon extends StatelessWidget {
+  final IconData icon;
+  final String url;
+
+  const _SocialIcon({required this.icon, required this.url});
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: () async {
+        final uri = Uri.parse(url);
+        if (await canLaunchUrl(uri)) {
+          await launchUrl(uri);
+        } else {
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('No se pudo abrir el enlace.')),
+            );
+          }
+        }
+      },
+      borderRadius: BorderRadius.circular(20),
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Icon(icon, color: Colors.white.withValues(alpha: 0.5), size: 24),
       ),
     );
   }
