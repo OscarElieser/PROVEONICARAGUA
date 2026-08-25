@@ -7,6 +7,7 @@
 // Importa los componentes visuales de Flutter
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 // Importa los tokens de color corporativos
 import '../core/theme/app_colors.dart';
@@ -279,6 +280,23 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
         duration: const Duration(seconds: 2),
       ),
     );
+  }
+
+  /// Abre un enlace externo (sitio web o perfil oficial de red social) en una pestaña nueva
+  Future<void> _launchExternalUrl(String rawUrl, String label) async {
+    try {
+      String url = rawUrl.trim();
+      if (!url.startsWith('http://') && !url.startsWith('https://')) {
+        url = 'https://$url';
+      }
+      final uri = Uri.parse(url);
+      final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+      if (!launched) {
+        _copyToClipboard(url, label);
+      }
+    } catch (e) {
+      _copyToClipboard(rawUrl, label);
+    }
   }
 
   @override
@@ -933,6 +951,7 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
             intel: intel,
             provider: widget.provider,
             onCopy: _copyToClipboard,
+            onOpenUrl: _launchExternalUrl,
           ),
 
           const SizedBox(height: 24),
@@ -958,63 +977,103 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
             ],
           ),
           const SizedBox(height: 12),
-          GridView.count(
-            crossAxisCount: MediaQuery.of(context).size.width > 700 ? 3 : 2,
-            crossAxisSpacing: 10,
-            mainAxisSpacing: 10,
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            childAspectRatio: 1.5,
-            children: [
-              _buildSocialTile(
-                icon: Icons.language_rounded,
-                network: 'Sitio Web Oficial',
-                handle: intel.website,
-                metric: 'Catálogo Online',
-                color: AppColors.teal,
-                onTap: () => _copyToClipboard('https://${intel.website}', 'Sitio Web'),
-              ),
-              _buildSocialTile(
-                icon: Icons.facebook,
-                network: 'Facebook Business',
-                handle: intel.facebook['handle'] ?? '',
-                metric: intel.facebook['followers'] ?? '',
-                color: const Color(0xFF1877F2),
-                onTap: () => _copyToClipboard('Facebook: ${intel.facebook['handle']}', 'Facebook'),
-              ),
-              _buildSocialTile(
-                icon: Icons.camera_alt_outlined,
-                network: 'Instagram Corporativo',
-                handle: intel.instagram['handle'] ?? '',
-                metric: intel.instagram['followers'] ?? '',
-                color: const Color(0xFFE1306C),
-                onTap: () => _copyToClipboard('Instagram: ${intel.instagram['handle']}', 'Instagram'),
-              ),
-              _buildSocialTile(
-                icon: Icons.music_note_rounded,
-                network: 'TikTok Business',
-                handle: intel.tiktok['handle'] ?? '',
-                metric: intel.tiktok['followers'] ?? '',
-                color: Colors.black,
-                onTap: () => _copyToClipboard('TikTok: ${intel.tiktok['handle']}', 'TikTok'),
-              ),
-              _buildSocialTile(
-                icon: Icons.play_circle_fill_rounded,
-                network: 'YouTube Channel',
-                handle: intel.youtube['handle'] ?? '',
-                metric: intel.youtube['followers'] ?? '',
-                color: const Color(0xFFFF0000),
-                onTap: () => _copyToClipboard('YouTube: ${intel.youtube['handle']}', 'YouTube'),
-              ),
-              _buildSocialTile(
-                icon: Icons.business_center_rounded,
-                network: 'LinkedIn B2B',
-                handle: intel.linkedin['handle'] ?? '',
-                metric: intel.linkedin['followers'] ?? 'Red B2B',
-                color: const Color(0xFF0A66C2),
-                onTap: () => _copyToClipboard('LinkedIn: ${intel.linkedin['handle']}', 'LinkedIn'),
-              ),
-            ],
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isWide = constraints.maxWidth > 650;
+              return GridView.count(
+                crossAxisCount: isWide ? 3 : 2,
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 12,
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                childAspectRatio: isWide ? 1.45 : 1.22,
+                children: [
+                  // 1. Sitio Web Oficial
+                  _buildSocialTile(
+                    icon: Icons.language_rounded,
+                    network: 'Sitio Web Oficial',
+                    handle: intel.website,
+                    metric: 'Catálogo Online',
+                    color: AppColors.teal,
+                    targetUrl: 'https://${intel.website.replaceAll('https://', '').replaceAll('http://', '')}',
+                    onTap: () => _launchExternalUrl(
+                      'https://${intel.website.replaceAll('https://', '').replaceAll('http://', '')}',
+                      'Sitio Web Oficial',
+                    ),
+                  ),
+
+                  // 2. Facebook Business
+                  _buildSocialTile(
+                    icon: Icons.facebook,
+                    network: 'Facebook Business',
+                    handle: intel.facebook['handle'] ?? '@PlastiPackNicaragua',
+                    metric: intel.facebook['followers'] ?? '18.4K seguidores',
+                    color: const Color(0xFF1877F2),
+                    targetUrl: 'https://facebook.com/${(intel.facebook['handle'] ?? 'PlastiPackNicaragua').replaceAll('@', '').replaceAll(' ', '')}',
+                    onTap: () => _launchExternalUrl(
+                      'https://facebook.com/${(intel.facebook['handle'] ?? 'PlastiPackNicaragua').replaceAll('@', '').replaceAll(' ', '')}',
+                      'Facebook',
+                    ),
+                  ),
+
+                  // 3. Instagram Corporativo
+                  _buildSocialTile(
+                    icon: Icons.camera_alt_outlined,
+                    network: 'Instagram Corporativo',
+                    handle: intel.instagram['handle'] ?? '@plastipack_ni',
+                    metric: intel.instagram['followers'] ?? '12.8K seguidores',
+                    color: const Color(0xFFE1306C),
+                    targetUrl: 'https://instagram.com/${(intel.instagram['handle'] ?? 'plastipack_ni').replaceAll('@', '').replaceAll(' ', '')}',
+                    onTap: () => _launchExternalUrl(
+                      'https://instagram.com/${(intel.instagram['handle'] ?? 'plastipack_ni').replaceAll('@', '').replaceAll(' ', '')}',
+                      'Instagram',
+                    ),
+                  ),
+
+                  // 4. TikTok Business
+                  _buildSocialTile(
+                    icon: Icons.music_note_rounded,
+                    network: 'TikTok Business',
+                    handle: intel.tiktok['handle'] ?? '@plastipack.nica',
+                    metric: intel.tiktok['followers'] ?? '24.5K seguidores',
+                    color: const Color(0xFF010101),
+                    targetUrl: 'https://tiktok.com/@${(intel.tiktok['handle'] ?? 'plastipack.nica').replaceAll('@', '').replaceAll(' ', '')}',
+                    onTap: () => _launchExternalUrl(
+                      'https://tiktok.com/@${(intel.tiktok['handle'] ?? 'plastipack.nica').replaceAll('@', '').replaceAll(' ', '')}',
+                      'TikTok',
+                    ),
+                  ),
+
+                  // 5. YouTube Oficial
+                  _buildSocialTile(
+                    icon: Icons.play_circle_fill_rounded,
+                    network: 'YouTube Channel',
+                    handle: intel.youtube['handle'] ?? 'PlastiPack Nicaragua Oficial',
+                    metric: intel.youtube['followers'] ?? '3.2K suscriptores',
+                    color: const Color(0xFFFF0000),
+                    targetUrl: 'https://youtube.com/results?search_query=${Uri.encodeComponent(intel.youtube['handle'] ?? widget.provider.name)}',
+                    onTap: () => _launchExternalUrl(
+                      'https://youtube.com/results?search_query=${Uri.encodeComponent(intel.youtube['handle'] ?? widget.provider.name)}',
+                      'YouTube',
+                    ),
+                  ),
+
+                  // 6. LinkedIn Corporativo B2B
+                  _buildSocialTile(
+                    icon: Icons.business_center_rounded,
+                    network: 'LinkedIn B2B',
+                    handle: intel.linkedin['handle'] ?? 'PlastiPack Nicaragua S.A.',
+                    metric: intel.linkedin['followers'] ?? '5.4K seguidores',
+                    color: const Color(0xFF0A66C2),
+                    targetUrl: 'https://www.linkedin.com/search/results/all/?keywords=${Uri.encodeComponent(intel.linkedin['handle'] ?? widget.provider.name)}',
+                    onTap: () => _launchExternalUrl(
+                      'https://www.linkedin.com/search/results/all/?keywords=${Uri.encodeComponent(intel.linkedin['handle'] ?? widget.provider.name)}',
+                      'LinkedIn',
+                    ),
+                  ),
+                ],
+              );
+            },
           ),
 
           const SizedBox(height: 24),
@@ -1134,52 +1193,115 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
     );
   }
 
-  /// Mosaico individual para cada red social con métrica y callback
+  /// Mosaico individual para cada red social con métrica, botón de redirección oficial y acción directa
   Widget _buildSocialTile({
     required IconData icon,
     required String network,
     required String handle,
     required String metric,
     required Color color,
+    required String targetUrl,
     required VoidCallback onTap,
   }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.all(10),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.border),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Row(
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.border),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(14),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(14),
+          splashColor: color.withValues(alpha: 0.15),
+          hoverColor: color.withValues(alpha: 0.05),
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Icon(icon, color: color, size: 18),
+                // Fila Superior: Icono de la Red + Badge de Métricas
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: color.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(icon, color: color, size: 18),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: color.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        metric,
+                        style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: color),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+
+                // Centro: Nombre Oficial de la Red y Handle / Usuario
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      network,
+                      style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 12.5, color: AppColors.navy),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      handle,
+                      style: TextStyle(fontSize: 11, color: color, fontWeight: FontWeight.w700),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+
+                // Fila Inferior: Botón de acción con enlace externo directo
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
                   decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(6),
+                    color: AppColors.paleBlue,
+                    borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Text(metric, style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.w800, color: color)),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        'Visitar Página Oficial',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                          color: color,
+                        ),
+                      ),
+                      const SizedBox(width: 5),
+                      Icon(Icons.open_in_new_rounded, size: 13, color: color),
+                    ],
+                  ),
                 ),
               ],
             ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(network, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 11, color: AppColors.navy)),
-                const SizedBox(height: 1),
-                Text(handle, style: TextStyle(fontSize: 10, color: color, fontWeight: FontWeight.w600), overflow: TextOverflow.ellipsis),
-              ],
-            ),
-          ],
+          ),
         ),
       ),
     );
@@ -1774,11 +1896,13 @@ class _LocationMapCard extends StatefulWidget {
   final CompanyIntelligenceData intel;
   final ProviderModel provider;
   final void Function(String, String) onCopy;
+  final Future<void> Function(String, String)? onOpenUrl;
 
   const _LocationMapCard({
     required this.intel,
     required this.provider,
     required this.onCopy,
+    this.onOpenUrl,
   });
 
   @override
@@ -2229,7 +2353,11 @@ class _LocationMapCardState extends State<_LocationMapCard> with SingleTickerPro
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                       ),
                       onPressed: () {
-                        widget.onCopy(intel.googleMapsUrl, 'Enlace Google Maps');
+                        if (widget.onOpenUrl != null) {
+                          widget.onOpenUrl!(intel.googleMapsUrl, 'Google Maps');
+                        } else {
+                          widget.onCopy(intel.googleMapsUrl, 'Enlace Google Maps');
+                        }
                       },
                       icon: const Icon(Icons.map_rounded, size: 16),
                       label: const Text(
@@ -2245,7 +2373,12 @@ class _LocationMapCardState extends State<_LocationMapCard> with SingleTickerPro
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                       ),
                       onPressed: () {
-                        widget.onCopy('https://waze.com/ul?ll=12.1485,-86.1923&navigate=yes', 'Enlace Waze');
+                        const wazeUrl = 'https://waze.com/ul?ll=12.1485,-86.1923&navigate=yes';
+                        if (widget.onOpenUrl != null) {
+                          widget.onOpenUrl!(wazeUrl, 'Waze');
+                        } else {
+                          widget.onCopy(wazeUrl, 'Enlace Waze');
+                        }
                       },
                       icon: const Icon(Icons.directions_car_filled_rounded, size: 16),
                       label: const Text(
