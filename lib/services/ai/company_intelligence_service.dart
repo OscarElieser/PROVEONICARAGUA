@@ -151,6 +151,15 @@ class CompanyIntelligenceData {
   /// Flota y logística de reparto
   final String fleet;
 
+  /// Coordenadas GPS de la planta o matriz
+  final String coordinates;
+
+  /// Punto de referencia geográfico para logística y visitas
+  final String landmarkReference;
+
+  /// URL de Google Maps para navegación directa
+  final String googleMapsUrl;
+
   /// Datos y perfil de LinkedIn empresarial
   final Map<String, String> linkedin;
 
@@ -189,6 +198,9 @@ class CompanyIntelligenceData {
     this.paymentMethods = 'Transferencia ACH (BAC, LAFISE, Banpro, Ficohsa), Cheques y Pago contra entrega.',
     this.facilities = 'Planta de manufactura de 4,500 m² con 3 muelles de carga pesada',
     this.fleet = '12 camiones propios con monitoreo GPS para distribución nacional',
+    this.coordinates = '12.1485° N, 86.1923° W',
+    this.landmarkReference = 'Km 7.5 Carretera Norte, Frente a entrada Zona Franca Las Mercedes',
+    this.googleMapsUrl = 'https://maps.google.com/?q=12.1485,-86.1923',
     this.linkedin = const {
       'handle': 'Empresa B2B Nicaragua',
       'followers': '3.8K seguidores',
@@ -227,6 +239,9 @@ class CompanyIntelligenceService {
       paymentMethods: 'Transferencia ACH (BAC Credomatic, Banco LAFISE, Banpro), Cheques y Contado.',
       facilities: 'Complejo industrial de 5,200 m² con 4 muelles para cabezales de 40 pies',
       fleet: '14 camiones propios con GPS y flete bonificado en el casco urbano de Managua',
+      coordinates: '12.1485° N, 86.1923° W',
+      landmarkReference: 'Km 7.5 Carretera Norte, Frente a Zona Franca Las Mercedes, Managua',
+      googleMapsUrl: 'https://maps.google.com/?q=12.1485,-86.1923',
       linkedin: {
         'handle': 'PlastiPack Nicaragua S.A.',
         'followers': '5.4K seguidores en LinkedIn',
@@ -314,6 +329,9 @@ class CompanyIntelligenceService {
       paymentMethods: 'BAC, LAFISE Bancentro, Banpro, Cheque certificado y ACH interbancario.',
       facilities: 'Planta de extrusión y rebobinado de 3,800 m² en Masaya',
       fleet: '8 camiones de carga mediana para entregas en Masaya, Managua, Granada y Rivas',
+      coordinates: '11.9744° N, 86.0942° W',
+      landmarkReference: 'Zona Franca Industrial Las Flores, Módulo 12, Masaya',
+      googleMapsUrl: 'https://maps.google.com/?q=11.9744,-86.0942',
       linkedin: {
         'handle': 'Evanplast S.A. Nicaragua',
         'followers': '3.1K seguidores',

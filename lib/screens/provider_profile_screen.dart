@@ -910,7 +910,7 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
           const Divider(height: 1, color: AppColors.border),
           const SizedBox(height: 20),
 
-          // ── 4. UBICACIÓN FÍSICA & LOGÍSTICA DE ENTREGA ──────────────────────
+          // ── 4. UBICACIÓN FÍSICA, MAPA INTERACTIVO & LOGÍSTICA ───────────────
           Row(
             children: [
               Container(
@@ -919,82 +919,20 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
                   color: AppColors.blue.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Icon(Icons.location_on_rounded, color: AppColors.blue, size: 18),
+                child: const Icon(Icons.map_rounded, color: AppColors.blue, size: 18),
               ),
               const SizedBox(width: 10),
               const Text(
-                'Ubicación Física & Capacidad Logística',
+                'Ubicación Física, Mapa & Capacidad Logística',
                 style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: AppColors.navy),
               ),
             ],
           ),
           const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppColors.border),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Icon(Icons.pin_drop_rounded, color: AppColors.error, size: 22),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text('Dirección de Planta y Oficinas Centrales',
-                              style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.textSecondary)),
-                          const SizedBox(height: 3),
-                          Text(
-                            intel.fullAddress,
-                            style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w700, color: AppColors.textPrimary, height: 1.4),
-                          ),
-                        ],
-                      ),
-                    ),
-                    IconButton(
-                      tooltip: 'Copiar Dirección',
-                      icon: const Icon(Icons.copy_rounded, size: 18, color: AppColors.navy),
-                      onPressed: () => _copyToClipboard(intel.fullAddress, 'Dirección física'),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                const Divider(height: 1),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    const Icon(Icons.factory_outlined, color: AppColors.navy, size: 20),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        'Instalaciones: ${intel.facilities}',
-                        style: const TextStyle(fontSize: 12.5, color: AppColors.textPrimary, fontWeight: FontWeight.w600),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    const Icon(Icons.local_shipping_outlined, color: AppColors.trustGreen, size: 20),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        'Distribución: ${intel.fleet}',
-                        style: const TextStyle(fontSize: 12.5, color: AppColors.textPrimary, fontWeight: FontWeight.w600),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
+          _LocationMapCard(
+            intel: intel,
+            provider: widget.provider,
+            onCopy: _copyToClipboard,
           ),
 
           const SizedBox(height: 24),
@@ -1826,5 +1764,661 @@ class _InfoBadge extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+// ── Tarjeta de Mapa de Ubicación & Logística GPS ──────────────────────────────
+/// Componente interactivo que despliega el mapa cartográfico estilizado de Nicaragua,
+/// controles de satélite/calles, zoom, marcador pulsante y accesos directos a Google Maps y Waze.
+class _LocationMapCard extends StatefulWidget {
+  final CompanyIntelligenceData intel;
+  final ProviderModel provider;
+  final void Function(String, String) onCopy;
+
+  const _LocationMapCard({
+    required this.intel,
+    required this.provider,
+    required this.onCopy,
+  });
+
+  @override
+  State<_LocationMapCard> createState() => _LocationMapCardState();
+}
+
+class _LocationMapCardState extends State<_LocationMapCard> with SingleTickerProviderStateMixin {
+  /// Modo satélite o mapa de calles
+  bool _isSatellite = false;
+
+  /// Nivel de zoom interactivo (1.0 = normal, 1.3 = medio, 1.6 = cercano)
+  double _zoom = 1.0;
+
+  /// Controlador de animación para el pulso del pin en el mapa
+  late final AnimationController _pulseController;
+  late final Animation<double> _pulseAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1600),
+    )..repeat(reverse: true);
+
+    _pulseAnimation = Tween<double>(begin: 0.85, end: 1.25).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _pulseController.dispose();
+    super.dispose();
+  }
+
+  void _zoomIn() {
+    setState(() {
+      if (_zoom < 1.6) _zoom += 0.3;
+    });
+  }
+
+  void _zoomOut() {
+    setState(() {
+      if (_zoom > 0.8) _zoom -= 0.3;
+    });
+  }
+
+  void _resetZoom() {
+    setState(() {
+      _zoom = 1.0;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final intel = widget.intel;
+    final isSatellite = _isSatellite;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppColors.border),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // ── 1. VENTANA CARTOGRÁFICA INTERACTIVA ───────────────────────────
+          ClipRRect(
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(17)),
+            child: SizedBox(
+              height: 250,
+              width: double.infinity,
+              child: Stack(
+                children: [
+                  // Lienzo del mapa personalizado con cuadrícula vial
+                  AnimatedBuilder(
+                    animation: _pulseAnimation,
+                    builder: (context, child) {
+                      return CustomPaint(
+                        size: const Size(double.infinity, 250),
+                        painter: _MapCanvasPainter(
+                          isSatellite: isSatellite,
+                          zoom: _zoom,
+                          pulseValue: _pulseAnimation.value,
+                          providerName: widget.provider.name,
+                          locationLabel: widget.provider.location,
+                        ),
+                      );
+                    },
+                  ),
+
+                  // Pin central con logotipo e insignia
+                  Center(
+                    child: Transform.scale(
+                      scale: _zoom,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // Tooltip informativo sobre el marcador
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                            decoration: BoxDecoration(
+                              color: AppColors.navy,
+                              borderRadius: BorderRadius.circular(8),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.3),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 3),
+                                ),
+                              ],
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.factory_rounded, color: AppColors.trustGreen, size: 14),
+                                const SizedBox(width: 6),
+                                Text(
+                                  widget.provider.name,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w900,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+
+                          // Marcador de Pin con efecto pulsante
+                          AnimatedBuilder(
+                            animation: _pulseAnimation,
+                            builder: (context, child) {
+                              return Stack(
+                                alignment: Alignment.center,
+                                children: [
+                                  // Onda exterior
+                                  Container(
+                                    width: 44 * _pulseAnimation.value,
+                                    height: 44 * _pulseAnimation.value,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: AppColors.blue.withValues(alpha: 0.25 / _pulseAnimation.value),
+                                    ),
+                                  ),
+                                  // Pin central
+                                  Container(
+                                    width: 32,
+                                    height: 32,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: AppColors.navy,
+                                      border: Border.all(color: Colors.white, width: 2.5),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withValues(alpha: 0.35),
+                                          blurRadius: 6,
+                                          offset: const Offset(0, 3),
+                                        ),
+                                      ],
+                                    ),
+                                    child: Center(
+                                      child: Text(
+                                        widget.provider.logo,
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w900,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  // ── Controles superiores: Modo Satélite & Tráfico en vivo ───
+                  Positioned(
+                    top: 12,
+                    left: 12,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.92),
+                        borderRadius: BorderRadius.circular(10),
+                        boxShadow: [
+                          BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 4),
+                        ],
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.traffic_rounded, color: AppColors.trustGreen, size: 14),
+                          SizedBox(width: 5),
+                          Text(
+                            'Tráfico en Vivo: Fluido',
+                            style: TextStyle(
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.w800,
+                              color: AppColors.navy,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  // Botones de Zoom y Modo en la esquina superior derecha
+                  Positioned(
+                    top: 12,
+                    right: 12,
+                    child: Column(
+                      children: [
+                        // Toggle Satélite / Calles
+                        InkWell(
+                          onTap: () => setState(() => _isSatellite = !_isSatellite),
+                          borderRadius: BorderRadius.circular(8),
+                          child: Container(
+                            padding: const EdgeInsets.all(7),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.95),
+                              borderRadius: BorderRadius.circular(8),
+                              boxShadow: [
+                                BoxShadow(color: Colors.black.withValues(alpha: 0.12), blurRadius: 4),
+                              ],
+                            ),
+                            child: Icon(
+                              _isSatellite ? Icons.map_outlined : Icons.satellite_alt_rounded,
+                              size: 18,
+                              color: AppColors.navy,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+
+                        // Botón Zoom In (+)
+                        InkWell(
+                          onTap: _zoomIn,
+                          borderRadius: BorderRadius.circular(8),
+                          child: Container(
+                            padding: const EdgeInsets.all(7),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.95),
+                              borderRadius: BorderRadius.circular(8),
+                              boxShadow: [
+                                BoxShadow(color: Colors.black.withValues(alpha: 0.12), blurRadius: 4),
+                              ],
+                            ),
+                            child: const Icon(Icons.add, size: 18, color: AppColors.navy),
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+
+                        // Botón Zoom Out (-)
+                        InkWell(
+                          onTap: _zoomOut,
+                          borderRadius: BorderRadius.circular(8),
+                          child: Container(
+                            padding: const EdgeInsets.all(7),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.95),
+                              borderRadius: BorderRadius.circular(8),
+                              boxShadow: [
+                                BoxShadow(color: Colors.black.withValues(alpha: 0.12), blurRadius: 4),
+                              ],
+                            ),
+                            child: const Icon(Icons.remove, size: 18, color: AppColors.navy),
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+
+                        // Botón Centrar Pin
+                        InkWell(
+                          onTap: _resetZoom,
+                          borderRadius: BorderRadius.circular(8),
+                          child: Container(
+                            padding: const EdgeInsets.all(7),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.95),
+                              borderRadius: BorderRadius.circular(8),
+                              boxShadow: [
+                                BoxShadow(color: Colors.black.withValues(alpha: 0.12), blurRadius: 4),
+                              ],
+                            ),
+                            child: const Icon(Icons.my_location_rounded, size: 18, color: AppColors.blue),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Tag inferior con Coordenadas GPS
+                  Positioned(
+                    bottom: 10,
+                    left: 12,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: AppColors.navy.withValues(alpha: 0.88),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.gps_fixed_rounded, color: Colors.white70, size: 12),
+                          const SizedBox(width: 5),
+                          Text(
+                            intel.coordinates,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          // ── 2. DETALLE DE DIRECCIÓN Y REFERENCIAS LOGÍSTICAS ──────────────
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Dirección y botón de copiar
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Icon(Icons.pin_drop_rounded, color: AppColors.error, size: 22),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Dirección Exacta de Planta / Bodega Principal',
+                            style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.textSecondary),
+                          ),
+                          const SizedBox(height: 3),
+                          Text(
+                            intel.fullAddress,
+                            style: const TextStyle(
+                              fontSize: 13.5,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.textPrimary,
+                              height: 1.35,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      tooltip: 'Copiar Dirección',
+                      icon: const Icon(Icons.copy_rounded, size: 18, color: AppColors.navy),
+                      onPressed: () => widget.onCopy(intel.fullAddress, 'Dirección física'),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+
+                // Punto de referencia para camiones y visitas
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+                  decoration: BoxDecoration(
+                    color: AppColors.paleBlue,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: AppColors.blue.withValues(alpha: 0.2)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.explore_outlined, color: AppColors.navy, size: 18),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Punto de Referencia: ${intel.landmarkReference}',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.navy,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                const Divider(height: 1),
+                const SizedBox(height: 12),
+
+                // Instalaciones y Flota de Reparto
+                Row(
+                  children: [
+                    const Icon(Icons.factory_outlined, color: AppColors.navy, size: 18),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Instalaciones: ${intel.facilities}',
+                        style: const TextStyle(fontSize: 12, color: AppColors.textPrimary, fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Row(
+                  children: [
+                    const Icon(Icons.local_shipping_outlined, color: AppColors.trustGreen, size: 18),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Distribución: ${intel.fleet}',
+                        style: const TextStyle(fontSize: 12, color: AppColors.textPrimary, fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 14),
+
+                // ── 3. BOTONES DE ACCIÓN: GOOGLE MAPS, WAZE Y COORDENADAS ────
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    FilledButton.icon(
+                      style: FilledButton.styleFrom(
+                        backgroundColor: AppColors.navy,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      ),
+                      onPressed: () {
+                        widget.onCopy(intel.googleMapsUrl, 'Enlace Google Maps');
+                      },
+                      icon: const Icon(Icons.map_rounded, size: 16),
+                      label: const Text(
+                        'Abrir en Google Maps',
+                        style: TextStyle(fontWeight: FontWeight.w800, fontSize: 12),
+                      ),
+                    ),
+                    OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.blue,
+                        side: const BorderSide(color: AppColors.blue),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      ),
+                      onPressed: () {
+                        widget.onCopy('https://waze.com/ul?ll=12.1485,-86.1923&navigate=yes', 'Enlace Waze');
+                      },
+                      icon: const Icon(Icons.directions_car_filled_rounded, size: 16),
+                      label: const Text(
+                        'Navegar en Waze',
+                        style: TextStyle(fontWeight: FontWeight.w800, fontSize: 12),
+                      ),
+                    ),
+                    OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.textSecondary,
+                        side: const BorderSide(color: AppColors.border),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      ),
+                      onPressed: () {
+                        widget.onCopy(intel.coordinates, 'Coordenadas GPS');
+                      },
+                      icon: const Icon(Icons.copy_rounded, size: 15),
+                      label: const Text(
+                        'Copiar GPS',
+                        style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Pintor del Mapa Cartográfico Vectorial ────────────────────────────────────
+/// Dibuja la cuadrícula de carreteras, autopistas (Carretera Norte / Panamericana),
+/// zonas industriales, curvas topográficas y etiquetas de calles de Nicaragua.
+class _MapCanvasPainter extends CustomPainter {
+  final bool isSatellite;
+  final double zoom;
+  final double pulseValue;
+  final String providerName;
+  final String locationLabel;
+
+  _MapCanvasPainter({
+    required this.isSatellite,
+    required this.zoom,
+    required this.pulseValue,
+    required this.providerName,
+    required this.locationLabel,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    // 1. Color de Fondo según el modo
+    final bgPaint = Paint()
+      ..color = isSatellite ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0);
+    canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), bgPaint);
+
+    // 2. Bloques de Zonas Industriales y Parques Verdes
+    final zonePaint = Paint()
+      ..color = isSatellite
+          ? const Color(0xFF0F172A).withValues(alpha: 0.7)
+          : const Color(0xFFCBD5E1).withValues(alpha: 0.6);
+
+    final greenPaint = Paint()
+      ..color = isSatellite
+          ? const Color(0xFF064E3B).withValues(alpha: 0.5)
+          : const Color(0xFFD1FAE5).withValues(alpha: 0.7);
+
+    // Dibuja bloques de cuadrícula urbana
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(size.width * 0.05, 20, size.width * 0.35, 80),
+        const Radius.circular(8),
+      ),
+      zonePaint,
+    );
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(size.width * 0.55, 30, size.width * 0.4, 75),
+        const Radius.circular(8),
+      ),
+      zonePaint,
+    );
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(size.width * 0.1, 140, size.width * 0.3, 85),
+        const Radius.circular(8),
+      ),
+      greenPaint,
+    );
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(size.width * 0.55, 145, size.width * 0.38, 80),
+        const Radius.circular(8),
+      ),
+      zonePaint,
+    );
+
+    // 3. Carreteras Principales y Arterias (Carretera Norte)
+    final mainRoadPaint = Paint()
+      ..color = isSatellite ? const Color(0xFF64748B) : Colors.white
+      ..strokeWidth = 14 * zoom
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+
+    final roadBorderPaint = Paint()
+      ..color = isSatellite ? const Color(0xFF334155) : const Color(0xFF94A3B8)
+      ..strokeWidth = 16 * zoom
+      ..style = PaintingStyle.stroke;
+
+    // Ruta Principal horizontal (Carretera Norte / NIC-1)
+    final mainRoadPath = Path();
+    mainRoadPath.moveTo(0, size.height * 0.48);
+    mainRoadPath.cubicTo(
+      size.width * 0.3,
+      size.height * 0.46,
+      size.width * 0.7,
+      size.height * 0.52,
+      size.width,
+      size.height * 0.48,
+    );
+
+    canvas.drawPath(mainRoadPath, roadBorderPaint);
+    canvas.drawPath(mainRoadPath, mainRoadPaint);
+
+    // 4. Avenida Transversal / Acceso a Zona Franca
+    final crossRoadPaint = Paint()
+      ..color = isSatellite ? const Color(0xFF475569) : Colors.white
+      ..strokeWidth = 10 * zoom
+      ..style = PaintingStyle.stroke;
+
+    final crossPath = Path();
+    crossPath.moveTo(size.width * 0.5, 0);
+    crossPath.lineTo(size.width * 0.5, size.height);
+    canvas.drawPath(crossPath, crossRoadPaint);
+
+    // 5. Etiquetas de Vías Viales
+    final textPainter = TextPainter(
+      textDirection: TextDirection.ltr,
+    );
+
+    // Etiqueta: Carretera Norte (NIC-1)
+    textPainter.text = TextSpan(
+      text: 'Carretera Norte • NIC-1',
+      style: TextStyle(
+        fontSize: 10 * zoom,
+        fontWeight: FontWeight.w900,
+        color: isSatellite ? Colors.white70 : const Color(0xFF475569),
+        letterSpacing: 0.5,
+      ),
+    );
+    textPainter.layout();
+    textPainter.paint(canvas, Offset(size.width * 0.12, size.height * 0.48 - 18));
+
+    // Etiqueta: Acceso Zona Franca Industrial
+    textPainter.text = TextSpan(
+      text: 'Acceso Parque Industrial',
+      style: TextStyle(
+        fontSize: 9 * zoom,
+        fontWeight: FontWeight.w700,
+        color: isSatellite ? Colors.white60 : const Color(0xFF64748B),
+      ),
+    );
+    textPainter.layout();
+    textPainter.paint(canvas, Offset(size.width * 0.53, size.height * 0.25));
+  }
+
+  @override
+  bool shouldRepaint(covariant _MapCanvasPainter oldDelegate) {
+    return oldDelegate.isSatellite != isSatellite ||
+        oldDelegate.zoom != zoom ||
+        oldDelegate.pulseValue != pulseValue;
   }
 }
