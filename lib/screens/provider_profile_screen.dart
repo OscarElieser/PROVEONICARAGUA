@@ -5,13 +5,12 @@
 // ==============================================================================
 
 // Importa los componentes visuales de Flutter
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 // Importa los tokens de color corporativos
 import '../core/theme/app_colors.dart';
+import '../core/utils/url_helper.dart';
 
 // Importa los modelos del dominio de datos
 import '../models/models.dart';
@@ -285,38 +284,7 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
 
   /// Abre un enlace externo (sitio web o perfil oficial de red social) en una pestaña nueva
   Future<void> _launchExternalUrl(String rawUrl, String label) async {
-    try {
-      String url = rawUrl.trim();
-      if (!url.startsWith('http://') && !url.startsWith('https://')) {
-        url = 'https://$url';
-      }
-      final uri = Uri.parse(url);
-
-      bool launched = false;
-      if (kIsWeb) {
-        // En Flutter Web, platformDefault con webOnlyWindowName '_blank' abre en pestaña nueva sin bloqueo
-        launched = await launchUrl(
-          uri,
-          mode: LaunchMode.platformDefault,
-          webOnlyWindowName: '_blank',
-        );
-      } else {
-        launched = await launchUrl(
-          uri,
-          mode: LaunchMode.externalApplication,
-        );
-      }
-
-      if (!launched) {
-        launched = await launchUrl(uri);
-      }
-
-      if (!launched) {
-        _copyToClipboard(url, label);
-      }
-    } catch (_) {
-      _copyToClipboard(rawUrl, label);
-    }
+    await openExternalUrl(rawUrl, onCopyFallback: _copyToClipboard, label: label);
   }
 
   @override
