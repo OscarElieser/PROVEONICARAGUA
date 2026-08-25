@@ -1,14 +1,34 @@
+// ==============================================================================
+// PROVEO NICARAGUA - Pantalla de Perfil de Usuario y Ajustes (lib/screens/profile_screen.dart)
+// ¿Qué hace?: Presenta la información de cuenta, métricas de actividad (búsquedas, cotizaciones), edición de datos y logout.
+// ¿Por qué se utiliza?: Permite al usuario consultar y gestionar su identidad comercial dentro de la plataforma.
+// ==============================================================================
+
+// Importa los componentes visuales de Flutter
 import 'package:flutter/material.dart';
+
+// Importa Provider para interactuar con AuthProvider y cerrar sesión
 import 'package:provider/provider.dart';
+
+// Importa los tokens de color corporativos
 import '../core/theme/app_colors.dart';
+
+// Importa los modelos del dominio de usuario
 import '../models/models.dart';
+
+// Importa el encabezado y pie de página globales
 import '../core/widgets/premium_header.dart';
 import '../core/widgets/premium_footer.dart';
+
+// Importa el proveedor de autenticación
 import '../core/providers/auth_provider.dart';
 
+/// Pantalla de gestión de perfil empresarial y datos de cuenta.
 class ProfileScreen extends StatefulWidget {
+  /// Modelo del usuario cuya información se está visualizando
   final AuthUser user;
 
+  /// Constructor con el usuario requerido
   const ProfileScreen({super.key, required this.user});
 
   @override
@@ -16,7 +36,10 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
+  /// Bandera que controla si el formulario se encuentra en modo edición o solo lectura
   bool _isEditing = false;
+
+  /// Controladores de texto para los campos editables
   late TextEditingController _nameCtrl;
   late TextEditingController _phoneCtrl;
   late TextEditingController _addressCtrl;
@@ -24,13 +47,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   void initState() {
     super.initState();
+    // Inicializa los controladores con la información actual del usuario
     _nameCtrl = TextEditingController(text: widget.user.name);
-    _phoneCtrl = TextEditingController(text: '+505 8888 8888'); // Mock phone
-    _addressCtrl = TextEditingController(text: 'Managua, Nicaragua'); // Mock address
+    _phoneCtrl = TextEditingController(text: '+505 8888 8888'); // Teléfono inicial de demostración
+    _addressCtrl = TextEditingController(text: 'Managua, Nicaragua'); // Dirección inicial
   }
 
   @override
   void dispose() {
+    // Libera los controladores de texto para evitar consumo innecesario de memoria
     _nameCtrl.dispose();
     _phoneCtrl.dispose();
     _addressCtrl.dispose();
@@ -44,7 +69,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       appBar: const PremiumHeader(currentPage: 'Perfil'),
       body: CustomScrollView(
         slivers: [
-          // Hero Banner con gradiente
+          // ------------------------------------------------------------------
+          // 1. HERO BANNER: Portada degradada con avatar, nombre e insignia de rol
+          // ------------------------------------------------------------------
           SliverToBoxAdapter(
             child: Container(
               height: 220,
@@ -57,7 +84,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
               child: Stack(
                 children: [
-                  // Patrón decorativo de fondo
+                  // Esferas decorativas transparentes
                   Positioned(
                     right: -30,
                     top: -30,
@@ -82,7 +109,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                     ),
                   ),
-                  // Avatar e info en el hero
+
+                  // Avatar e información centrada
                   Align(
                     alignment: Alignment.center,
                     child: Padding(
@@ -122,6 +150,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             textAlign: TextAlign.center,
                           ),
                           const SizedBox(height: 4),
+                          // Badge con el rol del usuario
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
                             decoration: BoxDecoration(
@@ -147,13 +176,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ),
 
+          // ------------------------------------------------------------------
+          // 2. CONTENIDO PRINCIPAL: Información, Estadísticas y Acciones
+          // ------------------------------------------------------------------
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.all(20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // Botón flotante para editar
+                  // Botón de alternancia entre modo lectura y edición
                   Align(
                     alignment: Alignment.centerRight,
                     child: FilledButton.icon(
@@ -163,7 +195,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       onPressed: () {
                         setState(() {
                           if (_isEditing) {
-                            // Save logic here
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(content: Text('Perfil guardado exitosamente')),
                             );
@@ -177,20 +208,36 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                   const SizedBox(height: 16),
 
-                  // Tarjeta de información de cuenta
+                  // Tarjeta con información de la cuenta
                   _SectionCard(
                     title: 'Información de Cuenta',
                     icon: Icons.manage_accounts_outlined,
                     child: Column(
                       children: [
                         if (!_isEditing) ...[
-                          _InfoRow(icon: Icons.business_outlined, label: 'Nombre de la Empresa', value: _nameCtrl.text),
+                          _InfoRow(
+                            icon: Icons.business_outlined,
+                            label: 'Nombre de la Empresa',
+                            value: _nameCtrl.text,
+                          ),
                           const Divider(height: 1),
-                          _InfoRow(icon: Icons.email_outlined, label: 'Correo electrónico', value: widget.user.email),
+                          _InfoRow(
+                            icon: Icons.email_outlined,
+                            label: 'Correo electrónico',
+                            value: widget.user.email,
+                          ),
                           const Divider(height: 1),
-                          _InfoRow(icon: Icons.phone_outlined, label: 'Teléfono', value: _phoneCtrl.text),
+                          _InfoRow(
+                            icon: Icons.phone_outlined,
+                            label: 'Teléfono',
+                            value: _phoneCtrl.text,
+                          ),
                           const Divider(height: 1),
-                          _InfoRow(icon: Icons.location_on_outlined, label: 'Dirección', value: _addressCtrl.text),
+                          _InfoRow(
+                            icon: Icons.location_on_outlined,
+                            label: 'Dirección',
+                            value: _addressCtrl.text,
+                          ),
                         ] else ...[
                           Padding(
                             padding: const EdgeInsets.all(16.0),
@@ -198,23 +245,35 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               children: [
                                 TextField(
                                   controller: _nameCtrl,
-                                  decoration: const InputDecoration(labelText: 'Nombre de la Empresa', border: OutlineInputBorder()),
+                                  decoration: const InputDecoration(
+                                    labelText: 'Nombre de la Empresa',
+                                    border: OutlineInputBorder(),
+                                  ),
                                 ),
                                 const SizedBox(height: 12),
                                 TextField(
                                   controller: TextEditingController(text: widget.user.email),
                                   enabled: false,
-                                  decoration: const InputDecoration(labelText: 'Correo electrónico (Solo Lectura)', border: OutlineInputBorder()),
+                                  decoration: const InputDecoration(
+                                    labelText: 'Correo electrónico (Solo Lectura)',
+                                    border: OutlineInputBorder(),
+                                  ),
                                 ),
                                 const SizedBox(height: 12),
                                 TextField(
                                   controller: _phoneCtrl,
-                                  decoration: const InputDecoration(labelText: 'Teléfono', border: OutlineInputBorder()),
+                                  decoration: const InputDecoration(
+                                    labelText: 'Teléfono',
+                                    border: OutlineInputBorder(),
+                                  ),
                                 ),
                                 const SizedBox(height: 12),
                                 TextField(
                                   controller: _addressCtrl,
-                                  decoration: const InputDecoration(labelText: 'Dirección', border: OutlineInputBorder()),
+                                  decoration: const InputDecoration(
+                                    labelText: 'Dirección',
+                                    border: OutlineInputBorder(),
+                                  ),
                                 ),
                               ],
                             ),
@@ -226,7 +285,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   const SizedBox(height: 16),
 
                   if (!_isEditing) ...[
-                    // Estadísticas de actividad
+                    // Sección de estadísticas de actividad del usuario en la plataforma
                     _SectionCard(
                       title: 'Mi Actividad',
                       icon: Icons.bar_chart_outlined,
@@ -263,7 +322,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                     const SizedBox(height: 16),
 
-                    // Acciones rápidas
+                    // Accesos rápidos y configuración
                     _SectionCard(
                       title: 'Acciones',
                       icon: Icons.bolt_outlined,
@@ -295,7 +354,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             subtitle: 'Guías y soporte PROVEO',
                             color: AppColors.teal,
                             onTap: () {
-                               Navigator.pushNamed(context, '/help');
+                              Navigator.pushNamed(context, '/help');
                             },
                           ),
                         ],
@@ -303,15 +362,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                     const SizedBox(height: 24),
 
-                    // Botón de cerrar sesión
+                    // Botón de cerrar sesión con diálogo de confirmación
                     ElevatedButton.icon(
                       onPressed: () async {
                         final confirmed = await showDialog<bool>(
                           context: context,
                           builder: (dialogCtx) => AlertDialog(
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                            title: const Text('¿Cerrar sesión?',
-                                style: TextStyle(fontWeight: FontWeight.w800)),
+                            title: const Text(
+                              '¿Cerrar sesión?',
+                              style: TextStyle(fontWeight: FontWeight.w800),
+                            ),
                             content: const Text('Se cerrará tu sesión activa en PROVEO.'),
                             actions: [
                               TextButton(
@@ -350,7 +411,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                     const SizedBox(height: 12),
 
-                    // Versión de app
+                    // Versión y créditos de la plataforma
                     const Center(
                       child: Text(
                         'PROVEO Nicaragua • v1.0.0',
@@ -367,18 +428,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ),
           ),
+
+          // ------------------------------------------------------------------
+          // 3. PIE DE PÁGINA UNIVERSAL
+          // ------------------------------------------------------------------
           const SliverToBoxAdapter(child: PremiumFooter()),
         ],
       ),
     );
   }
 
+  /// Calcula las iniciales del usuario para mostrarlas en el avatar
   String get _initials {
     final names = widget.user.name.trim().split(RegExp(r'\s+'));
     if (names.length == 1) return names.first.substring(0, names.first.length.clamp(0, 2)).toUpperCase();
     return '${names.first[0]}${names.last[0]}'.toUpperCase();
   }
 
+  /// Obtiene la etiqueta en lenguaje natural correspondiente al rol del usuario
   String get _roleName {
     switch (widget.user.role) {
       case UserRole.admin:
@@ -393,7 +460,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 }
 
-// ── Sección card con encabezado ──────────────────────────────────────
+/// Contenedor de sección estilizado con icono, título y divisor decorativo.
 class _SectionCard extends StatelessWidget {
   final String title;
   final IconData icon;
@@ -430,11 +497,14 @@ class _SectionCard extends StatelessWidget {
                   child: Icon(icon, size: 16, color: AppColors.blue),
                 ),
                 const SizedBox(width: 10),
-                Text(title,
-                    style: const TextStyle(
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.textPrimary,
-                        fontSize: 14)),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.textPrimary,
+                    fontSize: 14,
+                  ),
+                ),
               ],
             ),
           ),
@@ -446,7 +516,7 @@ class _SectionCard extends StatelessWidget {
   }
 }
 
-// ── Fila de información ───────────────────────────────────────────────
+/// Renglón que despliega un campo de información con su etiqueta, icono y valor.
 class _InfoRow extends StatelessWidget {
   final IconData icon;
   final String label;
@@ -465,9 +535,15 @@ class _InfoRow extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(label, style: const TextStyle(color: AppColors.textSecondary, fontSize: 11, fontWeight: FontWeight.w600)),
+                Text(
+                  label,
+                  style: const TextStyle(color: AppColors.textSecondary, fontSize: 11, fontWeight: FontWeight.w600),
+                ),
                 const SizedBox(height: 2),
-                Text(value, style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w700, fontSize: 13)),
+                Text(
+                  value,
+                  style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.w700, fontSize: 13),
+                ),
               ],
             ),
           ),
@@ -477,7 +553,7 @@ class _InfoRow extends StatelessWidget {
   }
 }
 
-// ── Celda de estadística ──────────────────────────────────────────────
+/// Muestra una celda estadística vertical (número destacado y descripción).
 class _StatCell extends StatelessWidget {
   final String value;
   final String label;
@@ -493,27 +569,35 @@ class _StatCell extends StatelessWidget {
         children: [
           Icon(icon, color: color, size: 22),
           const SizedBox(height: 6),
-          Text(value,
-              style: TextStyle(
-                  color: color, fontSize: 22, fontWeight: FontWeight.w900)),
+          Text(
+            value,
+            style: TextStyle(color: color, fontSize: 22, fontWeight: FontWeight.w900),
+          ),
           const SizedBox(height: 2),
-          Text(label,
-              style: const TextStyle(
-                  color: AppColors.textSecondary, fontSize: 11, fontWeight: FontWeight.w600)),
+          Text(
+            label,
+            style: const TextStyle(color: AppColors.textSecondary, fontSize: 11, fontWeight: FontWeight.w600),
+          ),
         ],
       ),
     );
   }
 }
 
-// ── Fila de acción ─────────────────────────────────────────────────────
+/// Elemento interactivo de acción rápida con navegación hacia subpantallas.
 class _ActionTile extends StatelessWidget {
   final IconData icon;
   final String label;
   final String subtitle;
   final Color color;
   final VoidCallback onTap;
-  const _ActionTile({required this.icon, required this.label, required this.subtitle, required this.color, required this.onTap});
+  const _ActionTile({
+    required this.icon,
+    required this.label,
+    required this.subtitle,
+    required this.color,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -536,11 +620,15 @@ class _ActionTile extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(label,
-                      style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: AppColors.textPrimary)),
+                  Text(
+                    label,
+                    style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: AppColors.textPrimary),
+                  ),
                   const SizedBox(height: 2),
-                  Text(subtitle,
-                      style: const TextStyle(color: AppColors.textSecondary, fontSize: 11)),
+                  Text(
+                    subtitle,
+                    style: const TextStyle(color: AppColors.textSecondary, fontSize: 11),
+                  ),
                 ],
               ),
             ),
@@ -551,3 +639,4 @@ class _ActionTile extends StatelessWidget {
     );
   }
 }
+

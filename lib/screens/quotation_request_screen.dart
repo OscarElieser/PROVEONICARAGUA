@@ -1,14 +1,34 @@
+// ==============================================================================
+// PROVEO NICARAGUA - Asistente Wizard de Cotización B2B (lib/screens/quotation_request_screen.dart)
+// ¿Qué hace?: Guía al comprador paso a paso (Especificaciones -> Selección de Proveedores -> Confirmación/Inteligencia Empresarial) para emitir solicitudes formales.
+// ¿Por qué se utiliza?: Estandariza los requerimientos de compras e integra IA para validar fuentes y reputación de los fabricantes.
+// ==============================================================================
+
+// Importa los componentes visuales de Flutter
 import 'package:flutter/material.dart';
+
+// Importa el gestor de apertura de enlaces externos
 import 'package:url_launcher/url_launcher.dart';
+
+// Importa los tokens de color corporativos
 import '../core/theme/app_colors.dart';
+
+// Importa los modelos de datos
 import '../models/models.dart';
+
+// Importa el servicio de inteligencia y verificación de empresas
 import '../services/ai/company_intelligence_service.dart';
+
+// Importa el repositorio de base de datos Firestore
 import '../services/firebase/firestore_repository.dart';
+
+// Importa el encabezado y pie de página globales
 import '../core/widgets/premium_header.dart';
 import '../core/widgets/premium_footer.dart';
 
 /// Flujo de Solicitud de Cotización B2B Ultra-Premium con navegación paso a paso (Anterior y Siguiente).
 class QuotationRequestScreen extends StatefulWidget {
+  /// Constructor constante
   const QuotationRequestScreen({super.key});
 
   @override
@@ -16,11 +36,18 @@ class QuotationRequestScreen extends StatefulWidget {
 }
 
 class _QuotationRequestScreenState extends State<QuotationRequestScreen> {
+  /// Índice del paso actual en el wizard (0: Especificaciones, 1: Proveedores, 2: Confirmación)
   int step = 0;
+
+  /// Servicio de IA para recopilar inteligencia comercial de los proveedores
   final _companyAi = CompanyIntelligenceService();
+
+  /// Caché de reportes generados para evitar reconsultas innecesarias por proveedor
   final Map<String, Future<CompanyIntelligenceReport>> _companyReports = {};
 
-  // Form State
+  // --------------------------------------------------------------------------
+  // Controladores de texto del formulario de especificaciones
+  // --------------------------------------------------------------------------
   final _productCtrl = TextEditingController(text: 'Empaque plástico termoformado y galoneras');
   final _descCtrl = TextEditingController(
       text: 'Requerimos suministro continuo de envases plásticos grado alimenticio para distribución nacional.');
@@ -28,6 +55,7 @@ class _QuotationRequestScreenState extends State<QuotationRequestScreen> {
   final _budgetCtrl = TextEditingController(text: 'C\$ 15,000');
   final _locationCtrl = TextEditingController(text: 'Managua, Carretera Norte');
 
+  /// Requisitos técnicos especiales disponibles para selección rápida
   final List<String> _features = [
     'Apto para alimentos (BPA Free)',
     'Con tapa de seguridad',
@@ -36,8 +64,11 @@ class _QuotationRequestScreenState extends State<QuotationRequestScreen> {
     'Resistente a químicos',
     'Entrega programada',
   ];
+
+  /// Conjunto de características seleccionadas por el comprador
   final Set<String> _selectedFeatures = {'Apto para alimentos (BPA Free)', 'Con tapa de seguridad'};
 
+  /// Proveedores candidatos disponibles para recibir la solicitud
   final List<Map<String, dynamic>> _providers = [
     {
       'name': 'PlastiPack Nicaragua',
@@ -65,6 +96,7 @@ class _QuotationRequestScreenState extends State<QuotationRequestScreen> {
     },
   ];
 
+  /// Obtiene o genera el reporte de inteligencia de IA para la empresa candidata
   Future<CompanyIntelligenceReport> _reportFor(Map<String, dynamic> provider) {
     final name = provider['name'] as String;
     return _companyReports.putIfAbsent(name, () {
@@ -100,6 +132,7 @@ class _QuotationRequestScreenState extends State<QuotationRequestScreen> {
     });
   }
 
+  /// Abre un enlace externo (red social, sitio web, ficha técnica) en el navegador del dispositivo
   static Future<void> _openSource(String url) async {
     await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
   }
@@ -114,6 +147,7 @@ class _QuotationRequestScreenState extends State<QuotationRequestScreen> {
     super.dispose();
   }
 
+  /// Avanza al siguiente paso del asistente o ejecuta el envío final en el paso 2
   void _next() {
     if (step < 2) {
       if (step == 0) _companyReports.clear();
@@ -123,6 +157,7 @@ class _QuotationRequestScreenState extends State<QuotationRequestScreen> {
     }
   }
 
+  /// Retrocede al paso anterior o cierra la pantalla si está en el paso inicial
   void _previous() {
     if (step > 0) {
       setState(() => step--);
@@ -131,6 +166,7 @@ class _QuotationRequestScreenState extends State<QuotationRequestScreen> {
     }
   }
 
+  /// Registra la cotización en Firestore y notifica a los proveedores seleccionados
   Future<void> _submitQuotation() async {
     final messenger = ScaffoldMessenger.of(context);
     final nav = Navigator.of(context);
@@ -183,7 +219,9 @@ class _QuotationRequestScreenState extends State<QuotationRequestScreen> {
       appBar: const PremiumHeader(currentPage: 'Cotizaciones'),
       body: CustomScrollView(
         slivers: [
-          // Banner Hero con Wizard de Progreso
+          // ------------------------------------------------------------------
+          // 1. BANNER HERO: Indicador visual del wizard de pasos
+          // ------------------------------------------------------------------
           SliverToBoxAdapter(
             child: Container(
               padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 20),
@@ -228,7 +266,9 @@ class _QuotationRequestScreenState extends State<QuotationRequestScreen> {
             ),
           ),
 
-          // Contenido del Formulario por Paso
+          // ------------------------------------------------------------------
+          // 2. CONTENIDO DEL PASO ACTIVO
+          // ------------------------------------------------------------------
           SliverToBoxAdapter(
             child: Center(
               child: ConstrainedBox(
@@ -315,6 +355,10 @@ class _QuotationRequestScreenState extends State<QuotationRequestScreen> {
               ),
             ),
           ),
+
+          // ------------------------------------------------------------------
+          // 3. PIE DE PÁGINA UNIVERSAL
+          // ------------------------------------------------------------------
           const SliverToBoxAdapter(child: PremiumFooter()),
         ],
       ),
@@ -443,49 +487,49 @@ class _QuotationRequestScreenState extends State<QuotationRequestScreen> {
           return Column(
             children: [
               Container(
-            margin: const EdgeInsets.only(bottom: 12),
-            decoration: BoxDecoration(
-              color: isSelected ? AppColors.paleBlue : Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: isSelected ? AppColors.blue : AppColors.border,
-                width: isSelected ? 2 : 1,
-              ),
-            ),
-            child: CheckboxListTile(
-              value: isSelected,
-              activeColor: AppColors.navy,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              onChanged: (val) {
-                setState(() {
-                  p['selected'] = val ?? false;
-                  if (p['selected'] == true) _reportFor(p);
-                });
-              },
-              title: Row(
-                children: [
-                  Expanded(
-                    child: Text(p['name'] as String, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
+                margin: const EdgeInsets.only(bottom: 12),
+                decoration: BoxDecoration(
+                  color: isSelected ? AppColors.paleBlue : Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: isSelected ? AppColors.blue : AppColors.border,
+                    width: isSelected ? 2 : 1,
                   ),
-                  const SizedBox(width: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: AppColors.trustGreen,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      p['tag'] as String,
-                      style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
-                    ),
+                ),
+                child: CheckboxListTile(
+                  value: isSelected,
+                  activeColor: AppColors.navy,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  onChanged: (val) {
+                    setState(() {
+                      p['selected'] = val ?? false;
+                      if (p['selected'] == true) _reportFor(p);
+                    });
+                  },
+                  title: Row(
+                    children: [
+                      Expanded(
+                        child: Text(p['name'] as String, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
+                      ),
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: AppColors.trustGreen,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          p['tag'] as String,
+                          style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-              subtitle: Text(
-                '${p['location']} • ${p['rating']} ★ • Responde en ${p['response']}',
-                style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
-              ),
-            ),
+                  subtitle: Text(
+                    '${p['location']} • ${p['rating']} ★ • Responde en ${p['response']}',
+                    style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                  ),
+                ),
               ),
               if (isSelected)
                 FutureBuilder<CompanyIntelligenceReport>(
@@ -569,6 +613,7 @@ class _QuotationRequestScreenState extends State<QuotationRequestScreen> {
 }
 
 // ── Fila de Resumen ───────────────────────────────────────────────────
+/// Indicador de carga animado mientras se construye el reporte de inteligencia comercial.
 class _CompanyIntelligenceLoading extends StatelessWidget {
   const _CompanyIntelligenceLoading();
 
@@ -602,6 +647,7 @@ class _CompanyIntelligenceLoading extends StatelessWidget {
   }
 }
 
+/// Panel de inteligencia comercial generado por IA con fuentes web y preguntas recomendadas.
 class _CompanyIntelligencePanel extends StatelessWidget {
   final CompanyIntelligenceReport report;
 
@@ -682,6 +728,7 @@ class _CompanyIntelligencePanel extends StatelessWidget {
   }
 }
 
+/// Elemento con icono de verificación para las pautas del checklist de compras.
 class _AiChecklistItem extends StatelessWidget {
   final String text;
 
@@ -703,6 +750,7 @@ class _AiChecklistItem extends StatelessWidget {
   }
 }
 
+/// Fila estructurada de etiqueta y valor para el resumen final de la cotización.
 class _SummaryRow extends StatelessWidget {
   final String label;
   final String value;
@@ -730,6 +778,7 @@ class _SummaryRow extends StatelessWidget {
 }
 
 // ── Wizard de Progreso ────────────────────────────────────────────────
+/// Barra horizontal que dibuja los nodos numéricos y líneas de conexión entre pasos.
 class _StepWizardProgress extends StatelessWidget {
   final int currentStep;
 
@@ -749,6 +798,7 @@ class _StepWizardProgress extends StatelessWidget {
   }
 }
 
+/// Nodo circular numerado del paso en el wizard.
 class _Node extends StatelessWidget {
   final String num;
   final String label;
@@ -801,6 +851,7 @@ class _Node extends StatelessWidget {
   }
 }
 
+/// Línea divisoria entre nodos del wizard con iluminación de avance.
 class _Line extends StatelessWidget {
   final bool active;
 
@@ -817,4 +868,5 @@ class _Line extends StatelessWidget {
     );
   }
 }
+
 

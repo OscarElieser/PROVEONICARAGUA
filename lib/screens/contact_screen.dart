@@ -1,9 +1,22 @@
+// ==============================================================================
+// PROVEO NICARAGUA - Pantalla de Contacto y Atención Empresarial (lib/screens/contact_screen.dart)
+// ¿Qué hace?: Despliega los canales oficiales de atención (oficinas, correos, WhatsApp) y un formulario directo de contacto.
+// ¿Por qué se utiliza?: Facilita la comunicación entre prospectos, usuarios corporativos y el equipo de operaciones de Proveo.
+// ==============================================================================
+
+// Importa los componentes visuales de Flutter
 import 'package:flutter/material.dart';
+
+// Importa los tokens de color corporativos
 import '../core/theme/app_colors.dart';
+
+// Importa el encabezado y pie de página globales
 import '../core/widgets/premium_header.dart';
 import '../core/widgets/premium_footer.dart';
 
+/// Pantalla de atención y formulario de soporte institucional.
 class ContactScreen extends StatelessWidget {
+  /// Constructor constante
   const ContactScreen({super.key});
 
   @override
@@ -13,6 +26,9 @@ class ContactScreen extends StatelessWidget {
       appBar: const PremiumHeader(currentPage: 'Contacto'),
       body: CustomScrollView(
         slivers: [
+          // ------------------------------------------------------------------
+          // 1. HERO BANNER: Encabezado con gradiente azul-verde marino
+          // ------------------------------------------------------------------
           SliverToBoxAdapter(
             child: Container(
               padding: const EdgeInsets.symmetric(vertical: 60, horizontal: 24),
@@ -48,6 +64,10 @@ class ContactScreen extends StatelessWidget {
               ),
             ),
           ),
+
+          // ------------------------------------------------------------------
+          // 2. SECCIÓN PRINCIPAL: Datos de Contacto y Formulario de Mensaje
+          // ------------------------------------------------------------------
           SliverPadding(
             padding: const EdgeInsets.all(32),
             sliver: SliverToBoxAdapter(
@@ -57,7 +77,7 @@ class ContactScreen extends StatelessWidget {
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Información de contacto
+                      // Columna izquierda: Información directa de contacto
                       const Expanded(
                         flex: 1,
                         child: Column(
@@ -89,7 +109,8 @@ class ContactScreen extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(width: 48),
-                      // Formulario de contacto
+
+                      // Columna derecha: Tarjeta con formulario de contacto
                       Expanded(
                         flex: 2,
                         child: Container(
@@ -111,9 +132,14 @@ class ContactScreen extends StatelessWidget {
                             children: [
                               const Text(
                                 'Envíanos un mensaje',
-                                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.textPrimary,
+                                ),
                               ),
                               const SizedBox(height: 24),
+                              // Campo de Nombre
                               TextFormField(
                                 decoration: const InputDecoration(
                                   labelText: 'Nombre Completo',
@@ -122,6 +148,7 @@ class ContactScreen extends StatelessWidget {
                                 ),
                               ),
                               const SizedBox(height: 16),
+                              // Campo de Correo
                               TextFormField(
                                 decoration: const InputDecoration(
                                   labelText: 'Correo Electrónico',
@@ -130,6 +157,7 @@ class ContactScreen extends StatelessWidget {
                                 ),
                               ),
                               const SizedBox(height: 16),
+                              // Campo de Mensaje multilínea
                               TextFormField(
                                 maxLines: 4,
                                 decoration: const InputDecoration(
@@ -139,20 +167,28 @@ class ContactScreen extends StatelessWidget {
                                 ),
                               ),
                               const SizedBox(height: 24),
+                              // Botón de Enviar
                               SizedBox(
                                 width: double.infinity,
                                 height: 50,
                                 child: FilledButton(
                                   onPressed: () {
                                     ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(content: Text('Mensaje enviado con éxito. Te contactaremos pronto.')),
+                                      const SnackBar(
+                                        content: Text('Mensaje enviado con éxito. Te contactaremos pronto.'),
+                                      ),
                                     );
                                   },
                                   style: FilledButton.styleFrom(
                                     backgroundColor: AppColors.blue,
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
                                   ),
-                                  child: const Text('Enviar Mensaje', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                                  child: const Text(
+                                    'Enviar Mensaje',
+                                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                  ),
                                 ),
                               ),
                             ],
@@ -165,6 +201,10 @@ class ContactScreen extends StatelessWidget {
               ),
             ),
           ),
+
+          // ------------------------------------------------------------------
+          // 3. PIE DE PÁGINA UNIVERSAL
+          // ------------------------------------------------------------------
           const SliverToBoxAdapter(child: PremiumFooter()),
         ],
       ),
@@ -172,6 +212,7 @@ class ContactScreen extends StatelessWidget {
   }
 }
 
+/// Elemento para mostrar un canal de contacto directo con icono y subtítulo explicativo.
 class _ContactInfoTile extends StatelessWidget {
   final IconData icon;
   final String title;
@@ -213,3 +254,4 @@ class _ContactInfoTile extends StatelessWidget {
     );
   }
 }
+

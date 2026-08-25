@@ -1,14 +1,34 @@
+// ==============================================================================
+// PROVEO NICARAGUA - Matriz Comparativa Inteligente B2B (lib/screens/comparison_screen.dart)
+// ¿Qué hace?: Contrasta cotizaciones simultáneas evaluando precio, días de despacho, distancia en km y análisis de recomendación IA con Gemini.
+// ¿Por qué se utiliza?: Otorga a las empresas una herramienta cuantitativa para seleccionar la oferta comercial más ventajosa.
+// ==============================================================================
+
+// Importa los componentes visuales de Flutter
 import 'package:flutter/material.dart';
+
+// Importa los tokens de color corporativos
 import '../core/theme/app_colors.dart';
+
+// Importa el encabezado y pie de página globales
 import '../core/widgets/premium_header.dart';
 import '../core/widgets/premium_footer.dart';
+
+// Importa los modelos del dominio de datos
 import '../models/models.dart';
+
+// Importa el servicio de Inteligencia Artificial Gemini
 import '../services/ai/gemini_recommendation_service.dart';
+
+// Importa el repositorio de base de datos Firestore
 import '../services/firebase/firestore_repository.dart';
+
+// Importa la pantalla de mensajería para negociación
 import 'chat_screen.dart';
 
 /// Comparador Inteligente y Matriz Comparativa B2B de PROVEO.
 class ComparisonScreen extends StatefulWidget {
+  /// Constructor constante
   const ComparisonScreen({super.key});
 
   @override
@@ -16,8 +36,13 @@ class ComparisonScreen extends StatefulWidget {
 }
 
 class _ComparisonScreenState extends State<ComparisonScreen> {
+  /// Instancia del servicio de IA Gemini para generar el veredicto técnico
   final _geminiService = GeminiService();
+
+  /// Texto generado con la conclusión del análisis de las ofertas
   String? _aiVerdict;
+
+  /// Bandera de estado de carga mientras la IA genera el veredicto
   bool _loadingAi = true;
 
   @override
@@ -26,6 +51,7 @@ class _ComparisonScreenState extends State<ComparisonScreen> {
     _fetchAiVerdict();
   }
 
+  /// Envía un prompt contextualizado a Gemini IA con los datos de las ofertas para generar una recomendación comercial
   Future<void> _fetchAiVerdict() async {
     try {
       const prompt = '''Eres el Asesor Senior de Compras B2B de PROVEO Nicaragua.
@@ -47,9 +73,11 @@ En 3 oraciones concisas:
         });
       }
     } catch (_) {
+      // En caso de desconexión o fallo en la API, se despliega una respuesta heurística de respaldo
       if (mounted) {
         setState(() {
-          _aiVerdict = 'PlastiPack Nicaragua es la opción óptima para despachos urgentes y máxima garantía. Para ahorro presupuestario, Evanplast S.A. ofrece el mejor precio por volumen con entrega a 6 días.';
+          _aiVerdict =
+              'PlastiPack Nicaragua es la opción óptima para despachos urgentes y máxima garantía. Para ahorro presupuestario, Evanplast S.A. ofrece el mejor precio por volumen con entrega a 6 días.';
           _loadingAi = false;
         });
       }
@@ -63,7 +91,9 @@ En 3 oraciones concisas:
       appBar: const PremiumHeader(currentPage: 'Cotizaciones'),
       body: CustomScrollView(
         slivers: [
-          // Banner Hero
+          // ------------------------------------------------------------------
+          // 1. BANNER HERO: Encabezado con gradiente tricolor
+          // ------------------------------------------------------------------
           SliverToBoxAdapter(
             child: Container(
               padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 20),
@@ -113,7 +143,9 @@ En 3 oraciones concisas:
             ),
           ),
 
-          // Contenido Comparativo
+          // ------------------------------------------------------------------
+          // 2. CONTENIDO COMPARATIVO: Veredicto IA + Tarjetas + Tabla de Criterios
+          // ------------------------------------------------------------------
           SliverToBoxAdapter(
             child: FutureBuilder<List<QuotationModel>>(
               future: FirestoreRepository().getQuotations(),
@@ -128,7 +160,7 @@ En 3 oraciones concisas:
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          // Tarjeta de Veredicto IA
+                          // 2.1 Tarjeta del Veredicto Comparativo Gemini IA
                           Container(
                             padding: const EdgeInsets.all(20),
                             decoration: BoxDecoration(
@@ -171,8 +203,10 @@ En 3 oraciones concisas:
                                         child: CircularProgressIndicator(color: AppColors.trustGreen, strokeWidth: 2),
                                       ),
                                       SizedBox(width: 12),
-                                      Text('Analizando variables de costo, tiempo y distancia...',
-                                          style: TextStyle(color: Colors.white70, fontSize: 13)),
+                                      Text(
+                                        'Analizando variables de costo, tiempo y distancia...',
+                                        style: TextStyle(color: Colors.white70, fontSize: 13),
+                                      ),
                                     ],
                                   )
                                 else
@@ -186,7 +220,7 @@ En 3 oraciones concisas:
 
                           const SizedBox(height: 28),
 
-                          // Matriz Comparativa (Tarjetas Lado a Lado)
+                          // 2.2 Matriz de Tarjetas de Proveedores Lado a Lado
                           const Text(
                             'Matriz de Proveedores Cotizantes',
                             style: TextStyle(fontSize: 19, fontWeight: FontWeight.w900, color: AppColors.textPrimary),
@@ -224,7 +258,7 @@ En 3 oraciones concisas:
 
                           const SizedBox(height: 28),
 
-                          // Tabla Desglosada de Criterios
+                          // 2.3 Tabla Desglosada de Criterios (Precio, Días, KM, Rating, Muestras)
                           Container(
                             decoration: BoxDecoration(
                               color: Colors.white,
@@ -301,6 +335,10 @@ En 3 oraciones concisas:
               },
             ),
           ),
+
+          // ------------------------------------------------------------------
+          // 3. PIE DE PÁGINA UNIVERSAL
+          // ------------------------------------------------------------------
           const SliverToBoxAdapter(child: PremiumFooter()),
         ],
       ),
@@ -309,6 +347,7 @@ En 3 oraciones concisas:
 }
 
 // ── Tarjeta Individual en la Matriz Comparativa ───────────────────────
+/// Tarjeta vertical que destaca los puntos fuertes (precio o rapidez) de cada cotización.
 class _ComparisonCard extends StatelessWidget {
   final QuotationModel quotation;
   final bool isBestPrice;
@@ -349,7 +388,7 @@ class _ComparisonCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Badge superior
+            // Badge superior distintivo
             if (isFastest)
               Container(
                 margin: const EdgeInsets.only(bottom: 10),
@@ -445,7 +484,7 @@ class _ComparisonCard extends StatelessWidget {
 
             const SizedBox(height: 16),
 
-            // Botones de acción directa
+            // Botones de acción directa: "Elegir Esta Oferta" y "Negociar en Chat"
             SizedBox(
               width: double.infinity,
               child: FilledButton(
@@ -487,6 +526,7 @@ class _ComparisonCard extends StatelessWidget {
 }
 
 // ── Fila de Criterio en Tabla ─────────────────────────────────────────
+/// Fila estructurada para comparar un parámetro técnico entre las 3 empresas finalistas.
 class _CriteriaRow extends StatelessWidget {
   final String criteria;
   final String val1;
@@ -553,3 +593,4 @@ class _CriteriaRow extends StatelessWidget {
     );
   }
 }
+

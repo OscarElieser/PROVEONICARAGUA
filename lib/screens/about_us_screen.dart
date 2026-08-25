@@ -1,9 +1,22 @@
+// ==============================================================================
+// PROVEO NICARAGUA - Pantalla Institucional / Quiénes Somos (lib/screens/about_us_screen.dart)
+// ¿Qué hace?: Presenta la historia de la plataforma, misión empresarial, visión a largo plazo y valores corporativos.
+// ¿Por qué se utiliza?: Comunica la identidad de marca, genera legitimidad y confianza institucional ante clientes e inversionistas.
+// ==============================================================================
+
+// Importa los componentes visuales de Flutter
 import 'package:flutter/material.dart';
+
+// Importa los tokens de color corporativos
 import '../core/theme/app_colors.dart';
+
+// Importa el encabezado y pie de página globales
 import '../core/widgets/premium_footer.dart';
 import '../core/widgets/premium_header.dart';
 
+/// Pantalla institucional con la historia, misión, visión y valores de PROVEO Nicaragua.
 class AboutUsScreen extends StatelessWidget {
+  /// Constructor constante
   const AboutUsScreen({super.key});
 
   @override
@@ -13,7 +26,9 @@ class AboutUsScreen extends StatelessWidget {
       appBar: const PremiumHeader(currentPage: 'Nosotros'),
       body: CustomScrollView(
         slivers: [
-          // ── Hero Section ──────────────────────────────────────────────
+          // ------------------------------------------------------------------
+          // 1. SECCIÓN HERO: Título institucional y manifiesto de PROVEO
+          // ------------------------------------------------------------------
           SliverToBoxAdapter(
             child: Container(
               padding: const EdgeInsets.symmetric(vertical: 80, horizontal: 24),
@@ -59,7 +74,9 @@ class AboutUsScreen extends StatelessWidget {
             ),
           ),
 
-          // ── Misión y Visión ──────────────────────────────────────────
+          // ------------------------------------------------------------------
+          // 2. SECCIÓN: Misión y Visión Empresarial
+          // ------------------------------------------------------------------
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 64),
@@ -74,12 +91,14 @@ class AboutUsScreen extends StatelessWidget {
                       _MissionVisionCard(
                         title: 'Nuestra Misión',
                         icon: Icons.rocket_launch_outlined,
-                        description: 'Empoderar a emprendedores y empresas nicaragüenses facilitando el descubrimiento, conexión y negociación con proveedores confiables a través de tecnología inteligente y accesible.',
+                        description:
+                            'Empoderar a emprendedores y empresas nicaragüenses facilitando el descubrimiento, conexión y negociación con proveedores confiables a través de tecnología inteligente y accesible.',
                       ),
                       _MissionVisionCard(
                         title: 'Nuestra Visión',
                         icon: Icons.visibility_outlined,
-                        description: 'Ser la red empresarial B2B líder y más confiable de la región, donde cada conexión comercial sea segura, eficiente y potencie el desarrollo económico sostenible.',
+                        description:
+                            'Ser la red empresarial B2B líder y más confiable de la región, donde cada conexión comercial sea segura, eficiente y potencie el desarrollo económico sostenible.',
                       ),
                     ],
                   ),
@@ -88,7 +107,9 @@ class AboutUsScreen extends StatelessWidget {
             ),
           ),
 
-          // ── Valores ──────────────────────────────────────────────────
+          // ------------------------------------------------------------------
+          // 3. SECCIÓN: Valores Fundamentales de la Marca
+          // ------------------------------------------------------------------
           SliverToBoxAdapter(
             child: Container(
               color: Colors.white,
@@ -117,10 +138,26 @@ class AboutUsScreen extends StatelessWidget {
                         runSpacing: 24,
                         alignment: WrapAlignment.center,
                         children: [
-                          _ValueCard(icon: Icons.verified_user_outlined, title: 'Confianza', desc: 'Verificamos a cada actor para garantizar transacciones seguras.'),
-                          _ValueCard(icon: Icons.lightbulb_outline_rounded, title: 'Innovación', desc: 'Integramos IA de vanguardia para recomendaciones precisas.'),
-                          _ValueCard(icon: Icons.handshake_outlined, title: 'Transparencia', desc: 'Información clara y abierta para decisiones informadas.'),
-                          _ValueCard(icon: Icons.support_agent_outlined, title: 'Servicio', desc: 'Estamos comprometidos con el éxito de nuestros usuarios.'),
+                          _ValueCard(
+                            icon: Icons.verified_user_outlined,
+                            title: 'Confianza',
+                            desc: 'Verificamos a cada actor para garantizar transacciones seguras.',
+                          ),
+                          _ValueCard(
+                            icon: Icons.lightbulb_outline_rounded,
+                            title: 'Innovación',
+                            desc: 'Integramos IA de vanguardia para recomendaciones precisas.',
+                          ),
+                          _ValueCard(
+                            icon: Icons.handshake_outlined,
+                            title: 'Transparencia',
+                            desc: 'Información clara y abierta para decisiones informadas.',
+                          ),
+                          _ValueCard(
+                            icon: Icons.support_agent_outlined,
+                            title: 'Servicio',
+                            desc: 'Estamos comprometidos con el éxito de nuestros usuarios.',
+                          ),
                         ],
                       ),
                     ],
@@ -130,7 +167,9 @@ class AboutUsScreen extends StatelessWidget {
             ),
           ),
 
-          // ── Footer ───────────────────────────────────────────────────
+          // ------------------------------------------------------------------
+          // 4. PIE DE PÁGINA UNIVERSAL
+          // ------------------------------------------------------------------
           const SliverToBoxAdapter(
             child: PremiumFooter(),
           ),
@@ -140,12 +179,17 @@ class AboutUsScreen extends StatelessWidget {
   }
 }
 
+/// Tarjeta estructurada para presentar la Misión o Visión institucional.
 class _MissionVisionCard extends StatelessWidget {
   final String title;
   final String description;
   final IconData icon;
 
-  const _MissionVisionCard({required this.title, required this.description, required this.icon});
+  const _MissionVisionCard({
+    required this.title,
+    required this.description,
+    required this.icon,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -182,6 +226,7 @@ class _MissionVisionCard extends StatelessWidget {
   }
 }
 
+/// Tarjeta individual para presentar un valor corporativo con icono circular destacado.
 class _ValueCard extends StatelessWidget {
   final IconData icon;
   final String title;
@@ -201,7 +246,11 @@ class _ValueCard extends StatelessWidget {
               color: Colors.white,
               shape: BoxShape.circle,
               boxShadow: [
-                BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 16, offset: const Offset(0, 8)),
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.05),
+                  blurRadius: 16,
+                  offset: const Offset(0, 8),
+                ),
               ],
             ),
             child: Icon(icon, size: 36, color: AppColors.trustGreen),
@@ -209,9 +258,14 @@ class _ValueCard extends StatelessWidget {
           const SizedBox(height: 20),
           Text(title, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18, color: AppColors.navy)),
           const SizedBox(height: 8),
-          Text(desc, textAlign: TextAlign.center, style: const TextStyle(fontSize: 14, color: AppColors.textSecondary, height: 1.5)),
+          Text(
+            desc,
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 14, color: AppColors.textSecondary, height: 1.5),
+          ),
         ],
       ),
     );
   }
 }
+

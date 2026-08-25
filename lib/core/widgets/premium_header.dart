@@ -1,7 +1,22 @@
+// ==============================================================================
+// PROVEO NICARAGUA - Barra de Navegación Superior Universal (lib/core/widgets/premium_header.dart)
+// ¿Qué hace?: Renderiza el AppBar/Header global responsivo con menú desktop, navegación móvil, buscador y avatar de sesión.
+// ¿Por qué se utiliza?: Garantiza una experiencia de navegación coherente e intuitiva en todas las pantallas de la plataforma.
+// ==============================================================================
+
+// Importa los componentes gráficos de Flutter
 import 'package:flutter/material.dart';
+
+// Importa Provider para reaccionar al estado de sesión de AuthProvider
 import 'package:provider/provider.dart';
+
+// Importa la paleta de colores corporativa
 import '../theme/app_colors.dart';
+
+// Importa el proveedor de autenticación
 import '../providers/auth_provider.dart';
+
+// Importa las pantallas a las que enlaza la barra de navegación
 import '../../screens/search_screen.dart';
 import '../../screens/match_screen.dart';
 import '../../screens/quotations_screen.dart';
@@ -14,20 +29,28 @@ import '../../screens/notifications_screen.dart';
 import '../../screens/profile_screen.dart';
 
 /// Barra de Navegación Principal Universal para todas las pantallas de PROVEO.
-/// Proporciona acceso consistente al menú principal, logo interactivo y buscador.
+///
+/// Implementa [PreferredSizeWidget] para poder usarse tanto en la propiedad `appBar` de un Scaffold
+/// como incrustada directamente en CustomScrollView o Column.
 class PremiumHeader extends StatelessWidget implements PreferredSizeWidget {
+  /// Nombre de la página actual para resaltar el botón activo en el menú
   final String currentPage;
+
+  /// Controla si se muestra el botón de retorno ("Atrás") cuando hay historial de navegación
   final bool showBackButton;
 
+  /// Constructor constante
   const PremiumHeader({
     super.key,
     this.currentPage = '',
     this.showBackButton = true,
   });
 
+  /// Define la altura estándar requerida por el contrato PreferredSizeWidget (70 píxeles)
   @override
   Size get preferredSize => const Size.fromHeight(70);
 
+  /// Navega a una pantalla empujando una nueva ruta Material
   void _navigateTo(BuildContext context, Widget screen) {
     Navigator.push(
       context,
@@ -35,26 +58,35 @@ class PremiumHeader extends StatelessWidget implements PreferredSizeWidget {
     );
   }
 
+  /// Retorna a la raíz de la aplicación (Home / Portada)
   void _goHome(BuildContext context) {
     Navigator.popUntil(context, (route) => route.isFirst);
   }
 
   @override
   Widget build(BuildContext context) {
+    // Evalúa si es posible retroceder en el historial de navegación
     final canPop = showBackButton && Navigator.canPop(context);
+
+    // Obtiene el ancho disponible en la ventana actual para diseño responsivo
     final width = MediaQuery.of(context).size.width;
+
+    // Punto de quiebre para pantallas de escritorio (>= 950px)
     final isDesktop = width >= 950;
+
+    // Punto de quiebre para pantallas de tabletas (650px a 949px)
     final isTablet = width >= 650 && width < 950;
 
     return Container(
       height: 70,
       width: double.infinity,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Colors.white, // Fondo blanco inmaculado
         border: const Border(
-          bottom: BorderSide(color: AppColors.border, width: 1.2),
+          bottom: BorderSide(color: AppColors.border, width: 1.2), // Línea divisoria inferior
         ),
         boxShadow: [
+          // Sombra suave para separar el header del contenido scrolleable
           BoxShadow(
             color: AppColors.navy.withValues(alpha: 0.04),
             blurRadius: 10,
@@ -67,7 +99,9 @@ class PremiumHeader extends StatelessWidget implements PreferredSizeWidget {
           padding: EdgeInsets.symmetric(horizontal: isDesktop ? 28 : 14),
           child: Row(
             children: [
-              // ── Botón Volver (si aplica) ──
+              // --------------------------------------------------------------
+              // 1. BOTÓN VOLVER (Si hay historial de navegación previo)
+              // --------------------------------------------------------------
               if (canPop) ...[
                 IconButton(
                   tooltip: 'Volver atrás',
@@ -84,7 +118,9 @@ class PremiumHeader extends StatelessWidget implements PreferredSizeWidget {
                 const SizedBox(width: 10),
               ],
 
-              // ── Logo PROVEO Interactivo ──
+              // --------------------------------------------------------------
+              // 2. LOGOTIPO INTERACTIVO DE PROVEO
+              // --------------------------------------------------------------
               InkWell(
                 onTap: () => _goHome(context),
                 borderRadius: BorderRadius.circular(12),
@@ -93,6 +129,7 @@ class PremiumHeader extends StatelessWidget implements PreferredSizeWidget {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
+                      // Contenedor con isotipo en azul marino y verde lima
                       Container(
                         width: 36,
                         height: 36,
@@ -114,6 +151,7 @@ class PremiumHeader extends StatelessWidget implements PreferredSizeWidget {
                         ),
                       ),
                       const SizedBox(width: 10),
+                      // Tipografía del logotipo con espaciado amplio
                       const Text(
                         'PROVEO',
                         style: TextStyle(
@@ -130,7 +168,9 @@ class PremiumHeader extends StatelessWidget implements PreferredSizeWidget {
 
               const Spacer(),
 
-              // ── Menú Principal Desktop ──
+              // --------------------------------------------------------------
+              // 3. MENÚ DE NAVEGACIÓN COMPLETO (Desktop >= 950px)
+              // --------------------------------------------------------------
               if (isDesktop) ...[
                 _NavButton(
                   label: 'Inicio',
@@ -170,7 +210,8 @@ class PremiumHeader extends StatelessWidget implements PreferredSizeWidget {
                   onTap: () => _navigateTo(context, const AboutUsScreen()),
                 ),
                 const SizedBox(width: 14),
-                // Botón Acción Rápida
+
+                // Botón destacado para crear nueva solicitud de cotización
                 FilledButton.icon(
                   style: FilledButton.styleFrom(
                     backgroundColor: AppColors.trustGreen,
@@ -191,21 +232,25 @@ class PremiumHeader extends StatelessWidget implements PreferredSizeWidget {
                 const SizedBox(width: 16),
                 Container(width: 1, height: 30, color: AppColors.border),
                 const SizedBox(width: 16),
-                
-                // Zona de Usuario / Autenticación
+
+                // Sección de perfil de usuario / autenticación reactiva
                 Consumer<AuthProvider>(
                   builder: (context, auth, _) {
-                    final isLoggedIn = auth.isAuthenticated && auth.currentUser?.id != 'guest_session';
-                    
+                    final isLoggedIn =
+                        auth.isAuthenticated && auth.currentUser?.id != 'guest_session';
+
+                    // Si el usuario tiene sesión formal iniciada
                     if (isLoggedIn) {
                       final user = auth.currentUser!;
                       return Row(
                         children: [
+                          // Botón de campana de notificaciones
                           IconButton(
                             icon: const Icon(Icons.notifications_none_rounded, color: AppColors.navy),
-                            onPressed: () => _navigateTo(context, const NotificationsScreen()), // requires NotificationsScreen
+                            onPressed: () => _navigateTo(context, const NotificationsScreen()),
                           ),
                           const SizedBox(width: 8),
+                          // Avatar interactivo con menú desplegable (Perfil, Historial, Logout)
                           PopupMenuButton<int>(
                             offset: const Offset(0, 50),
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -214,13 +259,17 @@ class PremiumHeader extends StatelessWidget implements PreferredSizeWidget {
                               backgroundColor: AppColors.navy,
                               child: Text(
                                 user.name.isNotEmpty ? user.name[0].toUpperCase() : 'U',
-                                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
                               ),
                             ),
                             itemBuilder: (context) => [
-                              PopupMenuItem(
+                              const PopupMenuItem(
                                 value: 1,
-                                child: const Row(
+                                child: Row(
                                   children: [
                                     Icon(Icons.person_outline, color: AppColors.navy, size: 20),
                                     SizedBox(width: 12),
@@ -228,9 +277,9 @@ class PremiumHeader extends StatelessWidget implements PreferredSizeWidget {
                                   ],
                                 ),
                               ),
-                              PopupMenuItem(
+                              const PopupMenuItem(
                                 value: 2,
-                                child: const Row(
+                                child: Row(
                                   children: [
                                     Icon(Icons.history_rounded, color: AppColors.teal, size: 20),
                                     SizedBox(width: 12),
@@ -239,13 +288,16 @@ class PremiumHeader extends StatelessWidget implements PreferredSizeWidget {
                                 ),
                               ),
                               const PopupMenuDivider(),
-                              PopupMenuItem(
+                              const PopupMenuItem(
                                 value: 3,
-                                child: const Row(
+                                child: Row(
                                   children: [
                                     Icon(Icons.logout_rounded, color: AppColors.error, size: 20),
                                     SizedBox(width: 12),
-                                    Text('Cerrar Sesión', style: TextStyle(fontWeight: FontWeight.w600, color: AppColors.error)),
+                                    Text(
+                                      'Cerrar Sesión',
+                                      style: TextStyle(fontWeight: FontWeight.w600, color: AppColors.error),
+                                    ),
                                   ],
                                 ),
                               ),
@@ -262,7 +314,9 @@ class PremiumHeader extends StatelessWidget implements PreferredSizeWidget {
                           ),
                         ],
                       );
-                    } else {
+                    } 
+                    // Si no está registrado o es invitado, presenta el botón de 'Ingresar'
+                    else {
                       return FilledButton.tonalIcon(
                         style: FilledButton.styleFrom(
                           backgroundColor: AppColors.paleBlue,
@@ -285,7 +339,9 @@ class PremiumHeader extends StatelessWidget implements PreferredSizeWidget {
                 ),
               ],
 
-              // ── Menú Tablet / Mobile (Desplegable y Accesible) ──
+              // --------------------------------------------------------------
+              // 4. MENÚ COMPACTO (Mobile y Tablet < 950px)
+              // --------------------------------------------------------------
               if (!isDesktop) ...[
                 if (isTablet)
                   FilledButton.tonalIcon(
@@ -302,6 +358,7 @@ class PremiumHeader extends StatelessWidget implements PreferredSizeWidget {
                     label: const Text('Cotizar', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
                   ),
                 const SizedBox(width: 8),
+                // Botón de menú hamburguesa con PopupMenuButton estilizado
                 PopupMenuButton<int>(
                   tooltip: 'Menú principal',
                   offset: const Offset(0, 50),
@@ -363,6 +420,7 @@ class PremiumHeader extends StatelessWidget implements PreferredSizeWidget {
     );
   }
 
+  /// Construye el encabezado no interactivo dentro del menú desplegable móvil
   PopupMenuItem<int> _buildPopupHeader() {
     return const PopupMenuItem<int>(
       enabled: false,
@@ -383,6 +441,7 @@ class PremiumHeader extends StatelessWidget implements PreferredSizeWidget {
     );
   }
 
+  /// Construye un elemento tipado con icono de color en el menú móvil
   PopupMenuItem<int> _buildPopupItem(
     int value,
     IconData icon,
@@ -409,6 +468,7 @@ class PremiumHeader extends StatelessWidget implements PreferredSizeWidget {
   }
 }
 
+/// Botón de navegación individual con animación de hover y soporte de estado activo.
 class _NavButton extends StatefulWidget {
   final String label;
   final IconData icon;
@@ -429,11 +489,13 @@ class _NavButton extends StatefulWidget {
 }
 
 class _NavButtonState extends State<_NavButton> {
+  /// Estado interno para rastrear el puntero del ratón
   bool _isHovered = false;
 
   @override
   Widget build(BuildContext context) {
     final active = widget.isActive;
+    // Calcula el color en base a si está activo, en hover o en reposo
     final color = active
         ? AppColors.navy
         : (_isHovered ? AppColors.blue : AppColors.textSecondary);
@@ -477,3 +539,4 @@ class _NavButtonState extends State<_NavButton> {
     );
   }
 }
+

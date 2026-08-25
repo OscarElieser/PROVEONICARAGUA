@@ -1,39 +1,83 @@
+// ==============================================================================
+// PROVEO NICARAGUA - Reglas de Seguridad de Cloud Firestore (firestore.rules)
+// ¿Qué hace?: Define los permisos granulares de lectura, creación, actualización y borrado de documentos.
+// ¿Por qué se utiliza?: Protege la integridad de los datos en la nube y previene accesos no autorizados a nivel de servidor.
+// ==============================================================================
+
+// Indica la versión 2 del motor de reglas de Firebase Security Rules
 rules_version = '2';
 
+// Define el servicio objetivo al que aplican estas reglas (Cloud Firestore)
 service cloud.firestore {
+  // Coincide con la base de datos principal del proyecto Firebase
   match /databases/{database}/documents {
+    
+    // --------------------------------------------------------------------------
+    // COLECCIÓN: providers (Directorio público de empresas y proveedores B2B)
+    // --------------------------------------------------------------------------
     match /providers/{providerId} {
+      // Lectura pública: Cualquier usuario o visitante puede explorar la lista de proveedores
       allow read: if true;
+      // Escritura restringida: Solo administradores autenticados con token custom 'admin' pueden alterar datos de proveedores
       allow create, update, delete: if request.auth != null && request.auth.token.admin == true;
     }
 
+    // --------------------------------------------------------------------------
+    // COLECCIÓN: products (Catálogo de productos y suministros)
+    // --------------------------------------------------------------------------
     match /products/{productId} {
+      // Lectura pública: Catálogo accesible para búsquedas de todos los emprendedores
       allow read: if true;
+      // Escritura restringida: Modificación exclusiva por administradores de Proveo
       allow create, update, delete: if request.auth != null && request.auth.token.admin == true;
     }
 
+    // --------------------------------------------------------------------------
+    // COLECCIÓN: categories (Categorías y rubros de la industria B2B)
+    // --------------------------------------------------------------------------
     match /categories/{categoryId} {
+      // Lectura pública: Necesario para el menú de navegación y filtros
       allow read: if true;
+      // Escritura restringida: Creación y edición administrada centralmente
       allow create, update, delete: if request.auth != null && request.auth.token.admin == true;
     }
 
+    // --------------------------------------------------------------------------
+    // COLECCIÓN: users (Perfiles privados de usuarios, emprendedores y proveedores)
+    // --------------------------------------------------------------------------
     match /users/{userId} {
+      // Lectura privada: Solo el propio usuario autenticado puede leer su documento de perfil
       allow read: if request.auth != null && request.auth.uid == userId;
+      // Actualización segura: El usuario solo edita su propio perfil y no puede cambiar su rol asignado (escalación de privilegios)
       allow update: if request.auth != null && request.auth.uid == userId
         && request.resource.data.role == resource.data.role;
+      // Creación permitida: Al registrarse, el usuario crea su propio documento de perfil coincidiendo con su UID
       allow create: if request.auth != null && request.auth.uid == userId;
     }
 
+    // --------------------------------------------------------------------------
+    // SUB-COLECCIÓN: favorites (Proveedores guardados por cada usuario)
+    // --------------------------------------------------------------------------
     match /users/{userId}/favorites/{favoriteId} {
+      // Acceso exclusivo: Cada usuario solo puede ver y gestionar sus propios favoritos
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
 
+    // --------------------------------------------------------------------------
+    // COLECCIÓN: quotations (Solicitudes y presupuestos de cotización B2B)
+    // --------------------------------------------------------------------------
     match /quotations/{quotationId} {
+      // Acceso autenticado: Usuarios registrados pueden crear, ver y responder cotizaciones
       allow read, write: if request.auth != null;
     }
 
+    // --------------------------------------------------------------------------
+    // SUB-COLECCIÓN: chats/{chatId}/messages (Mensajería directa entre emprendedor y proveedor)
+    // --------------------------------------------------------------------------
     match /chats/{chatId}/messages/{messageId} {
+      // Acceso autenticado: Permite el envío y recepción de mensajes a usuarios con sesión activa
       allow read, write: if request.auth != null;
     }
   }
 }
+

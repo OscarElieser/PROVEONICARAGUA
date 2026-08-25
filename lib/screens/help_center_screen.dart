@@ -1,9 +1,22 @@
+// ==============================================================================
+// PROVEO NICARAGUA - Centro de Ayuda y Preguntas Frecuentes (lib/screens/help_center_screen.dart)
+// ¿Qué hace?: Presenta preguntas frecuentes expandibles (FAQ), guías sobre Match IA y acceso directo al canal de soporte.
+// ¿Por qué se utiliza?: Resuelve dudas operativas comunes de emprendedores y empresas sin necesidad de abrir un ticket de soporte.
+// ==============================================================================
+
+// Importa los componentes visuales de Flutter
 import 'package:flutter/material.dart';
+
+// Importa los tokens de color corporativos
 import '../core/theme/app_colors.dart';
+
+// Importa el encabezado y pie de página globales
 import '../core/widgets/premium_header.dart';
 import '../core/widgets/premium_footer.dart';
 
+/// Pantalla del Centro de Ayuda con preguntas frecuentes (FAQ) y enlace a soporte directo.
 class HelpCenterScreen extends StatelessWidget {
+  /// Constructor constante
   const HelpCenterScreen({super.key});
 
   @override
@@ -13,6 +26,9 @@ class HelpCenterScreen extends StatelessWidget {
       appBar: const PremiumHeader(currentPage: 'Centro de Ayuda'),
       body: CustomScrollView(
         slivers: [
+          // ------------------------------------------------------------------
+          // 1. SECCIÓN HERO: Encabezado degradado azul marino
+          // ------------------------------------------------------------------
           SliverToBoxAdapter(
             child: Container(
               padding: const EdgeInsets.symmetric(vertical: 60, horizontal: 24),
@@ -48,6 +64,10 @@ class HelpCenterScreen extends StatelessWidget {
               ),
             ),
           ),
+
+          // ------------------------------------------------------------------
+          // 2. SECCIÓN PRINCIPAL: Acordeones de Preguntas Frecuentes
+          // ------------------------------------------------------------------
           SliverPadding(
             padding: const EdgeInsets.all(32),
             sliver: SliverToBoxAdapter(
@@ -66,28 +86,37 @@ class HelpCenterScreen extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 24),
+
+                      // FAQ 1: Algoritmo Match IA
                       const _FaqTile(
                         question: '¿Qué es PROVEO Match IA?',
                         answer:
                             'Es nuestro algoritmo propietario que analiza tus requerimientos y cruza los datos con nuestro directorio de proveedores para mostrarte las mejores opciones basadas en precio, calidad, tiempo de entrega y ubicación.',
                       ),
+
+                      // FAQ 2: Contactar Proveedor
                       const _FaqTile(
                         question: '¿Cómo contacto a un proveedor?',
                         answer:
                             'Puedes buscar proveedores y dar clic en "Ver Perfil". Ahí encontrarás la opción para enviar un mensaje directo mediante nuestro "Chat B2B" o solicitar una cotización formal.',
                       ),
+
+                      // FAQ 3: Costos de la plataforma
                       const _FaqTile(
                         question: '¿Tiene algún costo usar la plataforma?',
                         answer:
                             'El registro y la búsqueda básica son gratuitos para los emprendedores. Existen planes premium para proveedores que desean mayor visibilidad y acceso a herramientas avanzadas.',
                       ),
+
+                      // FAQ 4: Proceso de verificación
                       const _FaqTile(
                         question: '¿Cómo verifican a los proveedores?',
                         answer:
                             'Nuestro equipo realiza una validación exhaustiva de documentos legales, registros comerciales y referencias en Nicaragua para asegurar que los proveedores cuenten con la insignia "Verificado".',
                       ),
                       const SizedBox(height: 48),
-                      // Soporte Directo
+
+                      // Tarjeta de Asistencia y Soporte Directo 24/7
                       Container(
                         padding: const EdgeInsets.all(24),
                         decoration: BoxDecoration(
@@ -144,6 +173,10 @@ class HelpCenterScreen extends StatelessWidget {
               ),
             ),
           ),
+
+          // ------------------------------------------------------------------
+          // 3. PIE DE PÁGINA UNIVERSAL
+          // ------------------------------------------------------------------
           const SliverToBoxAdapter(child: PremiumFooter()),
         ],
       ),
@@ -151,6 +184,7 @@ class HelpCenterScreen extends StatelessWidget {
   }
 }
 
+/// Acordeón desplegable (ExpansionTile) para desplegar cada pregunta y respuesta frecuente.
 class _FaqTile extends StatelessWidget {
   final String question;
   final String answer;
@@ -189,3 +223,4 @@ class _FaqTile extends StatelessWidget {
     );
   }
 }
+

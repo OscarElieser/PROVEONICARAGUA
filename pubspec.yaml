@@ -1,32 +1,85 @@
+# ==============================================================================
+# PROVEO NICARAGUA - Archivo de Configuración de Proyecto y Dependencias (pubspec.yaml)
+# ¿Qué hace?: Define los metadatos del paquete, versiones de SDK, librerías externas y recursos gráficos.
+# ¿Por qué se utiliza?: Es el manifiesto obligatorio del ecosistema Dart/Flutter para la gestión de dependencias.
+# ==============================================================================
+
+# Nombre técnico del paquete en el ecosistema Dart
 name: proveo_premium
+
+# Evita la publicación accidental en pub.dev al ser una aplicación privada comercial
 publish_to: "none"
+
+# Descripción del proyecto utilizada para identificación interna y documentación
 description: PROVEO Premium - Plataforma inteligente para conectar emprendedores y proveedores.
+
+# Versión del software (formato SemVer + número de compilación interno de Flutter)
 version: 1.0.0+1
+
+# Restricciones del compilador de Dart compatibles con las características del lenguaje empleadas
 environment:
   sdk: '>=3.4.0 <4.0.0'
 
+# ==============================================================================
+# DEPENDENCIAS DE PRODUCCIÓN (Librerías requeridas en tiempo de ejecución)
+# ==============================================================================
 dependencies:
+  # Framework principal de Flutter que provee el motor de renderizado y widgets base
   flutter:
     sdk: flutter
 
+  # Iconografía estándar estilo iOS para componentes que requieren estética de Apple
   cupertino_icons: ^1.0.8
+
+  # Gestor de estado reactivo y desacoplado (ChangeNotifierProvider) usado en AuthProvider y navegación
   provider: ^6.1.5+1
+
+  # Núcleo de inicialización de los servicios de Google Firebase en la aplicación
   firebase_core: ^3.15.2
+
+  # Recolección de métricas, eventos de usuario y analíticas de comportamiento en tiempo real
   firebase_analytics: ^11.5.0
+
+  # Gestión de autenticación segura (Email/Password, tokens JWT, sesiones persistentes)
   firebase_auth: ^5.6.2
+
+  # Base de datos NoSQL en la nube con sincronización en tiempo real para cotizaciones, proveedores y usuarios
   cloud_firestore: ^5.6.12
+
+  # Integración del flujo de inicio de sesión nativo de cuentas Google (OAuth2)
   google_sign_in: ^6.2.2
+
+  # SDK oficial de Firebase para interactuar con modelos de Inteligencia Artificial (Gemini) en el cliente
   firebase_ai: ^2.3.0
+
+  # Validación de integridad de la aplicación para proteger endpoints y cuotas contra bots y abusos
   firebase_app_check: ^0.3.2+10
+
+  # Capacidad para abrir enlaces externos (sitios web, WhatsApp directo, correo electrónico y llamadas)
   url_launcher: ^6.3.2
 
+# ==============================================================================
+# DEPENDENCIAS DE DESARROLLO (Herramientas para pruebas y calidad de código)
+# ==============================================================================
 dev_dependencies:
+  # Entorno de pruebas unitarias y de widgets provisto por Flutter
   flutter_test:
     sdk: flutter
+
+  # Conjunto oficial de reglas de análisis estático recomendadas para mantener buenas prácticas en Dart
   flutter_lints: ^4.0.0
 
+# ==============================================================================
+# CONFIGURACIÓN ESPECÍFICA DE FLUTTER (Assets, fuentes y capacidades gráficas)
+# ==============================================================================
 flutter:
+  # Habilita el uso de los iconos e identidad visual basada en Material Design 3
   uses-material-design: true
+
+  # Declaración de rutas de recursos gráficos estáticos incluidos en el bundle compilado
   assets:
+    # Logotipo oficial de Proveo en alta definición
     - assets/logo/proveo_logo.png
+    # Carpeta contenedora de imágenes ilustrativas, avatares y banners publicitarios
     - assets/images/
+

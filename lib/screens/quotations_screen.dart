@@ -1,13 +1,32 @@
+// ==============================================================================
+// PROVEO NICARAGUA - Gestión de Cotizaciones y Adjudicación B2B (lib/screens/quotations_screen.dart)
+// ¿Qué hace?: Permite a los compradores revisar propuestas recibidas, negociar contraofertas en modal, adjudicar (aceptar) o rechazar cotizaciones.
+// ¿Por qué se utiliza?: Centraliza el ciclo de vida de compras empresariales y la formalización de acuerdos con proveedores.
+// ==============================================================================
+
+// Importa los componentes visuales de Flutter
 import 'package:flutter/material.dart';
+
+// Importa los tokens de color corporativos
 import '../core/theme/app_colors.dart';
+
+// Importa el encabezado y pie de página globales
 import '../core/widgets/premium_header.dart';
 import '../core/widgets/premium_footer.dart';
+
+// Importa los modelos del dominio
 import '../models/models.dart';
+
+// Importa el repositorio de persistencia en Firestore
 import '../services/firebase/firestore_repository.dart';
+
+// Importa las pantallas de navegación
 import 'chat_screen.dart';
 import 'comparison_screen.dart';
 
+/// Pantalla interactiva que lista y gestiona las cotizaciones recibidas por el comprador.
 class QuotationsScreen extends StatefulWidget {
+  /// Constructor constante
   const QuotationsScreen({super.key});
 
   @override
@@ -15,8 +34,13 @@ class QuotationsScreen extends StatefulWidget {
 }
 
 class _QuotationsScreenState extends State<QuotationsScreen> {
+  /// Repositorio de base de datos para recuperar y actualizar el estado de cotizaciones
   final _repository = FirestoreRepository();
+
+  /// Lista en memoria de propuestas recibidas
   List<QuotationModel>? _quotations;
+
+  /// Bandera de estado de carga
   bool _loading = true;
 
   @override
@@ -25,6 +49,7 @@ class _QuotationsScreenState extends State<QuotationsScreen> {
     _loadQuotations();
   }
 
+  /// Carga asíncrona de las cotizaciones desde Firestore
   Future<void> _loadQuotations() async {
     final list = await _repository.getQuotations();
     if (mounted) {
@@ -35,6 +60,7 @@ class _QuotationsScreenState extends State<QuotationsScreen> {
     }
   }
 
+  /// Despliega un diálogo de confirmación para adjudicar formalmente la cotización al proveedor
   void _acceptQuotation(QuotationModel q, int index) {
     showDialog(
       context: context,
@@ -126,6 +152,7 @@ class _QuotationsScreenState extends State<QuotationsScreen> {
     );
   }
 
+  /// Despliega un diálogo con motivos predefinidos para desestimar o rechazar la propuesta
   void _rejectQuotation(QuotationModel q, int index) {
     String selectedReason = 'Precio fuera de presupuesto';
     final reasons = [
@@ -160,7 +187,10 @@ class _QuotationsScreenState extends State<QuotationsScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Indica el motivo para notificar a "${q.provider}":', style: const TextStyle(fontSize: 13, color: AppColors.textSecondary)),
+              Text(
+                'Indica el motivo para notificar a "${q.provider}":',
+                style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
+              ),
               const SizedBox(height: 12),
               ...reasons.map((r) => RadioListTile<String>(
                     dense: true,
@@ -211,6 +241,7 @@ class _QuotationsScreenState extends State<QuotationsScreen> {
     );
   }
 
+  /// Despliega una hoja modal inferior (bottom sheet) con asesoría IA y campo de contraoferta
   void _negotiateQuotation(QuotationModel q) {
     final counterOfferCtrl = TextEditingController(text: (q.price * 0.90).toStringAsFixed(0));
     final messageCtrl = TextEditingController(
@@ -286,6 +317,7 @@ class _QuotationsScreenState extends State<QuotationsScreen> {
             ),
             const SizedBox(height: 16),
 
+            // Entrada de Monto de Contraoferta
             TextField(
               controller: counterOfferCtrl,
               keyboardType: TextInputType.number,
@@ -296,6 +328,7 @@ class _QuotationsScreenState extends State<QuotationsScreen> {
               ),
             ),
             const SizedBox(height: 12),
+            // Entrada de Mensaje de Negociación
             TextField(
               controller: messageCtrl,
               maxLines: 3,
@@ -306,6 +339,7 @@ class _QuotationsScreenState extends State<QuotationsScreen> {
             ),
             const SizedBox(height: 20),
 
+            // Botón para enviar contraoferta al Chat
             SizedBox(
               width: double.infinity,
               child: FilledButton.icon(
@@ -341,7 +375,9 @@ class _QuotationsScreenState extends State<QuotationsScreen> {
       appBar: const PremiumHeader(currentPage: 'Cotizaciones'),
       body: CustomScrollView(
         slivers: [
-          // Header moderno con degradado
+          // ------------------------------------------------------------------
+          // 1. HEADER MODERNO CON GRADIENTE Y BOTÓN DE COMPARAR
+          // ------------------------------------------------------------------
           SliverToBoxAdapter(
             child: Container(
               padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 20),
@@ -413,7 +449,9 @@ class _QuotationsScreenState extends State<QuotationsScreen> {
             ),
           ),
 
-          // Cuerpo interactivo
+          // ------------------------------------------------------------------
+          // 2. LISTA DE COTIZACIONES INTERACTIVAS
+          // ------------------------------------------------------------------
           SliverToBoxAdapter(
             child: _loading
                 ? const SizedBox(
@@ -470,14 +508,16 @@ class _QuotationsScreenState extends State<QuotationsScreen> {
                                         color: AppColors.paleBlue,
                                         borderRadius: BorderRadius.circular(10),
                                       ),
-                                      child: const Text('Ordenado por Recomendación',
-                                          style: TextStyle(color: AppColors.navy, fontSize: 11, fontWeight: FontWeight.bold)),
+                                      child: const Text(
+                                        'Ordenado por Recomendación',
+                                        style: TextStyle(color: AppColors.navy, fontSize: 11, fontWeight: FontWeight.bold),
+                                      ),
                                     ),
                                   ],
                                 ),
                                 const SizedBox(height: 16),
 
-                                // Lista de cotizaciones interactivas
+                                // Tarjetas individuales de cada oferta
                                 ..._quotations!.asMap().entries.map((entry) {
                                   final i = entry.key;
                                   final q = entry.value;
@@ -497,17 +537,23 @@ class _QuotationsScreenState extends State<QuotationsScreen> {
                         ),
                       ),
           ),
+
+          // ------------------------------------------------------------------
+          // 3. PIE DE PÁGINA UNIVERSAL
+          // ------------------------------------------------------------------
           const SliverToBoxAdapter(child: PremiumFooter()),
         ],
       ),
     );
   }
 
+  /// Calcula el precio mínimo entre todas las propuestas de la lista
   double _minPrice(List<QuotationModel> q) =>
       q.map((e) => e.price).reduce((a, b) => a < b ? a : b);
 }
 
 // ── Tarjeta de Cotización Interactiva ─────────────────────────────────
+/// Tarjeta visual completa con estado dinámico (Aceptada, Rechazada, Pendiente), métricas y acciones.
 class _QuotationCard extends StatelessWidget {
   final QuotationModel quotation;
   final int rank;
@@ -525,6 +571,7 @@ class _QuotationCard extends StatelessWidget {
     required this.onNegotiate,
   });
 
+  /// Determina el color del estado de la propuesta
   Color get _statusColor {
     switch (quotation.status.toLowerCase()) {
       case 'aceptada':
@@ -569,7 +616,7 @@ class _QuotationCard extends StatelessWidget {
       ),
       child: Column(
         children: [
-          // Cabecera de tarjeta
+          // Cabecera de tarjeta con Ranking y Proveedor
           Container(
             padding: const EdgeInsets.fromLTRB(18, 16, 18, 12),
             decoration: BoxDecoration(
@@ -582,7 +629,7 @@ class _QuotationCard extends StatelessWidget {
             ),
             child: Row(
               children: [
-                // Número de ranking
+                // Número de ranking ordenado
                 Container(
                   width: 36,
                   height: 36,
@@ -666,7 +713,7 @@ class _QuotationCard extends StatelessWidget {
             ),
           ),
 
-          // Detalle de métricas
+          // Detalle de métricas (Precio, Días, Distancia, Estado)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
             child: Row(
@@ -746,7 +793,7 @@ class _QuotationCard extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
 
-                // Botón Rechazar (Nuevo)
+                // Botón Rechazar
                 Expanded(
                   flex: 3,
                   child: OutlinedButton.icon(
@@ -791,6 +838,7 @@ class _QuotationCard extends StatelessWidget {
 }
 
 // ── Chip de métrica ───────────────────────────────────────────────────
+/// Badge estilizado para representar una variable cuantitativa (precio, días o kilómetros).
 class _MetricChip extends StatelessWidget {
   final IconData icon;
   final String label;
@@ -830,3 +878,4 @@ class _MetricChip extends StatelessWidget {
     );
   }
 }
+

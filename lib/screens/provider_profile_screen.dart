@@ -1,24 +1,42 @@
+// ==============================================================================
+// PROVEO NICARAGUA - Perfil y Catálogo Digital del Proveedor (lib/screens/provider_profile_screen.dart)
+// ¿Qué hace?: Presenta la ficha corporativa de la empresa, su catálogo de productos en grid interactivo, ficha técnica en bottom sheet y métricas de calidad.
+// ¿Por qué se utiliza?: Permite a los compradores auditar credenciales, explorar stock/MOQ y solicitar cotizaciones sobre productos específicos.
+// ==============================================================================
+
+// Importa los componentes visuales de Flutter
 import 'package:flutter/material.dart';
+
+// Importa los tokens de color corporativos
 import '../core/theme/app_colors.dart';
+
+// Importa los modelos del dominio de datos
 import '../models/models.dart';
+
+// Importa el encabezado y pie de página globales
 import '../core/widgets/premium_footer.dart';
 import '../core/widgets/premium_header.dart';
+
+// Importa las pantallas de interacción directa
 import 'chat_screen.dart';
 import 'quotation_request_screen.dart';
 
 // ── Datos demo del catálogo (se reemplazan por los datos reales del proveedor) ──
+/// Genera el catálogo interactivo adaptado según el rubro o categoría de la empresa seleccionada
 List<ProductModel> _buildDemoProducts(ProviderModel provider) {
   // Las fotos apuntan al asset demo; en producción se usan las URLs de Firestore (imageUrl).
   // Cada proveedor puede tener sus propias líneas y productos almacenados en la base de datos.
   final cat = provider.category.toLowerCase();
 
+  // Catálogo enfocado en envases y empaques industriales
   if (cat.contains('plástico') || cat.contains('empaqu') || cat.contains('envase') || cat.isEmpty) {
     return [
       const ProductModel(
         id: 'p1',
         name: 'Galonera HDPE 1 Galón',
         model: 'GAL-001-HDPE',
-        description: 'Galonera industrial de polietileno de alta densidad con tapa de seguridad azul oscuro y asa integrada.',
+        description:
+            'Galonera industrial de polietileno de alta densidad con tapa de seguridad azul oscuro y asa integrada.',
         provider: '',
         category: 'Envases',
         price: 18.50,
@@ -42,7 +60,8 @@ List<ProductModel> _buildDemoProducts(ProviderModel provider) {
         id: 'p2',
         name: 'Frasco PET 500ml Transparente',
         model: 'PET-500-TR',
-        description: 'Frasco PET cristal con tapa rosca de aluminio o plástica, ideal para alimentos, bebidas y cosméticos.',
+        description:
+            'Frasco PET cristal con tapa rosca de aluminio o plástica, ideal para alimentos, bebidas y cosméticos.',
         provider: '',
         category: 'Frascos',
         price: 8.20,
@@ -66,7 +85,8 @@ List<ProductModel> _buildDemoProducts(ProviderModel provider) {
         id: 'p3',
         name: 'Film Estiramiento Industrial',
         model: 'FILM-IND-20',
-        description: 'Rollo de film stretch de polietileno lineal para paletizado de mercancía. Alta resistencia y extensión.',
+        description:
+            'Rollo de film stretch de polietileno lineal para paletizado de mercancía. Alta resistencia y extensión.',
         provider: '',
         category: 'Empaques',
         price: 0.45,
@@ -90,7 +110,8 @@ List<ProductModel> _buildDemoProducts(ProviderModel provider) {
         id: 'p4',
         name: 'Contenedor Plástico Rectangular',
         model: 'CONT-RECT-1L',
-        description: 'Contenedor de polipropileno con tapa hermética apto para almacenamiento de alimentos, líquidos y sólidos.',
+        description:
+            'Contenedor de polipropileno con tapa hermética apto para almacenamiento de alimentos, líquidos y sólidos.',
         provider: '',
         category: 'Contenedores',
         price: 12.00,
@@ -114,7 +135,8 @@ List<ProductModel> _buildDemoProducts(ProviderModel provider) {
         id: 'p5',
         name: 'Barril Industrial 200L',
         model: 'BARR-200-HDPE',
-        description: 'Barril hermético de polietileno azul de 200 litros con cierre de seguridad industrial para químicos y alimentos.',
+        description:
+            'Barril hermético de polietileno azul de 200 litros con cierre de seguridad industrial para químicos y alimentos.',
         provider: '',
         category: 'Barriles',
         price: 1250.00,
@@ -138,7 +160,8 @@ List<ProductModel> _buildDemoProducts(ProviderModel provider) {
         id: 'p6',
         name: 'Bolsa Kraft Biodegradable Stand Up',
         model: 'BOLSA-KR-250',
-        description: 'Bolsa tipo stand-up kraft 100% biodegradable con cierre zip y ventana transparente. Apta para alimentos.',
+        description:
+            'Bolsa tipo stand-up kraft 100% biodegradable con cierre zip y ventana transparente. Apta para alimentos.',
         provider: '',
         category: 'Bolsas',
         price: 3.80,
@@ -167,7 +190,8 @@ List<ProductModel> _buildDemoProducts(ProviderModel provider) {
       id: 'g1',
       name: 'Producto Principal ${provider.category}',
       model: 'MOD-001',
-      description: 'Producto estrella del portafolio de ${provider.name}. Consulte al proveedor para especificaciones completas.',
+      description:
+          'Producto estrella del portafolio de ${provider.name}. Consulte al proveedor para especificaciones completas.',
       provider: provider.id,
       category: provider.category,
       price: 50.00,
@@ -187,8 +211,10 @@ List<ProductModel> _buildDemoProducts(ProviderModel provider) {
 
 /// Perfil y Catálogo Empresarial B2B Ultra-Premium de PROVEO con Grid de Productos.
 class ProviderProfileScreen extends StatefulWidget {
+  /// Modelo del proveedor cuyos datos se están visualizando
   final ProviderModel provider;
 
+  /// Constructor constante
   const ProviderProfileScreen({super.key, required this.provider});
 
   @override
@@ -197,6 +223,7 @@ class ProviderProfileScreen extends StatefulWidget {
 
 class _ProviderProfileScreenState extends State<ProviderProfileScreen>
     with SingleTickerProviderStateMixin {
+  /// Controlador de pestañas para Catálogo, Perfil y Calidad
   late final TabController _tabController;
 
   @override
@@ -211,6 +238,7 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
     super.dispose();
   }
 
+  /// Despliega la hoja modal interactiva con la ficha técnica y fotos del producto
   void _openProductDetail(ProductModel product) {
     showModalBottomSheet(
       context: context,
@@ -229,7 +257,9 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
       appBar: const PremiumHeader(currentPage: 'Proveedores'),
       body: CustomScrollView(
         slivers: [
-          // ── Banner Hero ──────────────────────────────────────────────
+          // ------------------------------------------------------------------
+          // 1. BANNER HERO CON LOGO, BADGES Y MÉTRICAS DE CONTACTO
+          // ------------------------------------------------------------------
           SliverToBoxAdapter(
             child: Container(
               height: 200,
@@ -261,7 +291,7 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
-                          // Avatar empresa
+                          // Avatar circular con iniciales
                           Container(
                             padding: const EdgeInsets.all(4),
                             decoration: BoxDecoration(
@@ -315,8 +345,14 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
                                           children: [
                                             Icon(Icons.verified_rounded, color: Colors.white, size: 12),
                                             SizedBox(width: 3),
-                                            Text('Top Verificado',
-                                                style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                                            Text(
+                                              'Top Verificado',
+                                              style: TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 10,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
                                           ],
                                         ),
                                       ),
@@ -359,7 +395,9 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
             ),
           ),
 
-          // ── Cuerpo ────────────────────────────────────────────────────
+          // ------------------------------------------------------------------
+          // 2. CUERPO: Dossier IA, Botones de Acción y Pestañas
+          // ------------------------------------------------------------------
           SliverToBoxAdapter(
             child: Center(
               child: ConstrainedBox(
@@ -369,7 +407,73 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      // Acciones Comerciales
+                      // Banner de Auditoría Digital con IA y Redes Sociales
+                      Container(
+                        margin: const EdgeInsets.only(bottom: 16),
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [AppColors.navy, AppColors.teal],
+                          ),
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.navy.withValues(alpha: 0.15),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: AppColors.trustGreen.withValues(alpha: 0.25),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: const Icon(Icons.auto_awesome_rounded, color: AppColors.trustGreen, size: 20),
+                            ),
+                            const SizedBox(width: 12),
+                            const Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Auditoría Digital con IA Activa',
+                                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 13),
+                                  ),
+                                  SizedBox(height: 2),
+                                  Text(
+                                    'Verificación en Google, Facebook, Instagram, TikTok, YouTube y DGI',
+                                    style: TextStyle(color: Colors.white70, fontSize: 11),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            FilledButton.icon(
+                              style: FilledButton.styleFrom(
+                                backgroundColor: AppColors.trustGreen,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                              ),
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => ChatScreen(initialProvider: widget.provider),
+                                  ),
+                                );
+                              },
+                              icon: const Icon(Icons.analytics_outlined, size: 16),
+                              label: const Text('Ver Dossier IA', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 12)),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      // Botones de Acción Comercial: "Solicitar Cotización" y "Chat B2B"
                       Row(
                         children: [
                           Expanded(
@@ -403,7 +507,9 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
                               ),
                               onPressed: () => Navigator.push(
                                 context,
-                                MaterialPageRoute(builder: (_) => const ChatScreen()),
+                                MaterialPageRoute(
+                                  builder: (_) => ChatScreen(initialProvider: widget.provider),
+                                ),
                               ),
                               icon: const Icon(Icons.chat_bubble_outline_rounded, size: 18),
                               label: const Text('Chat B2B',
@@ -414,7 +520,7 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
                       ),
                       const SizedBox(height: 24),
 
-                      // Tabs: Catálogo / Perfil / Calificaciones
+                      // Pestañas de Navegación: Catálogo / Perfil / Calificaciones
                       Container(
                         decoration: BoxDecoration(
                           color: Colors.white,
@@ -430,7 +536,7 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
                         ),
                         child: Column(
                           children: [
-                            // TabBar
+                            // Encabezado de TabBar
                             TabBar(
                               controller: _tabController,
                               indicatorColor: AppColors.navy,
@@ -469,7 +575,9 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
                                           spacing: 8,
                                           runSpacing: 8,
                                           children: [
-                                            _InfoBadge(icon: Icons.business_center_outlined, text: '${widget.provider.years} años de experiencia'),
+                                            _InfoBadge(
+                                                icon: Icons.business_center_outlined,
+                                                text: '${widget.provider.years} años de experiencia'),
                                             const _InfoBadge(icon: Icons.verified_user_outlined, text: 'RUC y DGI Verificado'),
                                             const _InfoBadge(icon: Icons.local_shipping_outlined, text: 'Flotilla propia de reparto'),
                                             const _InfoBadge(icon: Icons.inventory_2_outlined, text: 'Venta Mayorista y Menudeo'),
@@ -479,7 +587,7 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
                                     ),
                                   ),
 
-                                  // ── TAB 3: CALIFICACIONES ─────────────────────
+                                  // ── TAB 3: CALIFICACIONES Y PUNTUACIÓN ────────
                                   const SingleChildScrollView(
                                     padding: EdgeInsets.all(20),
                                     child: Column(
@@ -507,6 +615,10 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
               ),
             ),
           ),
+
+          // ------------------------------------------------------------------
+          // 3. PIE DE PÁGINA UNIVERSAL
+          // ------------------------------------------------------------------
           const SliverToBoxAdapter(child: PremiumFooter()),
         ],
       ),
@@ -515,6 +627,7 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
 }
 
 // ── Grid de Catálogo ─────────────────────────────────────────────────────────
+/// Cuadrícula responsiva que organiza y renderiza los productos del proveedor en tarjetas.
 class _CatalogGrid extends StatelessWidget {
   final List<ProductModel> products;
   final void Function(ProductModel) onTap;
@@ -552,6 +665,7 @@ class _CatalogGrid extends StatelessWidget {
 }
 
 // ── Tarjeta de Producto en Grid ──────────────────────────────────────────────
+/// Tarjeta individual de producto con hover animado, badges de descuento, imagen y MOQ.
 class _ProductCard extends StatefulWidget {
   final ProductModel product;
   final void Function(ProductModel) onTap;
@@ -595,7 +709,7 @@ class _ProductCardState extends State<_ProductCard> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Foto del Producto
+              // Foto del Producto con badges
               Stack(
                 children: [
                   ClipRRect(
@@ -614,7 +728,7 @@ class _ProductCardState extends State<_ProductCard> {
                       ),
                     ),
                   ),
-                  // Badges
+                  // Badges de "NUEVO" o porcentaje de descuento
                   Positioned(
                     top: 8,
                     left: 8,
@@ -628,7 +742,15 @@ class _ProductCardState extends State<_ProductCard> {
                               color: AppColors.trustGreen,
                               borderRadius: BorderRadius.circular(8),
                             ),
-                            child: const Text('NUEVO', style: TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.w900, letterSpacing: 0.5)),
+                            child: const Text(
+                              'NUEVO',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 9,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
                           ),
                         if (p.discount > 0) ...[
                           const SizedBox(height: 4),
@@ -638,13 +760,16 @@ class _ProductCardState extends State<_ProductCard> {
                               color: AppColors.error,
                               borderRadius: BorderRadius.circular(8),
                             ),
-                            child: Text('-${p.discount.toInt()}%', style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w900)),
+                            child: Text(
+                              '-${p.discount.toInt()}%',
+                              style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w900),
+                            ),
                           ),
                         ],
                       ],
                     ),
                   ),
-                  // Disponibilidad
+                  // Indicador de disponibilidad en almacén
                   Positioned(
                     bottom: 8,
                     right: 8,
@@ -665,14 +790,13 @@ class _ProductCardState extends State<_ProductCard> {
                 ],
               ),
 
-              // Info del Producto
+              // Información comercial del Producto (Categoría, Nombre, Precio, MOQ)
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Categoría
                       Text(
                         p.category.toUpperCase(),
                         style: const TextStyle(
@@ -683,7 +807,6 @@ class _ProductCardState extends State<_ProductCard> {
                         ),
                       ),
                       const SizedBox(height: 3),
-                      // Nombre
                       Text(
                         p.name,
                         maxLines: 2,
@@ -703,7 +826,6 @@ class _ProductCardState extends State<_ProductCard> {
                         ),
                       ],
                       const Spacer(),
-                      // Precio
                       Text(
                         p.priceDisplay,
                         style: const TextStyle(
@@ -713,7 +835,6 @@ class _ProductCardState extends State<_ProductCard> {
                         ),
                       ),
                       const SizedBox(height: 4),
-                      // MOQ
                       Row(
                         children: [
                           const Icon(Icons.inventory_2_outlined, size: 12, color: AppColors.textSecondary),
@@ -737,6 +858,7 @@ class _ProductCardState extends State<_ProductCard> {
 }
 
 // ── Bottom Sheet Detalle de Producto ─────────────────────────────────────────
+/// Modal deslizable que expone la ficha técnica completa, características de manufactura y botón de cotización.
 class _ProductDetailSheet extends StatelessWidget {
   final ProductModel product;
   final ProviderModel provider;
@@ -758,7 +880,7 @@ class _ProductDetailSheet extends StatelessWidget {
           controller: controller,
           padding: EdgeInsets.zero,
           children: [
-            // Handle
+            // Asa superior de deslizamiento
             Center(
               child: Container(
                 margin: const EdgeInsets.only(top: 12, bottom: 8),
@@ -768,7 +890,7 @@ class _ProductDetailSheet extends StatelessWidget {
               ),
             ),
 
-            // Foto grande
+            // Foto ampliada
             ClipRRect(
               borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
               child: Image.asset(
@@ -793,8 +915,10 @@ class _ProductDetailSheet extends StatelessWidget {
                           color: AppColors.paleBlue,
                           borderRadius: BorderRadius.circular(10),
                         ),
-                        child: Text(product.category,
-                            style: const TextStyle(color: AppColors.navy, fontSize: 11, fontWeight: FontWeight.w800)),
+                        child: Text(
+                          product.category,
+                          style: const TextStyle(color: AppColors.navy, fontSize: 11, fontWeight: FontWeight.w800),
+                        ),
                       ),
                       const SizedBox(width: 8),
                       if (product.isNew)
@@ -804,8 +928,10 @@ class _ProductDetailSheet extends StatelessWidget {
                             color: AppColors.trustGreen,
                             borderRadius: BorderRadius.circular(10),
                           ),
-                          child: const Text('NUEVO',
-                              style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w800)),
+                          child: const Text(
+                            'NUEVO',
+                            style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w800),
+                          ),
                         ),
                       if (product.discount > 0) ...[
                         const SizedBox(width: 8),
@@ -815,31 +941,39 @@ class _ProductDetailSheet extends StatelessWidget {
                             color: AppColors.error,
                             borderRadius: BorderRadius.circular(10),
                           ),
-                          child: Text('-${product.discount.toInt()}% descuento',
-                              style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w800)),
+                          child: Text(
+                            '-${product.discount.toInt()}% descuento',
+                            style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w800),
+                          ),
                         ),
                       ],
                     ],
                   ),
                   const SizedBox(height: 14),
 
-                  // Nombre y Modelo
-                  Text(product.name,
-                      style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: AppColors.textPrimary)),
+                  // Nombre y Modelo / SKU
+                  Text(
+                    product.name,
+                    style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: AppColors.textPrimary),
+                  ),
                   const SizedBox(height: 4),
                   if (product.model.isNotEmpty)
-                    Text('Modelo / SKU: ${product.model}',
-                        style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
+                    Text(
+                      'Modelo / SKU: ${product.model}',
+                      style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                    ),
 
                   const SizedBox(height: 14),
 
-                  // Descripción
-                  Text(product.description,
-                      style: const TextStyle(fontSize: 14, height: 1.55, color: AppColors.textPrimary)),
+                  // Descripción detallada
+                  Text(
+                    product.description,
+                    style: const TextStyle(fontSize: 14, height: 1.55, color: AppColors.textPrimary),
+                  ),
 
                   const SizedBox(height: 20),
 
-                  // Precio y MOQ destacados
+                  // Tarjeta con Precio Unitario y Pedido Mínimo (MOQ)
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
@@ -855,8 +989,10 @@ class _ProductDetailSheet extends StatelessWidget {
                             children: [
                               const Text('Precio Unitario', style: TextStyle(color: AppColors.textSecondary, fontSize: 11)),
                               const SizedBox(height: 2),
-                              Text(product.priceDisplay,
-                                  style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 17, color: AppColors.navy)),
+                              Text(
+                                product.priceDisplay,
+                                style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 17, color: AppColors.navy),
+                              ),
                             ],
                           ),
                         ),
@@ -868,8 +1004,10 @@ class _ProductDetailSheet extends StatelessWidget {
                             children: [
                               const Text('Pedido Mínimo (MOQ)', style: TextStyle(color: AppColors.textSecondary, fontSize: 11)),
                               const SizedBox(height: 2),
-                              Text('${product.moq} ${product.unit}s',
-                                  style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 17, color: AppColors.navy)),
+                              Text(
+                                '${product.moq} ${product.unit}s',
+                                style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 17, color: AppColors.navy),
+                              ),
                             ],
                           ),
                         ),
@@ -878,7 +1016,7 @@ class _ProductDetailSheet extends StatelessWidget {
                   ),
                   const SizedBox(height: 20),
 
-                  // Disponibilidad
+                  // Indicador de disponibilidad
                   Row(
                     children: [
                       Icon(
@@ -903,10 +1041,12 @@ class _ProductDetailSheet extends StatelessWidget {
                   ),
                   const SizedBox(height: 20),
 
-                  // Características
+                  // Lista de Características y Especificaciones Técnicas
                   if (product.characteristics.isNotEmpty) ...[
-                    const Text('Características y Especificaciones:',
-                        style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15, color: AppColors.textPrimary)),
+                    const Text(
+                      'Características y Especificaciones:',
+                      style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15, color: AppColors.textPrimary),
+                    ),
                     const SizedBox(height: 12),
                     ...product.characteristics.map(
                       (c) => Padding(
@@ -917,8 +1057,10 @@ class _ProductDetailSheet extends StatelessWidget {
                             const Icon(Icons.check_circle_outline_rounded, size: 16, color: AppColors.trustGreen),
                             const SizedBox(width: 10),
                             Expanded(
-                              child: Text(c,
-                                  style: const TextStyle(fontSize: 13.5, color: AppColors.textPrimary, height: 1.35)),
+                              child: Text(
+                                c,
+                                style: const TextStyle(fontSize: 13.5, color: AppColors.textPrimary, height: 1.35),
+                              ),
                             ),
                           ],
                         ),
@@ -927,7 +1069,7 @@ class _ProductDetailSheet extends StatelessWidget {
                     const SizedBox(height: 20),
                   ],
 
-                  // Botones de acción
+                  // Botones de acción: Solicitar Cotización o Volver
                   FilledButton.icon(
                     style: FilledButton.styleFrom(
                       backgroundColor: AppColors.trustGreen,
@@ -973,6 +1115,7 @@ class _ProductDetailSheet extends StatelessWidget {
 }
 
 // ── Barra de Calificación ─────────────────────────────────────────────────────
+/// Barra de progreso lineal para desplegar el puntaje en rubros específicos de calidad.
 class _ScoreBar extends StatelessWidget {
   final String label;
   final double score;
@@ -988,11 +1131,15 @@ class _ScoreBar extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Expanded(
-              child: Text(label,
-                  style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: AppColors.textPrimary)),
+              child: Text(
+                label,
+                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: AppColors.textPrimary),
+              ),
             ),
-            Text('$score / 5.0',
-                style: const TextStyle(fontWeight: FontWeight.w900, color: AppColors.trustGreen, fontSize: 13)),
+            Text(
+              '$score / 5.0',
+              style: const TextStyle(fontWeight: FontWeight.w900, color: AppColors.trustGreen, fontSize: 13),
+            ),
           ],
         ),
         const SizedBox(height: 6),
@@ -1011,6 +1158,7 @@ class _ScoreBar extends StatelessWidget {
 }
 
 // ── Badge Informativo ─────────────────────────────────────────────────────────
+/// Etiqueta compacta con icono para destacar atributos institucionales de la empresa.
 class _InfoBadge extends StatelessWidget {
   final IconData icon;
   final String text;

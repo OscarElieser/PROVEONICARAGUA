@@ -1,42 +1,94 @@
+// ==============================================================================
+// PROVEO NICARAGUA - Buscador Inteligente B2B (lib/screens/search_screen.dart)
+// ¿Qué hace?: Permite a compradores y empresas filtrar el directorio de proveedores por texto, categoría, departamento, rating y verificación.
+// ¿Por qué se utiliza?: Es el canal principal de prospección y descubrimiento de proveedores certificados en Nicaragua.
+// ==============================================================================
+
+// Importa los componentes visuales de Flutter
 import 'package:flutter/material.dart';
+
+// Importa los tokens de color corporativos
 import '../core/theme/app_colors.dart';
+
+// Importa los modelos del dominio de datos
 import '../models/models.dart';
+
+// Importa el repositorio de Firestore para obtener el directorio
 import '../services/firebase/firestore_repository.dart';
+
+// Importa el encabezado y pie de página globales
 import '../core/widgets/premium_footer.dart';
 import '../core/widgets/premium_header.dart';
+
+// Importa las pantallas de navegación de detalle
 import 'provider_profile_screen.dart';
 import 'quotation_request_screen.dart';
 
 // ─── Constantes de categorías y ubicaciones ────────────────────────────────
+/// Etiqueta comodín para seleccionar todas las categorías sin restricción
 const _kAllCategories = 'Todas las categorías';
+
+/// Etiqueta comodín para buscar en todos los departamentos del país
 const _kAllLocations = 'Todas las ubicaciones';
+
+/// Lista de rubros y categorías comerciales disponibles en Nicaragua
 const List<String> _kCategories = [
-  _kAllCategories, 'Empaques', 'Materia Prima', 'Logística', 'Tecnología',
-  'Etiquetas', 'Manufactura',
+  _kAllCategories,
+  'Empaques',
+  'Materia Prima',
+  'Logística',
+  'Tecnología',
+  'Etiquetas',
+  'Manufactura',
 ];
+
+/// Lista de ciudades y departamentos principales de cobertura comercial
 const List<String> _kLocations = [
-  _kAllLocations, 'Managua, Nicaragua', 'Masaya, Nicaragua',
-  'León, Nicaragua', 'Chinandega, Nicaragua', 'Matagalpa, Nicaragua',
-  'Granada, Nicaragua', 'Tipitapa, Nicaragua',
+  _kAllLocations,
+  'Managua, Nicaragua',
+  'Masaya, Nicaragua',
+  'León, Nicaragua',
+  'Chinandega, Nicaragua',
+  'Matagalpa, Nicaragua',
+  'Granada, Nicaragua',
+  'Tipitapa, Nicaragua',
 ];
 
 /// Buscador B2B premium con filtros funcionales y resultados desplazables.
 class SearchScreen extends StatefulWidget {
+  /// Constructor constante
   const SearchScreen({super.key});
+
   @override
   State<SearchScreen> createState() => _SearchScreenState();
 }
 
 class _SearchScreenState extends State<SearchScreen> {
+  /// Controlador del campo de texto de búsqueda libre
   final _searchCtrl = TextEditingController();
-  String _selectedCategory = _kAllCategories;
-  String _selectedLocation = _kAllLocations;
-  double _minRating = 0;
-  bool _onlyFeatured = false;
-  final bool _filterPanelOpen = false; // para mobile
-  String _activeCategory = _kAllCategories; // categoría visual seleccionada
 
+  /// Categoría seleccionada en el menú desplegable
+  String _selectedCategory = _kAllCategories;
+
+  /// Ubicación seleccionada en el menú desplegable
+  String _selectedLocation = _kAllLocations;
+
+  /// Calificación mínima por estrellas (0 a 5)
+  double _minRating = 0;
+
+  /// Bandera para filtrar solo proveedores verificados / destacados
+  bool _onlyFeatured = false;
+
+  /// Bandera para controlar la apertura del panel de filtros en dispositivos móviles
+  final bool _filterPanelOpen = false;
+
+  /// Categoría visual activa seleccionada mediante los chips horizontales
+  String _activeCategory = _kAllCategories;
+
+  /// Lista completa de proveedores obtenidos desde Firestore
   List<ProviderModel> _allProviders = [];
+
+  /// Estado de carga mientras se recuperan los datos
   bool _loading = true;
 
   @override
@@ -45,30 +97,55 @@ class _SearchScreenState extends State<SearchScreen> {
     _loadProviders();
   }
 
+  /// Recupera los proveedores registrados desde el repositorio de base de datos
   Future<void> _loadProviders() async {
     final data = await FirestoreRepository().getProviders();
-    if (mounted) setState(() { _allProviders = data; _loading = false; });
+    if (mounted) {
+      setState(() {
+        _allProviders = data;
+        _loading = false;
+      });
+    }
   }
 
+  /// Calcula la lista de proveedores que cumplen con todos los criterios de filtrado
   List<ProviderModel> get _filtered {
     return _allProviders.where((p) {
       final q = _searchCtrl.text.toLowerCase();
+      // Coincidencia por texto libre en nombre, descripción o categoría
       final matchesSearch = q.isEmpty ||
           p.name.toLowerCase().contains(q) ||
           p.description.toLowerCase().contains(q) ||
           p.category.toLowerCase().contains(q);
+
+      // Coincidencia con categoría seleccionada en dropdown
       final matchesCat = _selectedCategory == _kAllCategories ||
           p.category.toLowerCase().contains(_selectedCategory.toLowerCase());
+
+      // Coincidencia con categoría visual de los chips
       final matchesActiveCat = _activeCategory == _kAllCategories ||
           p.category.toLowerCase().contains(_activeCategory.toLowerCase());
+
+      // Coincidencia geográfica
       final matchesLoc = _selectedLocation == _kAllLocations ||
           p.location == _selectedLocation;
+
+      // Coincidencia por calificación mínima
       final matchesRating = p.rating >= _minRating;
+
+      // Coincidencia por verificación
       final matchesFeatured = !_onlyFeatured || p.featured;
-      return matchesSearch && matchesCat && matchesActiveCat && matchesLoc && matchesRating && matchesFeatured;
+
+      return matchesSearch &&
+          matchesCat &&
+          matchesActiveCat &&
+          matchesLoc &&
+          matchesRating &&
+          matchesFeatured;
     }).toList();
   }
 
+  /// Restablece todos los filtros a sus valores predeterminados
   void _clearFilters() {
     setState(() {
       _searchCtrl.clear();
@@ -103,6 +180,7 @@ class _SearchScreenState extends State<SearchScreen> {
                 onCategoryTap: (cat) => setState(() => _activeCategory = cat),
               );
 
+        // Disposición para pantallas de escritorio: Columna lateral de filtros + resultados
         if (desktop) {
           return SingleChildScrollView(
             child: Column(
@@ -111,6 +189,7 @@ class _SearchScreenState extends State<SearchScreen> {
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // Barra lateral fija de filtros
                       SizedBox(
                         width: 270,
                         child: _FiltersPanel(
@@ -118,13 +197,16 @@ class _SearchScreenState extends State<SearchScreen> {
                           selectedLocation: _selectedLocation,
                           minRating: _minRating,
                           onlyFeatured: _onlyFeatured,
-                          onCategoryChanged: (v) => setState(() => _selectedCategory = v ?? _kAllCategories),
-                          onLocationChanged: (v) => setState(() => _selectedLocation = v ?? _kAllLocations),
+                          onCategoryChanged: (v) =>
+                              setState(() => _selectedCategory = v ?? _kAllCategories),
+                          onLocationChanged: (v) =>
+                              setState(() => _selectedLocation = v ?? _kAllLocations),
                           onRatingChanged: (v) => setState(() => _minRating = v),
                           onFeaturedChanged: (v) => setState(() => _onlyFeatured = v),
                           onClear: _clearFilters,
                         ),
                       ),
+                      // Área expandida de resultados
                       Expanded(
                         child: Padding(
                           padding: const EdgeInsets.all(24),
@@ -140,6 +222,7 @@ class _SearchScreenState extends State<SearchScreen> {
           );
         }
 
+        // Disposición responsiva para dispositivos móviles
         return Column(
           children: [
             if (_filterPanelOpen)
@@ -148,8 +231,10 @@ class _SearchScreenState extends State<SearchScreen> {
                 selectedLocation: _selectedLocation,
                 minRating: _minRating,
                 onlyFeatured: _onlyFeatured,
-                onCategoryChanged: (v) => setState(() => _selectedCategory = v ?? _kAllCategories),
-                onLocationChanged: (v) => setState(() => _selectedLocation = v ?? _kAllLocations),
+                onCategoryChanged: (v) =>
+                    setState(() => _selectedCategory = v ?? _kAllCategories),
+                onLocationChanged: (v) =>
+                    setState(() => _selectedLocation = v ?? _kAllLocations),
                 onRatingChanged: (v) => setState(() => _minRating = v),
                 onFeaturedChanged: (v) => setState(() => _onlyFeatured = v),
                 onClear: _clearFilters,
@@ -157,7 +242,11 @@ class _SearchScreenState extends State<SearchScreen> {
             Expanded(
               child: ListView(
                 padding: const EdgeInsets.all(16),
-                children: [results, const SizedBox(height: 24), const PremiumFooter()],
+                children: [
+                  results,
+                  const SizedBox(height: 24),
+                  const PremiumFooter(),
+                ],
               ),
             ),
           ],
@@ -168,6 +257,7 @@ class _SearchScreenState extends State<SearchScreen> {
 }
 
 // ─── Panel de Filtros ──────────────────────────────────────────────────────
+/// Panel lateral o superior con controles interactivos para filtrar el catálogo de proveedores.
 class _FiltersPanel extends StatelessWidget {
   final String selectedCategory;
   final String selectedLocation;
@@ -228,25 +318,35 @@ class _FiltersPanel extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 20),
+
+          // Selector de Categoría
           _sectionLabel('Categoría'),
           const SizedBox(height: 8),
           DropdownButtonFormField<String>(
             value: selectedCategory,
             decoration: _dropInputDec(),
-            items: _kCategories.map((c) => DropdownMenuItem(value: c, child: Text(c, style: const TextStyle(fontSize: 13)))).toList(),
+            items: _kCategories
+                .map((c) => DropdownMenuItem(value: c, child: Text(c, style: const TextStyle(fontSize: 13))))
+                .toList(),
             onChanged: onCategoryChanged,
           ),
           const SizedBox(height: 18),
+
+          // Selector de Departamento / Ubicación
           _sectionLabel('Ubicación'),
           const SizedBox(height: 8),
           DropdownButtonFormField<String>(
             value: selectedLocation,
             decoration: _dropInputDec(),
             isExpanded: true,
-            items: _kLocations.map((l) => DropdownMenuItem(value: l, child: Text(l, style: const TextStyle(fontSize: 12)))).toList(),
+            items: _kLocations
+                .map((l) => DropdownMenuItem(value: l, child: Text(l, style: const TextStyle(fontSize: 12))))
+                .toList(),
             onChanged: onLocationChanged,
           ),
           const SizedBox(height: 18),
+
+          // Selector de Calificación Mínima por Estrellas
           _sectionLabel('Calificación mínima'),
           const SizedBox(height: 8),
           Row(
@@ -265,10 +365,14 @@ class _FiltersPanel extends StatelessWidget {
           if (minRating > 0)
             Padding(
               padding: const EdgeInsets.only(top: 6),
-              child: Text('${minRating.toInt()} estrella${minRating > 1 ? 's' : ''} o más',
-                  style: const TextStyle(color: AppColors.textSecondary, fontSize: 11)),
+              child: Text(
+                '${minRating.toInt()} estrella${minRating > 1 ? 's' : ''} o más',
+                style: const TextStyle(color: AppColors.textSecondary, fontSize: 11),
+              ),
             ),
           const SizedBox(height: 18),
+
+          // Switch para Proveedores Verificados
           Row(
             children: [
               Switch.adaptive(
@@ -278,11 +382,16 @@ class _FiltersPanel extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               const Expanded(
-                child: Text('Solo verificados / Top', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.navy)),
+                child: Text(
+                  'Solo verificados / Top',
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.navy),
+                ),
               ),
             ],
           ),
           const SizedBox(height: 20),
+
+          // Botón de confirmación de filtros
           SizedBox(
             width: double.infinity,
             child: FilledButton.icon(
@@ -301,8 +410,10 @@ class _FiltersPanel extends StatelessWidget {
     );
   }
 
-  Widget _sectionLabel(String label) => Text(label,
-      style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13, color: AppColors.textPrimary));
+  Widget _sectionLabel(String label) => Text(
+        label,
+        style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13, color: AppColors.textPrimary),
+      );
 
   InputDecoration _dropInputDec() => InputDecoration(
         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -312,6 +423,7 @@ class _FiltersPanel extends StatelessWidget {
 }
 
 // ─── Panel de Resultados ───────────────────────────────────────────────────
+/// Panel central que despliega la barra de búsqueda rápida, chips de rubros y tarjetas de proveedores.
 class _ResultsPanel extends StatelessWidget {
   final List<ProviderModel> providers;
   final TextEditingController searchCtrl;
@@ -332,7 +444,7 @@ class _ResultsPanel extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Barra de búsqueda
+        // Campo de entrada para búsqueda libre
         TextField(
           controller: searchCtrl,
           onChanged: (_) => onSearch(),
@@ -350,7 +462,7 @@ class _ResultsPanel extends StatelessWidget {
         ),
         const SizedBox(height: 20),
 
-        // Categorías visuales
+        // Carrusel horizontal de categorías comerciales
         const Text('Explorar por Categorías', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w900, color: AppColors.navy)),
         const SizedBox(height: 12),
         SizedBox(
@@ -370,7 +482,7 @@ class _ResultsPanel extends StatelessWidget {
         ),
         const SizedBox(height: 20),
 
-        // Encabezado de resultados
+        // Encabezado con contador de resultados encontrados
         Row(
           children: [
             Expanded(
@@ -404,7 +516,7 @@ class _ResultsPanel extends StatelessWidget {
         ),
         const SizedBox(height: 16),
 
-        // Lista de proveedores
+        // Lista de proveedores encontrados o estado vacío
         if (providers.isEmpty)
           const Center(
             child: Padding(
@@ -428,6 +540,7 @@ class _ResultsPanel extends StatelessWidget {
 }
 
 // ─── Chip de Categoría ─────────────────────────────────────────────────────
+/// Chip interactivo con icono, color distintivo y micro-animación al seleccionarse.
 class _CategoryChip extends StatelessWidget {
   final IconData icon;
   final String name;
@@ -435,7 +548,13 @@ class _CategoryChip extends StatelessWidget {
   final bool active;
   final VoidCallback onTap;
 
-  const _CategoryChip({required this.icon, required this.name, required this.color, required this.active, required this.onTap});
+  const _CategoryChip({
+    required this.icon,
+    required this.name,
+    required this.color,
+    required this.active,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -449,19 +568,25 @@ class _CategoryChip extends StatelessWidget {
           color: active ? color : Colors.white,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: active ? color : AppColors.border, width: active ? 2 : 1),
-          boxShadow: active ? [BoxShadow(color: color.withValues(alpha: 0.3), blurRadius: 10, offset: const Offset(0, 4))] : [],
+          boxShadow: active
+              ? [BoxShadow(color: color.withValues(alpha: 0.3), blurRadius: 10, offset: const Offset(0, 4))]
+              : [],
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(icon, color: active ? Colors.white : color, size: 26),
             const SizedBox(height: 6),
-            Text(name, textAlign: TextAlign.center, style: TextStyle(
-              color: active ? Colors.white : AppColors.navy,
-              fontWeight: active ? FontWeight.w900 : FontWeight.w700,
-              fontSize: 11,
-              height: 1.2,
-            )),
+            Text(
+              name,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: active ? Colors.white : AppColors.navy,
+                fontWeight: active ? FontWeight.w900 : FontWeight.w700,
+                fontSize: 11,
+                height: 1.2,
+              ),
+            ),
           ],
         ),
       ),
@@ -470,14 +595,17 @@ class _CategoryChip extends StatelessWidget {
 }
 
 // ─── Tarjeta de Resultado ──────────────────────────────────────────────────
+/// Tarjeta con elevación, efecto de cursor hover, métricas de respuesta y botones de acción rápida.
 class _ProviderResultCard extends StatefulWidget {
   final ProviderModel provider;
   const _ProviderResultCard({required this.provider});
+
   @override
   State<_ProviderResultCard> createState() => _ProviderResultCardState();
 }
 
 class _ProviderResultCardState extends State<_ProviderResultCard> {
+  /// Estado de elevación cuando el puntero del mouse entra en la tarjeta
   bool _hovered = false;
 
   @override
@@ -493,11 +621,13 @@ class _ProviderResultCardState extends State<_ProviderResultCard> {
           color: Colors.white,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(color: _hovered ? AppColors.blue : AppColors.border, width: _hovered ? 2 : 1),
-          boxShadow: [BoxShadow(
-            color: _hovered ? AppColors.blue.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.04),
-            blurRadius: _hovered ? 20 : 8,
-            offset: const Offset(0, 4),
-          )],
+          boxShadow: [
+            BoxShadow(
+              color: _hovered ? AppColors.blue.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.04),
+              blurRadius: _hovered ? 20 : 8,
+              offset: const Offset(0, 4),
+            )
+          ],
         ),
         child: Padding(
           padding: const EdgeInsets.all(20),
@@ -507,69 +637,114 @@ class _ProviderResultCardState extends State<_ProviderResultCard> {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Avatar
+                  // Avatar de la empresa con gradiente corporativo
                   Container(
                     width: 56,
                     height: 56,
                     decoration: BoxDecoration(
-                      gradient: const LinearGradient(colors: [AppColors.navy, AppColors.teal], begin: Alignment.topLeft, end: Alignment.bottomRight),
+                      gradient: const LinearGradient(
+                        colors: [AppColors.navy, AppColors.teal],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
                       borderRadius: BorderRadius.circular(16),
                     ),
-                    child: Center(child: Text(p.logo.isNotEmpty ? p.logo.substring(0, p.logo.length.clamp(0, 2)) : p.name.substring(0, 2).toUpperCase(),
-                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 16, letterSpacing: 0.5))),
+                    child: Center(
+                      child: Text(
+                        p.logo.isNotEmpty ? p.logo.substring(0, p.logo.length.clamp(0, 2)) : p.name.substring(0, 2).toUpperCase(),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w900,
+                          fontSize: 16,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ),
                   ),
                   const SizedBox(width: 14),
+                  // Nombre, categoría, departamento y rating
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(children: [
-                          Flexible(child: Text(p.name, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w900, color: AppColors.navy))),
-                          if (p.featured) ...[
-                            const SizedBox(width: 8),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                              decoration: BoxDecoration(color: AppColors.trustGreen, borderRadius: BorderRadius.circular(8)),
-                              child: const Row(mainAxisSize: MainAxisSize.min, children: [
-                                Icon(Icons.verified_rounded, color: Colors.white, size: 10),
-                                SizedBox(width: 3),
-                                Text('Top', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
-                              ]),
+                        Row(
+                          children: [
+                            Flexible(
+                              child: Text(
+                                p.name,
+                                style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w900, color: AppColors.navy),
+                              ),
+                            ),
+                            if (p.featured) ...[
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                decoration: BoxDecoration(color: AppColors.trustGreen, borderRadius: BorderRadius.circular(8)),
+                                child: const Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(Icons.verified_rounded, color: Colors.white, size: 10),
+                                    SizedBox(width: 3),
+                                    Text('Top', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            const Icon(Icons.location_on_outlined, size: 13, color: AppColors.textSecondary),
+                            const SizedBox(width: 3),
+                            Text(p.location, style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+                            const SizedBox(width: 10),
+                            Container(width: 4, height: 4, decoration: const BoxDecoration(color: AppColors.border, shape: BoxShape.circle)),
+                            const SizedBox(width: 10),
+                            const Icon(Icons.category_outlined, size: 13, color: AppColors.textSecondary),
+                            const SizedBox(width: 3),
+                            Text(p.category, style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                        Row(
+                          children: [
+                            ...List.generate(
+                              5,
+                              (i) => Icon(
+                                Icons.star_rounded,
+                                size: 15,
+                                color: i < p.rating.floor() ? AppColors.warning : AppColors.border,
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              '${p.rating} (${p.reviews} reseñas)',
+                              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
                             ),
                           ],
-                        ]),
-                        const SizedBox(height: 4),
-                        Row(children: [
-                          const Icon(Icons.location_on_outlined, size: 13, color: AppColors.textSecondary),
-                          const SizedBox(width: 3),
-                          Text(p.location, style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
-                          const SizedBox(width: 10),
-                          Container(width: 4, height: 4, decoration: const BoxDecoration(color: AppColors.border, shape: BoxShape.circle)),
-                          const SizedBox(width: 10),
-                          const Icon(Icons.category_outlined, size: 13, color: AppColors.textSecondary),
-                          const SizedBox(width: 3),
-                          Text(p.category, style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
-                        ]),
-                        const SizedBox(height: 6),
-                        Row(children: [
-                          ...List.generate(5, (i) => Icon(Icons.star_rounded, size: 15, color: i < p.rating.floor() ? AppColors.warning : AppColors.border)),
-                          const SizedBox(width: 6),
-                          Text('${p.rating} (${p.reviews} reseñas)', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
-                        ]),
+                        ),
                       ],
                     ),
                   ),
+                  // Tiempo de respuesta y trayectoria
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(color: AppColors.paleGreen, borderRadius: BorderRadius.circular(8)),
-                        child: Row(mainAxisSize: MainAxisSize.min, children: [
-                          const Icon(Icons.timer_outlined, size: 12, color: AppColors.trustGreen),
-                          const SizedBox(width: 4),
-                          Text('Resp: ${p.responseTime}', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.trustGreen)),
-                        ]),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.timer_outlined, size: 12, color: AppColors.trustGreen),
+                            const SizedBox(width: 4),
+                            Text(
+                              'Resp: ${p.responseTime}',
+                              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.trustGreen),
+                            ),
+                          ],
+                        ),
                       ),
                       const SizedBox(height: 4),
                       Text('${p.years} años', style: const TextStyle(color: AppColors.textSecondary, fontSize: 11)),
@@ -578,35 +753,49 @@ class _ProviderResultCardState extends State<_ProviderResultCard> {
                 ],
               ),
               const SizedBox(height: 12),
-              Text(p.description, maxLines: 2, overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(color: AppColors.textSecondary, fontSize: 13, height: 1.4)),
+              // Descripción corta del proveedor
+              Text(
+                p.description,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(color: AppColors.textSecondary, fontSize: 13, height: 1.4),
+              ),
               const SizedBox(height: 16),
-              Row(children: [
-                Expanded(
-                  child: OutlinedButton(
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: AppColors.navy,
-                      side: const BorderSide(color: AppColors.navy),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              // Botones de acción: "Ver Perfil" y "Solicitar Cotización"
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.navy,
+                        side: const BorderSide(color: AppColors.navy),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      onPressed: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => ProviderProfileScreen(provider: p)),
+                      ),
+                      child: const Text('Ver perfil'),
                     ),
-                    onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ProviderProfileScreen(provider: p))),
-                    child: const Text('Ver perfil'),
                   ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  flex: 2,
-                  child: FilledButton.icon(
-                    style: FilledButton.styleFrom(
-                      backgroundColor: AppColors.trustGreen,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    flex: 2,
+                    child: FilledButton.icon(
+                      style: FilledButton.styleFrom(
+                        backgroundColor: AppColors.trustGreen,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      onPressed: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const QuotationRequestScreen()),
+                      ),
+                      icon: const Icon(Icons.request_quote_outlined, size: 16),
+                      label: const Text('Solicitar cotización'),
                     ),
-                    onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const QuotationRequestScreen())),
-                    icon: const Icon(Icons.request_quote_outlined, size: 16),
-                    label: const Text('Solicitar cotización'),
                   ),
-                ),
-              ]),
+                ],
+              ),
             ],
           ),
         ),
@@ -614,3 +803,4 @@ class _ProviderResultCardState extends State<_ProviderResultCard> {
     );
   }
 }
+

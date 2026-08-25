@@ -1,12 +1,30 @@
+// ==============================================================================
+// PROVEO NICARAGUA - Pantalla de Autenticación y Registro B2B (lib/screens/auth_screen.dart)
+// ¿Qué hace?: Gestiona el inicio de sesión con correo/contraseña, Google OAuth, registro empresarial y modo explorador invitado.
+// ¿Por qué se utiliza?: Es la puerta de entrada segura para la autenticación de empresas y emprendedores en la plataforma.
+// ==============================================================================
+
+// Importa los componentes visuales de Flutter
 import 'package:flutter/material.dart';
+
+// Importa Provider para interactuar con AuthProvider
 import 'package:provider/provider.dart';
+
+// Importa los tokens de color corporativos
 import '../core/theme/app_colors.dart';
+
+// Importa el widget oficial del logotipo
 import '../core/widgets/proveo_logo.dart';
+
+// Importa las enumeraciones de roles de usuario
 import '../models/models.dart';
+
+// Importa el gestor de estado de sesión
 import '../core/providers/auth_provider.dart';
 
-/// Pantalla de acceso ultra-premium de PROVEO con soporte Firebase y modo explorador invitado.
+/// Pantalla de acceso de PROVEO con soporte Firebase y modo explorador invitado.
 class AuthScreen extends StatefulWidget {
+  /// Constructor constante
   const AuthScreen({super.key});
 
   @override
@@ -14,27 +32,48 @@ class AuthScreen extends StatefulWidget {
 }
 
 class _AuthScreenState extends State<AuthScreen> {
+  /// Controlador del campo de texto de correo electrónico
   final _email = TextEditingController();
+
+  /// Controlador del campo de texto de contraseña
   final _password = TextEditingController();
+
+  /// Controlador del campo de texto del nombre comercial o representante
   final _name = TextEditingController();
+
+  /// Alterna entre el formulario de inicio de sesión (`false`) y el de registro (`true`)
   bool _isSignUp = false;
+
+  /// Controla la visibilidad de los caracteres en el campo de contraseña
   bool _obscurePassword = true;
+
+  /// Indicador visual de operación asíncrona en curso
   bool _loading = false;
+
+  /// Mensaje de error a presentar en la interfaz ante fallos de validación o credenciales
   String? _error;
 
   @override
   void dispose() {
+    // Libera los controladores de texto al desmontar el widget para evitar fugas de memoria
     _email.dispose();
     _password.dispose();
     _name.dispose();
     super.dispose();
   }
 
+  /// Ejecuta la autenticación con correo y contraseña (o registro según [_isSignUp])
   Future<void> _signIn() async {
-    setState(() { _loading = true; _error = null; });
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+
     try {
       final auth = Provider.of<AuthProvider>(context, listen: false);
+
       if (_isSignUp) {
+        // Registro de nueva cuenta empresarial por defecto con rol Emprendedor
         await auth.signUp(
           _email.text.trim(),
           _password.text,
@@ -42,8 +81,11 @@ class _AuthScreenState extends State<AuthScreen> {
           UserRole.entrepreneur,
         );
       } else {
+        // Inicio de sesión con credenciales existentes
         await auth.signIn(_email.text.trim(), _password.text);
       }
+
+      // Si el proveedor registró un mensaje de error legible, lo mostramos
       if (mounted && auth.errorMessage != null) {
         setState(() => _error = auth.errorMessage);
       }
@@ -54,11 +96,17 @@ class _AuthScreenState extends State<AuthScreen> {
     }
   }
 
+  /// Ejecuta el flujo federado de autenticación con Google SignIn
   Future<void> _signInWithGoogle() async {
-    setState(() { _loading = true; _error = null; });
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+
     try {
       final auth = Provider.of<AuthProvider>(context, listen: false);
       await auth.signInWithGoogle();
+
       if (mounted && auth.errorMessage != null) {
         setState(() => _error = auth.errorMessage);
       }
@@ -69,6 +117,7 @@ class _AuthScreenState extends State<AuthScreen> {
     }
   }
 
+  /// Inicia una visita exploratoria en modo invitado sin necesidad de registrar credenciales
   Future<void> _startGuestVisit() async {
     setState(() => _loading = true);
     try {
@@ -84,7 +133,9 @@ class _AuthScreenState extends State<AuthScreen> {
       backgroundColor: AppColors.background,
       body: Stack(
         children: [
-          // Fondo decorativo con gradiente suave
+          // ------------------------------------------------------------------
+          // 1. FONDO DECORATIVO CON ESFERAS SUAVES
+          // ------------------------------------------------------------------
           Positioned(
             top: -120,
             left: -120,
@@ -110,6 +161,9 @@ class _AuthScreenState extends State<AuthScreen> {
             ),
           ),
 
+          // ------------------------------------------------------------------
+          // 2. FORMULARIO PRINCIPAL CENTRADO
+          // ------------------------------------------------------------------
           Center(
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 32),
@@ -118,7 +172,7 @@ class _AuthScreenState extends State<AuthScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    // Tarjeta Principal Ultra-Premium
+                    // Tarjeta Principal de Autenticación
                     Container(
                       padding: const EdgeInsets.all(32),
                       decoration: BoxDecoration(
@@ -136,11 +190,11 @@ class _AuthScreenState extends State<AuthScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          // Logo de PROVEO
+                          // Logotipo de PROVEO
                           const Center(child: ProveoLogo(height: 52)),
                           const SizedBox(height: 20),
 
-                          // Título y Subtítulo
+                          // Título dinámico según modo Login / Sign Up
                           Text(
                             _isSignUp ? 'Crear Cuenta Empresarial' : 'Bienvenido a PROVEO',
                             textAlign: TextAlign.center,
@@ -157,11 +211,15 @@ class _AuthScreenState extends State<AuthScreen> {
                                 ? 'Regístrate para conectar con fabricantes y compradores verificados.'
                                 : 'Conecta con proveedores confiables y toma mejores decisiones.',
                             textAlign: TextAlign.center,
-                            style: const TextStyle(color: AppColors.textSecondary, fontSize: 13, height: 1.35),
+                            style: const TextStyle(
+                              color: AppColors.textSecondary,
+                              fontSize: 13,
+                              height: 1.35,
+                            ),
                           ),
                           const SizedBox(height: 24),
 
-                          // Selector Tabs: Iniciar Sesión / Registrarse
+                          // Selector Segmentado de Pestañas: Iniciar Sesión / Registrarse
                           Container(
                             padding: const EdgeInsets.all(4),
                             decoration: BoxDecoration(
@@ -170,6 +228,7 @@ class _AuthScreenState extends State<AuthScreen> {
                             ),
                             child: Row(
                               children: [
+                                // Opción: Iniciar Sesión
                                 Expanded(
                                   child: InkWell(
                                     borderRadius: BorderRadius.circular(10),
@@ -204,6 +263,7 @@ class _AuthScreenState extends State<AuthScreen> {
                                     ),
                                   ),
                                 ),
+                                // Opción: Registrarse
                                 Expanded(
                                   child: InkWell(
                                     borderRadius: BorderRadius.circular(10),
@@ -243,7 +303,7 @@ class _AuthScreenState extends State<AuthScreen> {
                           ),
                           const SizedBox(height: 20),
 
-                          // Campo Nombre (si es registro)
+                          // Campo Nombre (exclusivo para registro)
                           if (_isSignUp) ...[
                             TextField(
                               controller: _name,
@@ -272,7 +332,7 @@ class _AuthScreenState extends State<AuthScreen> {
                           ),
                           const SizedBox(height: 14),
 
-                          // Campo Contraseña con botón de mostrar/ocultar
+                          // Campo Contraseña con botón interactivo de visibilidad
                           TextField(
                             controller: _password,
                             obscureText: _obscurePassword,
@@ -293,7 +353,7 @@ class _AuthScreenState extends State<AuthScreen> {
                             ),
                           ),
 
-                          // Mensaje de Error
+                          // Banner visual de error en caso de fallo
                           if (_error != null) ...[
                             const SizedBox(height: 14),
                             Container(
@@ -310,7 +370,11 @@ class _AuthScreenState extends State<AuthScreen> {
                                   Expanded(
                                     child: Text(
                                       _error!,
-                                      style: const TextStyle(color: AppColors.error, fontSize: 12, fontWeight: FontWeight.w600),
+                                      style: const TextStyle(
+                                        color: AppColors.error,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                      ),
                                     ),
                                   ),
                                 ],
@@ -337,7 +401,11 @@ class _AuthScreenState extends State<AuthScreen> {
                                   )
                                 : Text(
                                     _isSignUp ? 'Crear Cuenta Empresarial' : 'Iniciar Sesión',
-                                    style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 15, letterSpacing: 0.3),
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w900,
+                                      fontSize: 15,
+                                      letterSpacing: 0.3,
+                                    ),
                                   ),
                           ),
                           const SizedBox(height: 12),
@@ -358,20 +426,23 @@ class _AuthScreenState extends State<AuthScreen> {
                           ),
                           const SizedBox(height: 20),
 
-                          // Separador
+                          // Separador visual "O prueba la plataforma"
                           const Row(
                             children: [
                               Expanded(child: Divider()),
                               Padding(
                                 padding: EdgeInsets.symmetric(horizontal: 12),
-                                child: Text('O prueba la plataforma', style: TextStyle(color: AppColors.textSecondary, fontSize: 11)),
+                                child: Text(
+                                  'O prueba la plataforma',
+                                  style: TextStyle(color: AppColors.textSecondary, fontSize: 11),
+                                ),
                               ),
                               Expanded(child: Divider()),
                             ],
                           ),
                           const SizedBox(height: 16),
 
-                          // Botón de Visita Exploratoria Invitado (1 sola visita de prueba)
+                          // Botón de Visita Exploratoria Invitado (acceso de prueba instantáneo)
                           OutlinedButton.icon(
                             style: OutlinedButton.styleFrom(
                               foregroundColor: AppColors.trustGreen,
@@ -393,7 +464,7 @@ class _AuthScreenState extends State<AuthScreen> {
 
                     const SizedBox(height: 20),
 
-                    // Pie de Seguridad y Respaldo
+                    // Pie informativo sobre seguridad y respaldo Google Cloud
                     const Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -415,3 +486,4 @@ class _AuthScreenState extends State<AuthScreen> {
     );
   }
 }
+

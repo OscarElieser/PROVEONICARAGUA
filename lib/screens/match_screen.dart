@@ -1,16 +1,36 @@
+// ==============================================================================
+// PROVEO NICARAGUA - Motor de Matching B2B con IA (lib/screens/match_screen.dart)
+// ¿Qué hace?: Asistente wizard interactivo de 3 pasos (Categoría -> Ubicación/Logística -> Prioridad Estratégica & Volumen) que utiliza Gemini AI para emparejar empresas compradoras con fabricantes locales.
+// ¿Por qué se utiliza?: Maximiza la probabilidad de compra y ahorro mediante cálculo algorítmico de compatibilidad e insights automáticos de mercado.
+// ==============================================================================
+
+// Importa los componentes visuales de Flutter
 import 'package:flutter/material.dart';
+
+// Importa los tokens de color corporativos
 import '../core/theme/app_colors.dart';
+
+// Importa los modelos del dominio de datos
 import '../models/models.dart';
+
+// Importa el servicio de IA de Google Gemini para recomendaciones
 import '../services/ai/gemini_recommendation_service.dart';
+
+// Importa el repositorio de Firestore
 import '../services/firebase/firestore_repository.dart';
+
+// Importa el encabezado y pie de página globales
 import '../core/widgets/premium_header.dart';
 import '../core/widgets/premium_footer.dart';
+
+// Importa las pantallas de navegación directa
 import 'chat_screen.dart';
 import 'provider_profile_screen.dart';
 import 'quotation_request_screen.dart';
 
 /// Pantalla PROVEO Match interactiva, visualmente impactante y optimizada para conversión B2B.
 class MatchScreen extends StatefulWidget {
+  /// Constructor constante
   const MatchScreen({super.key});
 
   @override
@@ -18,17 +38,34 @@ class MatchScreen extends StatefulWidget {
 }
 
 class _MatchScreenState extends State<MatchScreen> {
+  /// Paso actual del flujo wizard (0: Rubro, 1: Ubicación, 2: Prioridad, 3+: Resultados)
   int _step = 0;
+
+  /// Categoría seleccionada por el usuario
   String _selectedCategory = 'Empaques y Envases Plásticos';
+
+  /// Ubicación / Departamento seleccionado
   String _selectedLocation = 'Managua';
+
+  /// Prioridad estratégica de compra seleccionada
   String _selectedPriority = 'Calidad y Certificaciones (ISO/BPA Free)';
+
+  /// Rango de volumen proyectado
   String _estimatedVolume = '1,000 - 5,000 unidades';
+
+  /// Requerimientos técnicos adicionales en texto libre
   String _customNotes = '';
 
+  /// Instancia del servicio de IA Gemini para generar el análisis explicativo
   final _geminiService = GeminiService();
+
+  /// Texto generado por Gemini justificando el emparejamiento
   String? _aiExplanation;
+
+  /// Bandera de estado de carga para la generación con IA
   bool _loadingAi = false;
 
+  /// Catálogo de rubros y categorías disponibles para el comprador
   final List<Map<String, dynamic>> _categories = [
     {
       'title': 'Empaques y Envases Plásticos',
@@ -74,6 +111,7 @@ class _MatchScreenState extends State<MatchScreen> {
     },
   ];
 
+  /// Zonas logísticas y departamentos de Nicaragua con detalles de distribución
   final List<Map<String, dynamic>> _locations = [
     {
       'name': 'Managua',
@@ -119,6 +157,7 @@ class _MatchScreenState extends State<MatchScreen> {
     },
   ];
 
+  /// Criterios estratégicos de ponderación seleccionables por el comprador
   final List<Map<String, dynamic>> _priorities = [
     {
       'title': 'Mejor Precio por Volumen',
@@ -150,6 +189,7 @@ class _MatchScreenState extends State<MatchScreen> {
     },
   ];
 
+  /// Opciones de escala de volumen
   final List<String> _volumes = [
     'Menos de 1,000 unidades',
     '1,000 - 5,000 unidades',
@@ -157,6 +197,7 @@ class _MatchScreenState extends State<MatchScreen> {
     'Más de 20,000 unidades / Contrato continuo',
   ];
 
+  /// Solicita el análisis predictivo y asesoría a Gemini AI según los filtros del wizard
   Future<void> _generateAiAnalysis() async {
     setState(() => _loadingAi = true);
     try {
@@ -184,7 +225,8 @@ Explica en un párrafo conciso y motivador (máximo 3 oraciones):
     } catch (_) {
       if (mounted) {
         setState(() {
-          _aiExplanation = 'Hemos analizado los fabricantes con mayor capacidad operativa en $_selectedLocation para $_selectedCategory. Destacan por su cumplimiento de entregas y precios competitivos para $_estimatedVolume.';
+          _aiExplanation =
+              'Hemos analizado los fabricantes con mayor capacidad operativa en $_selectedLocation para $_selectedCategory. Destacan por su cumplimiento de entregas y precios competitivos para $_estimatedVolume.';
           _loadingAi = false;
         });
       }
@@ -205,7 +247,9 @@ Explica en un párrafo conciso y motivador (máximo 3 oraciones):
       appBar: const PremiumHeader(currentPage: 'Match IA'),
       body: CustomScrollView(
         slivers: [
-          // Banner Hero interactivo
+          // ------------------------------------------------------------------
+          // 1. BANNER HERO: Barra de progreso e indicador de pasos
+          // ------------------------------------------------------------------
           SliverToBoxAdapter(
             child: Container(
               padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 20),
@@ -285,7 +329,9 @@ Explica en un párrafo conciso y motivador (máximo 3 oraciones):
             ),
           ),
 
-          // Contenido del paso actual
+          // ------------------------------------------------------------------
+          // 2. CONTENIDO DEL PASO ACTIVO Y NAVEGACIÓN
+          // ------------------------------------------------------------------
           SliverToBoxAdapter(
             child: Center(
               child: ConstrainedBox(
@@ -350,12 +396,17 @@ Explica en un párrafo conciso y motivador (máximo 3 oraciones):
               ),
             ),
           ),
+
+          // ------------------------------------------------------------------
+          // 3. PIE DE PÁGINA UNIVERSAL
+          // ------------------------------------------------------------------
           const SliverToBoxAdapter(child: PremiumFooter()),
         ],
       ),
     );
   }
 
+  /// Retorna el título descriptivo para la barra de progreso del paso actual
   String _getStepTitle() {
     switch (_step) {
       case 0:
@@ -947,6 +998,7 @@ Explica en un párrafo conciso y motivador (máximo 3 oraciones):
 }
 
 // ── TARJETA DE PROVEEDOR CON MATCH ────────────────────────────────────
+/// Tarjeta de empresa recomendada con cálculo de porcentaje de match, atributos verificados y accesos directos a catálogo y cotización.
 class _ProviderMatchCard extends StatelessWidget {
   final ProviderModel provider;
   final int matchPercent;
@@ -1084,7 +1136,7 @@ class _ProviderMatchCard extends StatelessWidget {
             const Divider(height: 1),
             const SizedBox(height: 14),
 
-            // Botones de Conversión (Llamativos)
+            // Botones de Conversión
             Row(
               children: [
                 Expanded(
@@ -1124,6 +1176,7 @@ class _ProviderMatchCard extends StatelessWidget {
 }
 
 // ── CHIPS AUXILIARES ──────────────────────────────────────────────────
+/// Chip con icono y color temático para destacar atributos del fabricante.
 class _FeatureChip extends StatelessWidget {
   final IconData icon;
   final String text;
@@ -1151,6 +1204,7 @@ class _FeatureChip extends StatelessWidget {
   }
 }
 
+/// Chip con fondo blanco translúcido para el resumen del banner de IA.
 class _FilterChipWhite extends StatelessWidget {
   final IconData icon;
   final String text;
@@ -1176,3 +1230,4 @@ class _FilterChipWhite extends StatelessWidget {
     );
   }
 }
+

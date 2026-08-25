@@ -1,32 +1,60 @@
+// ==============================================================================
+// PROVEO NICARAGUA - Panel de Administración General / Backoffice (lib/screens/admin_dashboard_screen.dart)
+// ¿Qué hace?: Permite a los administradores monitorear KPIs, auditar/aprobar proveedores con RUC, supervisar cotizaciones y asignar roles.
+// ¿Por qué se utiliza?: Es el centro de control operativo y de gobierno para la moderación del ecosistema B2B.
+// ==============================================================================
+
+// Importa los componentes visuales de Flutter
 import 'package:flutter/material.dart';
+
+// Importa la paleta de colores del tema
 import '../core/theme/app_colors.dart';
+
+// Importa los widgets estilizados corporativos
 import '../core/widgets/premium_widgets.dart';
+
+// Importa el encabezado global
 import '../core/widgets/premium_header.dart';
+
+// Importa los datos de prueba
 import '../data/mock_data.dart';
+
+// Importa los modelos del dominio
 import '../models/models.dart';
+
+// Importa el repositorio de base de datos
 import '../services/firebase/firestore_repository.dart';
 
 /// Panel Administrativo oficial de PROVEO con control integral de la plataforma.
 class AdminDashboardScreen extends StatefulWidget {
+  /// Constructor constante
   const AdminDashboardScreen({super.key});
 
   @override
   State<AdminDashboardScreen> createState() => _AdminDashboardScreenState();
 }
 
-class _AdminDashboardScreenState extends State<AdminDashboardScreen> with SingleTickerProviderStateMixin {
+class _AdminDashboardScreenState extends State<AdminDashboardScreen>
+    with SingleTickerProviderStateMixin {
+  /// Controlador para las 4 pestañas operativas del panel administrativo
   late final TabController _tabController;
+
+  /// Instancia del repositorio Firestore para lecturas y escrituras
   final _repository = FirestoreRepository();
+
+  /// Filtro de búsqueda en tiempo real para el listado de proveedores
   String _searchQuery = '';
 
   @override
   void initState() {
     super.initState();
+    // Inicializa el TabController con 4 secciones: KPIs, Proveedores, Cotizaciones y Usuarios
     _tabController = TabController(length: 4, vsync: this);
   }
 
   @override
   void dispose() {
+    // Libera los recursos del TabController al salir de la pantalla
     _tabController.dispose();
     super.dispose();
   }
@@ -38,6 +66,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> with Single
       appBar: const PremiumHeader(currentPage: 'Admin'),
       body: Column(
         children: [
+          // ------------------------------------------------------------------
+          // 1. BARRA DE PESTAÑAS ADMINISTRATIVAS
+          // ------------------------------------------------------------------
           Container(
             color: Colors.white,
             padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -61,6 +92,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> with Single
                     ],
                   ),
                 ),
+                // Botón para refrescar y sincronizar datos con Firestore
                 IconButton(
                   tooltip: 'Sincronizar Firestore',
                   icon: const Icon(Icons.sync_rounded, color: AppColors.navy),
@@ -75,14 +107,18 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> with Single
             ),
           ),
           const Divider(height: 1, color: AppColors.border),
+
+          // ------------------------------------------------------------------
+          // 2. VISTAS DE CADA PESTAÑA
+          // ------------------------------------------------------------------
           Expanded(
             child: TabBarView(
               controller: _tabController,
               children: [
-                _buildOverviewTab(),
-                _buildProvidersTab(),
-                _buildQuotationsTab(),
-                _buildUsersTab(),
+                _buildOverviewTab(),    // Pestaña 1: Métricas de negocio
+                _buildProvidersTab(),   // Pestaña 2: Listado y alta de proveedores
+                _buildQuotationsTab(),  // Pestaña 3: Monitor de cotizaciones B2B
+                _buildUsersTab(),       // Pestaña 4: Asignación de roles de usuario
               ],
             ),
           ),
@@ -170,7 +206,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> with Single
       future: _repository.getProviders(),
       builder: (context, snapshot) {
         final providers = snapshot.data ?? MockData.providers;
-        final filtered = providers.where((p) => p.name.toLowerCase().contains(_searchQuery.toLowerCase()) || p.category.toLowerCase().contains(_searchQuery.toLowerCase())).toList();
+        final filtered = providers
+            .where((p) =>
+                p.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+                p.category.toLowerCase().contains(_searchQuery.toLowerCase()))
+            .toList();
 
         return ListView(
           padding: const EdgeInsets.all(24),
@@ -207,7 +247,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> with Single
                   return ListTile(
                     leading: CircleAvatar(
                       backgroundColor: AppColors.paleBlue,
-                      child: Text(provider.name[0], style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.navy)),
+                      child: Text(
+                        provider.name[0],
+                        style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.navy),
+                      ),
                     ),
                     title: Row(
                       children: [
@@ -229,7 +272,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> with Single
                           icon: const Icon(Icons.edit_outlined, color: AppColors.blue),
                           tooltip: 'Editar',
                           onPressed: () {
-                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Editando ${provider.name}')));
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Editando ${provider.name}')),
+                            );
                           },
                         ),
                       ],
@@ -267,7 +312,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> with Single
                 subtitle: Text('Monto: C\$ ${q.price.toStringAsFixed(2)} • Entrega: ${q.deliveryDays} días • Estado: ${q.status}'),
                 trailing: FilledButton.tonal(
                   onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Detalle de cotización abierto.')));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Detalle de cotización abierto.')),
+                    );
                   },
                   child: const Text('Ver Detalles'),
                 ),
@@ -304,7 +351,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> with Single
             subtitle: Text('${u['email']} • Rol: ${u['role']}'),
             trailing: PopupMenuButton<String>(
               onSelected: (val) {
-                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Rol de ${u['name']} actualizado a $val')));
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Rol de ${u['name']} actualizado a $val')),
+                );
               },
               itemBuilder: (context) => const [
                 PopupMenuItem(value: 'Administrador', child: Text('Hacer Administrador')),
@@ -391,14 +440,18 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> with Single
             icon: const Icon(Icons.check_circle_outline, color: AppColors.trustGreen),
             tooltip: 'Aprobar y Verificar',
             onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$name aprobado con éxito.')));
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('$name aprobado con éxito.')),
+              );
             },
           ),
           IconButton(
             icon: const Icon(Icons.cancel_outlined, color: AppColors.error),
             tooltip: 'Rechazar',
             onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$name rechazado.')));
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('$name rechazado.')),
+              );
             },
           ),
         ],
@@ -421,7 +474,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> with Single
                   child: Icon(icon, color: color),
                 ),
                 const Spacer(),
-                Text(change, style: const TextStyle(color: AppColors.trustGreen, fontSize: 11, fontWeight: FontWeight.bold)),
+                Text(
+                  change,
+                  style: const TextStyle(color: AppColors.trustGreen, fontSize: 11, fontWeight: FontWeight.bold),
+                ),
               ],
             ),
             const SizedBox(height: 16),
@@ -434,4 +490,5 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> with Single
     );
   }
 }
+
 

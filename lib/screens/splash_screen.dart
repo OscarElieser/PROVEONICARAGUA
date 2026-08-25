@@ -1,10 +1,24 @@
+// ==============================================================================
+// PROVEO NICARAGUA - Pantalla de Bienvenida Animada / Splash (lib/screens/splash_screen.dart)
+// ¿Qué hace?: Despliega la animación de entrada del logotipo de Proveo y gestiona la transición a la pantalla de Auth.
+// ¿Por qué se utiliza?: Otorga una primera impresión de alta gama (branding) mientras se precargan recursos y fuentes en memoria.
+// ==============================================================================
+
+// Importa los componentes visuales y animaciones de Flutter
 import 'package:flutter/material.dart';
+
+// Importa los tokens de color corporativos
 import '../core/theme/app_colors.dart';
+
+// Importa el widget oficial del logotipo
 import '../core/widgets/proveo_logo.dart';
+
+// Importa la pantalla de autenticación para la redirección
 import 'auth_screen.dart';
 
-/// Pantalla de entrada de PROVEO durante la preparación de la sesión.
+/// Pantalla de bienvenida con animación fluida de escala y fundido (fade-in).
 class SplashScreen extends StatefulWidget {
+  /// Constructor constante
   const SplashScreen({super.key});
 
   @override
@@ -13,17 +27,25 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen>
     with SingleTickerProviderStateMixin {
+  /// Controlador de tiempo para orquestar la animación de entrada
   late final AnimationController _controller;
 
   @override
   void initState() {
     super.initState();
+
+    // Inicializa el controlador con una duración de 1700 milisegundos para una entrada suave
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1700),
-    )..forward();
+    )..forward(); // Inicia la reproducción hacia adelante
+
+    // Programa la navegación hacia la pantalla de autenticación tras 1.9 segundos
     Future<void>.delayed(const Duration(milliseconds: 1900), () {
+      // Valida que el widget continúe montado en el árbol para evitar fugas o excepciones
       if (!mounted) return;
+
+      // Reemplaza la ruta actual para que el usuario no pueda regresar al splash con el botón atrás
       Navigator.pushReplacement(
         context,
         MaterialPageRoute<void>(builder: (_) => const AuthScreen()),
@@ -33,6 +55,7 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   void dispose() {
+    // Libera los recursos del AnimationController para evitar fugas de memoria (memory leaks)
     _controller.dispose();
     super.dispose();
   }
@@ -40,10 +63,16 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      // Fondo azul marino corporativo de Proveo
       backgroundColor: AppColors.navy,
       body: Center(
+        // Transición de opacidad progresiva (FadeTransition)
         child: FadeTransition(
-          opacity: CurvedAnimation(parent: _controller, curve: Curves.easeOut),
+          opacity: CurvedAnimation(
+            parent: _controller,
+            curve: Curves.easeOut,
+          ),
+          // Transición de escala suave (de 94% a 100% de tamaño)
           child: ScaleTransition(
             scale: Tween<double>(begin: .94, end: 1).animate(
               CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
@@ -51,8 +80,10 @@ class _SplashScreenState extends State<SplashScreen>
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
+                // Logotipo de Proveo
                 const ProveoLogo(height: 54),
                 const SizedBox(height: 24),
+                // Lema comercial de la marca
                 Text(
                   'Conectamos confianza. Impulsamos negocios.',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -62,6 +93,7 @@ class _SplashScreenState extends State<SplashScreen>
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 30),
+                // Indicador de carga circular en verde confianza
                 const SizedBox(
                   width: 28,
                   height: 28,
@@ -77,4 +109,4 @@ class _SplashScreenState extends State<SplashScreen>
       ),
     );
   }
-}
+}

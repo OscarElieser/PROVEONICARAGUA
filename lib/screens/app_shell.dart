@@ -1,8 +1,25 @@
+// ==============================================================================
+// PROVEO NICARAGUA - Cascarón Principal de Navegación (lib/screens/app_shell.dart)
+// ¿Qué hace?: Actúa como contenedor raíz de las vistas principales con soporte de BottomNavigationBar en móviles y Drawer lateral responsivo.
+// ¿Por qué se utiliza?: Centraliza la navegación basada en el rol del usuario autenticado (Emprendedor, Proveedor, Administrador).
+// ==============================================================================
+
+// Importa los componentes visuales de Flutter
 import 'package:flutter/material.dart';
+
+// Importa Provider para acceder al estado global de autenticación
 import 'package:provider/provider.dart';
+
+// Importa la paleta de colores del tema
 import '../core/theme/app_colors.dart';
+
+// Importa el proveedor de autenticación
 import '../core/providers/auth_provider.dart';
+
+// Importa los modelos del dominio de usuario
 import '../models/models.dart';
+
+// Importa las pantallas que integran el flujo principal
 import 'chat_screen.dart';
 import 'admin_dashboard_screen.dart';
 import 'provider_dashboard_screen.dart';
@@ -13,11 +30,12 @@ import 'quotations_screen.dart';
 import 'search_screen.dart';
 import 'about_us_screen.dart';
 
-/// Contenedor principal con navegación en modo Hamburguesa Desplegable (Drawer)
-/// para dar 100% de visibilidad panorámica a las páginas principales.
+/// Contenedor principal de la aplicación que administra las vistas activas mediante un índice seleccionado.
 class AppShell extends StatefulWidget {
+  /// Usuario autenticado con su rol correspondiente
   final AuthUser user;
 
+  /// Constructor con el usuario requerido
   const AppShell({super.key, required this.user});
 
   @override
@@ -25,26 +43,37 @@ class AppShell extends StatefulWidget {
 }
 
 class _AppShellState extends State<AppShell> {
+  /// Índice de la página actualmente visualizada en pantalla
   int index = 0;
+
+  /// Lista de widgets correspondientes a cada sección del menú
   late final List<Widget> pages;
+
+  /// Clave global para controlar el Drawer programáticamente
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
   void initState() {
     super.initState();
+
+    // Inicializa las pantallas principales e inyecta vistas condicionales según el rol del usuario
     pages = [
-      const HomeScreen(),
-      const SearchScreen(),
-      const MatchScreen(),
-      const QuotationsScreen(),
-      const ChatScreen(),
-      ProfileScreen(user: widget.user),
+      const HomeScreen(),               // Índice 0: Pantalla de inicio y categorías destacadas
+      const SearchScreen(),             // Índice 1: Directorio y buscador de proveedores
+      const MatchScreen(),              // Índice 2: Motor de recomendación inteligente PROVEO Match
+      const QuotationsScreen(),         // Índice 3: Gestión de solicitudes y presupuestos de cotización
+      const ChatScreen(),               // Índice 4: Mensajería directa B2B entre empresas
+      ProfileScreen(user: widget.user), // Índice 5: Perfil y configuración de cuenta
+      // Si el usuario es proveedor, añade su panel operativo
       if (widget.user.role == UserRole.provider)
         const ProviderDashboardScreen(),
-      if (widget.user.role == UserRole.admin) const AdminDashboardScreen()
+      // Si el usuario es administrador, añade el panel de métricas y auditoría
+      if (widget.user.role == UserRole.admin) 
+        const AdminDashboardScreen(),
     ];
   }
 
+  /// Cambia de pestaña activa y cierra el Drawer si estaba abierto
   void _onSelectDestination(int value) {
     setState(() => index = value);
     if (_scaffoldKey.currentState?.isDrawerOpen ?? false) {
@@ -54,50 +83,67 @@ class _AppShellState extends State<AppShell> {
 
   @override
   Widget build(BuildContext context) {
+    // Configura los destinos de navegación estándar
     final destinations = <NavigationDestination>[
       const NavigationDestination(
-          icon: Icon(Icons.home_outlined),
-          selectedIcon: Icon(Icons.home_rounded),
-          label: 'Inicio'),
+        icon: Icon(Icons.home_outlined),
+        selectedIcon: Icon(Icons.home_rounded),
+        label: 'Inicio',
+      ),
       const NavigationDestination(
-          icon: Icon(Icons.search_rounded),
-          selectedIcon: Icon(Icons.search),
-          label: 'Buscar'),
+        icon: Icon(Icons.search_rounded),
+        selectedIcon: Icon(Icons.search),
+        label: 'Buscar',
+      ),
       const NavigationDestination(
-          icon: Icon(Icons.auto_awesome_outlined),
-          selectedIcon: Icon(Icons.auto_awesome_rounded),
-          label: 'Match'),
+        icon: Icon(Icons.auto_awesome_outlined),
+        selectedIcon: Icon(Icons.auto_awesome_rounded),
+        label: 'Match',
+      ),
       const NavigationDestination(
-          icon: Icon(Icons.request_quote_outlined),
-          selectedIcon: Icon(Icons.request_quote_rounded),
-          label: 'Cotizar'),
+        icon: Icon(Icons.request_quote_outlined),
+        selectedIcon: Icon(Icons.request_quote_rounded),
+        label: 'Cotizar',
+      ),
       const NavigationDestination(
-          icon: Icon(Icons.chat_bubble_outline_rounded),
-          selectedIcon: Icon(Icons.chat_bubble_rounded),
-          label: 'Chat'),
+        icon: Icon(Icons.chat_bubble_outline_rounded),
+        selectedIcon: Icon(Icons.chat_bubble_rounded),
+        label: 'Chat',
+      ),
       const NavigationDestination(
-          icon: Icon(Icons.person_outline_rounded),
-          selectedIcon: Icon(Icons.person_rounded),
-          label: 'Perfil'),
+        icon: Icon(Icons.person_outline_rounded),
+        selectedIcon: Icon(Icons.person_rounded),
+        label: 'Perfil',
+      ),
     ];
 
+    // Agrega pestaña especial si el usuario es proveedor
     if (widget.user.role == UserRole.provider) {
-      destinations.add(const NavigationDestination(
+      destinations.add(
+        const NavigationDestination(
           icon: Icon(Icons.storefront_outlined),
           selectedIcon: Icon(Icons.storefront_rounded),
-          label: 'Empresa'));
+          label: 'Empresa',
+        ),
+      );
     }
+
+    // Agrega pestaña especial si el usuario es administrador
     if (widget.user.role == UserRole.admin) {
-      destinations.add(const NavigationDestination(
+      destinations.add(
+        const NavigationDestination(
           icon: Icon(Icons.admin_panel_settings_outlined),
           selectedIcon: Icon(Icons.admin_panel_settings_rounded),
-          label: 'Admin'));
+          label: 'Admin',
+        ),
+      );
     }
 
     return Scaffold(
       key: _scaffoldKey,
-      drawer: _buildHamburgerDrawer(),
-      body: pages[index],
+      drawer: _buildHamburgerDrawer(), // Menú lateral deslizable
+      body: pages[index],               // Renderiza la pantalla seleccionada actualmente
+      // En dispositivos móviles (< 768px), muestra barra de navegación inferior
       bottomNavigationBar: MediaQuery.sizeOf(context).width < 768
           ? NavigationBar(
               selectedIndex: index > 5 ? 0 : index,
@@ -108,24 +154,28 @@ class _AppShellState extends State<AppShell> {
     );
   }
 
-  // ── Menú Hamburguesa Desplegable (Slide Drawer) ───────────────────────
+  // --------------------------------------------------------------------------
+  // MENÚ HAMBURGUESA DESPLEGABLE (Slide Drawer)
+  // --------------------------------------------------------------------------
   Widget _buildHamburgerDrawer() {
     return Drawer(
-      backgroundColor: AppColors.navy,
+      backgroundColor: AppColors.navy, // Fondo azul oscuro corporativo
       child: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Header del Drawer con Marca y Usuario
+            // Cabecera del menú lateral con identidad de marca y datos del usuario
             Container(
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
+              padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [AppColors.navy, AppColors.blue],
                 ),
-                border: Border(bottom: BorderSide(color: Colors.white.withValues(alpha: 0.1))),
+                border: Border(
+                  bottom: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
+                ),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -155,14 +205,21 @@ class _AppShellState extends State<AppShell> {
                     ],
                   ),
                   const SizedBox(height: 16),
+                  // Avatar y datos del usuario
                   Row(
                     children: [
                       CircleAvatar(
                         radius: 20,
                         backgroundColor: AppColors.teal,
                         child: Text(
-                          widget.user.name.isNotEmpty ? widget.user.name[0].toUpperCase() : 'U',
-                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                          widget.user.name.isNotEmpty
+                              ? widget.user.name[0].toUpperCase()
+                              : 'U',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -174,13 +231,20 @@ class _AppShellState extends State<AppShell> {
                               widget.user.name,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 14),
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w800,
+                                fontSize: 14,
+                              ),
                             ),
                             Text(
                               widget.user.email,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(color: Colors.white54, fontSize: 11),
+                              style: const TextStyle(
+                                color: Colors.white54,
+                                fontSize: 11,
+                              ),
                             ),
                           ],
                         ),
@@ -191,7 +255,7 @@ class _AppShellState extends State<AppShell> {
               ),
             ),
 
-            // Opciones de Navegación del Menú Hamburguesa
+            // Lista de enlaces de navegación dentro del Drawer
             Expanded(
               child: ListView(
                 padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
@@ -212,7 +276,7 @@ class _AppShellState extends State<AppShell> {
               ),
             ),
 
-            // Footer con botón de cerrar sesión
+            // Pie del menú lateral con botón de cerrar sesión
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -239,7 +303,14 @@ class _AppShellState extends State<AppShell> {
     );
   }
 
-  Widget _drawerItem(IconData icon, IconData selectedIcon, String label, int value, {String? badge}) {
+  /// Construye un elemento de lista estilizado para el Drawer con icono, texto y badge opcional
+  Widget _drawerItem(
+    IconData icon,
+    IconData selectedIcon,
+    String label,
+    int value, {
+    String? badge,
+  }) {
     final isSelected = index == value;
     return Container(
       margin: const EdgeInsets.only(bottom: 6),
@@ -267,7 +338,11 @@ class _AppShellState extends State<AppShell> {
                 ),
                 child: Text(
                   badge,
-                  style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               )
             : null,
@@ -285,3 +360,4 @@ class _AppShellState extends State<AppShell> {
     );
   }
 }
+
