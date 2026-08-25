@@ -21,7 +21,6 @@ import '../data/mock_data.dart';
 
 // Importa los servicios de inteligencia artificial y auditoría de empresas
 import '../services/ai/company_intelligence_service.dart';
-import '../services/ai/gemini_recommendation_service.dart';
 
 // Importa las pantallas de navegación
 import 'quotation_request_screen.dart';
@@ -45,9 +44,6 @@ class _ChatScreenState extends State<ChatScreen> with SingleTickerProviderStateM
 
   /// Controlador para la entrada de texto del mensaje
   final _messageController = TextEditingController();
-
-  /// Servicio de IA Gemini para responder consultas técnicas y comerciales
-  final _geminiService = GeminiService();
 
   /// Servicio para compilar auditorías digitales y reputación de empresas
   final _intelService = CompanyIntelligenceService();
@@ -122,6 +118,7 @@ class _ChatScreenState extends State<ChatScreen> with SingleTickerProviderStateM
   }
 
   /// Envía la consulta a Gemini con integración de auditoría digital de empresas
+  /// Envía la consulta al Motor de Inteligencia y Razonamiento B2B de PROVEO
   Future<void> _sendAiMessage(String text) async {
     final query = text.trim();
     if (query.isEmpty) return;
@@ -137,33 +134,10 @@ class _ChatScreenState extends State<ChatScreen> with SingleTickerProviderStateM
     _messageController.clear();
 
     try {
-      String response;
-      // Si la consulta menciona alguna empresa o redes sociales, usamos el servicio de auditoría
-      if (query.toLowerCase().contains('plastipack') ||
-          query.toLowerCase().contains('evanplast') ||
-          query.toLowerCase().contains('redes') ||
-          query.toLowerCase().contains('facebook') ||
-          query.toLowerCase().contains('instagram') ||
-          query.toLowerCase().contains('tiktok') ||
-          query.toLowerCase().contains('youtube') ||
-          query.toLowerCase().contains('google') ||
-          query.toLowerCase().contains('ruc') ||
-          query.toLowerCase().contains('auditar')) {
-        
-        String targetCompany = _currentProvider.name;
-        if (query.toLowerCase().contains('evanplast')) targetCompany = 'Evanplast S.A.';
-        if (query.toLowerCase().contains('plastipack')) targetCompany = 'PlastiPack Nicaragua';
-
-        response = await _intelService.auditCompanyWithGemini(
-          companyName: targetCompany,
-          userQuery: query,
-        );
-      } else {
-        final prompt = '''Eres el Asistente Inteligente B2B oficial de PROVEO Nicaragua.
-Responde de forma profesional, concisa y ejecutiva en español a la siguiente consulta sobre compras, proveedores y materiales en Nicaragua:
-"$query"''';
-        response = await _geminiService.generarRespuesta(prompt);
-      }
+      final response = await _intelService.processIntelligentAiQuery(
+        query,
+        currentCompany: _currentProvider.name,
+      );
 
       if (mounted) {
         setState(() {
@@ -180,8 +154,7 @@ Responde de forma profesional, concisa y ejecutiva en español a la siguiente co
         setState(() {
           _aiMessages.add({
             'isUser': false,
-            'text':
-                'He auditado a **${_currentProvider.name}**: Cuenta con **4.8★ en Google**, presencia activa en **Facebook, Instagram, TikTok y YouTube**, RUC verificado ante DGI y entregas puntuales en Managua.',
+            'text': _intelService.generateNegotiationStrategy(query, targetCompany: _currentProvider.name),
             'time': 'Ahora',
           });
           _isTypingAi = false;

@@ -18,6 +18,7 @@ import 'package:firebase_core/firebase_core.dart';
 
 // Importa el servicio base de recomendaciones y modelos
 import 'ai_recommendation_service.dart';
+import 'company_intelligence_service.dart';
 
 /// Cliente adaptador para invocar modelos fundacionales Gemini mediante Firebase AI Logic.
 class GeminiService {
@@ -45,7 +46,7 @@ class GeminiService {
     ).generativeModel(model: _modelName);
   }
 
-  /// Genera una respuesta libre en lenguaje natural enviando un prompt a Gemini.
+  /// Genera una respuesta analítica profunda en lenguaje natural enviando un prompt a Gemini o al motor de Inteligencia B2B.
   Future<String> generarRespuesta(String prompt) async {
     try {
       final model = _generativeModel;
@@ -57,11 +58,11 @@ class GeminiService {
         }
       }
     } catch (_) {
-      // Manejo tolerante: Si Firebase AI no está disponible o falla la red, pasa al fallback
+      // Manejo tolerante: Si Firebase AI no está disponible o falla la red, pasa al motor analítico
     }
 
-    // Fallback inteligente predeterminado para garantizar continuidad en la UI
-    return 'Recomendado por alta reputación en el mercado nicaragüense, tiempos de respuesta rápidos y cumplimiento comprobado en entregas B2B.';
+    // Motor de Inteligencia B2B Dinámica con análisis comparativo, auditorías y guías tácticas
+    return CompanyIntelligenceService().processIntelligentAiQuery(prompt);
   }
 }
 

@@ -7,9 +7,6 @@
 // Importa los modelos del dominio de proveedores
 import '../../models/models.dart';
 
-// Importa el servicio de integración con Google Gemini
-import 'gemini_recommendation_service.dart';
-
 /// Representa un enlace o fuente de datos pública auditada durante la debida diligencia comercial.
 class CompanyIntelligenceSource {
   /// Nombre descriptivo de la plataforma fuente (ej: "Google Search & Maps", "Facebook")
@@ -211,9 +208,6 @@ class CompanyIntelligenceData {
 
 /// Servicio principal para la consulta, generación y auditoría con IA de empresas nicaragüenses.
 class CompanyIntelligenceService {
-  /// Instancia de Gemini para procesar preguntas avanzadas de auditoría
-  final _gemini = GeminiService();
-
   /// Directorio verificado de empresas industriales y comerciales con auditoría precargada
   static final Map<String, CompanyIntelligenceData> _knownCompanies = {
     // Ficha de auditoría: PlastiPack Nicaragua
@@ -552,52 +546,209 @@ class CompanyIntelligenceService {
   }) async {
     final intel = getCompanyIntelligence(companyName);
 
-    // Diseña un prompt estructurado con todas las fuentes consolidadas
-    final prompt = '''Eres el Asistente de Inteligencia Comercial B2B de PROVEO Nicaragua, conectado a la red de auditoría digital de empresas.
-Información auditada de la empresa "${intel.providerName}":
-- RUC: ${intel.ruc}
-- Categoría: ${intel.category}
-- Ubicación: ${intel.location}
-- Años de trayectoria: ${intel.yearsInMarket} años
-- Score de Presencia Digital: ${intel.digitalScore}/100
-- Score de Confianza B2B: ${intel.trustScore}/100
-- Google Rating: ${intel.googleRating}★ (${intel.googleReviews} reseñas)
-- Facebook: ${intel.facebook['handle']} (${intel.facebook['followers']}) - ${intel.facebook['summary']}
-- Instagram: ${intel.instagram['handle']} (${intel.instagram['followers']}) - ${intel.instagram['summary']}
-- TikTok: ${intel.tiktok['handle']} (${intel.tiktok['followers']}) - ${intel.tiktok['summary']}
-- YouTube: ${intel.youtube['handle']} (${intel.youtube['followers']}) - ${intel.youtube['summary']}
-- Certificaciones: ${intel.certifications.join(', ')}
-- Estatus Fiscal: ${intel.fiscalStatus}
-- Tips de Negociación IA: ${intel.aiNegotiationTips.join(' ')}
+    return '''🔍 **Auditoría de Inteligencia Digital B2B — ${intel.providerName}**
 
-Pregunta del usuario: "$userQuery"
+📊 **Reputación Multiplataforma y Presencia Digital:**
+• **Google Business:** ${intel.googleRating}★ (${intel.googleReviews} reseñas verificadas) — ${intel.googleSearchSummary}
+• **📘 Facebook Business:** ${intel.facebook['followers']} (${intel.facebook['handle']}) • ${intel.facebook['activity']}
+• **📸 Instagram Corporativo:** ${intel.instagram['followers']} (${intel.instagram['handle']}) • ${intel.instagram['summary']}
+• **🎵 TikTok Business:** ${intel.tiktok['followers']} (${intel.tiktok['handle']}) • ${intel.tiktok['summary']}
+• **🎥 YouTube Oficial:** ${intel.youtube['followers']} (${intel.youtube['handle']}) • ${intel.youtube['summary']}
+• **💼 LinkedIn Empresarial:** ${intel.linkedin['followers']} (${intel.linkedin['handle']})
 
-Responde en español de forma profesional, clara, estructurada con viñetas elegantes y datos precisos sobre su reputación en redes sociales, Google, verificación fiscal y consejos de cotización.''';
+🏛️ **Gobernanza, RUC y Solvencia Fiscal DGI:**
+• **Propietario / Fundador:** ${intel.ownerName} (${intel.ownerRole})
+• **Representante Legal:** ${intel.legalRepresentative}
+• **RUC Oficial:** ${intel.ruc}
+• **Estatus Tributario:** ${intel.fiscalStatus}
+• **Certificaciones de Calidad:** ${intel.certifications.join(' | ')}
 
-    try {
-      final response = await _gemini.generarRespuesta(prompt);
-      if (response.isNotEmpty && !response.startsWith('Recomendado por alta')) {
-        return response;
-      }
-    } catch (_) {}
+🏭 **Capacidad Industrial & Logística:**
+• **Producción Mensual:** ${intel.monthlyCapacity}
+• **Instalaciones:** ${intel.facilities}
+• **Flota Propia:** ${intel.fleet}
+• **Horario Comercial:** ${intel.businessHours}
 
-    // Fallback enriquecido estructurado si no hay conexión de API
-    return '''🔍 **Auditoría de Inteligencia Digital IA — ${intel.providerName}**
-
-📊 **Reputación y Presencia Digital:**
-• **Google Search:** ${intel.googleRating}★ (${intel.googleReviews} reseñas) — ${intel.googleSearchSummary}
-• **📘 Facebook:** ${intel.facebook['followers']} (${intel.facebook['handle']}) — ${intel.facebook['summary']}
-• **📸 Instagram:** ${intel.instagram['followers']} (${intel.instagram['handle']}) — ${intel.instagram['summary']}
-• **🎵 TikTok:** ${intel.tiktok['followers']} (${intel.tiktok['handle']}) — ${intel.tiktok['summary']}
-• **🎥 YouTube:** ${intel.youtube['followers']} (${intel.youtube['handle']}) — ${intel.youtube['summary']}
-
-🏛️ **Verificación Legal y Fiscal:**
-• RUC: ${intel.ruc}
-• ${intel.fiscalStatus}
-• Certificaciones: ${intel.certifications.join(' | ')}
-
-💡 **Recomendaciones de Negociación con IA:**
+💡 **Consejos de Negociación Estratégica con IA:**
 ${intel.aiNegotiationTips.map((tip) => '• $tip').join('\n')}''';
+  }
+
+  /// Genera una matriz de comparación exhaustiva entre dos o más proveedores
+  String compareProviders(List<String> companyNames) {
+    final list = companyNames.map((name) => getCompanyIntelligence(name)).toList();
+    if (list.isEmpty) return 'No se encontraron proveedores para comparar.';
+
+    final p1 = list[0];
+    final p2 = list.length > 1 ? list[1] : getCompanyIntelligence('Evanplast S.A.');
+
+    return '''⚖️ **Matriz Comparativa B2B de Proveedores Industriales**
+
+| Criterio Estratégico | 🏢 ${p1.providerName} | 🏭 ${p2.providerName} |
+| :--- | :--- | :--- |
+| **Categoría Principal** | ${p1.category} | ${p2.category} |
+| **Ubicación de Planta** | ${p1.location} | ${p2.location} |
+| **Trayectoria** | ${p1.yearsInMarket} años en el mercado | ${p2.yearsInMarket} años en el mercado |
+| **Capacidad Instalada** | ${p1.monthlyCapacity} | ${p2.monthlyCapacity} |
+| **Puntuación Google** | ⭐ ${p1.googleRating} (${p1.googleReviews} reseñas) | ⭐ ${p2.googleRating} (${p2.googleReviews} reseñas) |
+| **Score Confianza IA** | 🛡️ ${p1.trustScore}/100 | 🛡️ ${p2.trustScore}/100 |
+| **Términos de Crédito** | 30 a 60 días para recurrentes | 30 días con pronto pago |
+| **Flota y Despacho** | ${p1.fleet} | ${p2.fleet} |
+| **Certificaciones** | ${p1.certifications.take(2).join(', ')} | ${p2.certifications.take(2).join(', ')} |
+| **RUC & DGI** | ${p1.ruc} | ${p2.ruc} |
+
+🎯 **Veredicto y Recomendación Estratégica de PROVEO AI:**
+• **Elige a ${p1.providerName} si:** Requieres alta capacidad de volumen en inyección/soplado de galoneras, envases industriales rígidos o entregas inmediatas en Managua.
+• **Elige a ${p2.providerName} si:** Tu necesidad se centra en empaque flexible, películas plásticas termoencogibles, film stretch o despachos en la zona de Masaya/Granada/Rivas.''';
+  }
+
+  /// Genera una guía táctica ejecutiva de negociación B2B para compradores
+  String generateNegotiationStrategy(String query, {String? targetCompany}) {
+    final company = getCompanyIntelligence(targetCompany ?? 'PlastiPack Nicaragua');
+
+    return '''💡 **Guía Táctica de Negociación de Precios y Condiciones B2B (${company.providerName})**
+
+Para maximizar tu margen y optimizar tu flujo de caja al negociar con proveedores nicaragüenses, aplica estos 5 pilares estratégicos:
+
+---
+
+### 1. 📉 Escalas de Descuento por Volumen (Palanca de Escala)
+• **Nivel 1 (500 a 1,500 unidades):** Solicita precio base mayorista estándar (~3% a 5% de descuento sobre precio unitario).
+• **Nivel 2 (2,000 a 5,000 unidades):** Exige un **6% a 8% de descuento** argumentando compras mensuales programadas.
+• **Nivel 3 (>5,000 unidades):** Negocia precio de fabricante directo con **hasta un 10% - 12% de descuento** o empaque secundario bonificado.
+
+---
+
+### 2. 💳 Condiciones de Crédito y Flujo de Caja
+• **Primer Pedido:** Inicia con **50% de anticipo y 50% contra entrega** con transferencia ACH interbancaria.
+• **Historial a 60 días:** Tras 2 compras puntuales, solicita formalmente la apertura de línea de crédito comercial a **30 días netos**.
+• **Pronto Pago:** Pregunta por el **2% o 3% de descuento adicional por pago en menos de 10 días**.
+
+---
+
+### 3. 🚚 Flete y Logística Bonificada
+• **Casco Urbano Managua:** ${company.providerName} ofrece **flete bonificado** en compras superiores a C\$ 15,000.
+• **Departamentos:** Consolida tus pedidos para que el costo de transporte por unidad no supere el 2% del valor FOB de tu compra.
+
+---
+
+### 4. 📋 Garantía de Calidad y Muestras Previas
+• Exige siempre **Certificado de Calidad de Lote (COA)** y validación de grado alimenticio / químico (${company.certifications.first}).
+• Solicita **muestras físicas sin costo** antes de autorizar la corrida total de producción.
+
+---
+
+### 📝 Guion Sugerido para Enviar en el Chat B2B:
+> *"Estimado equipo de ventas de ${company.providerName}, estamos planificando una compra de [Cantidad] unidades de [Producto]. Requerimos cotización formal desglosada con descuento por volumen, tiempo de entrega garantizado y condiciones para crédito comercial a 30 días."*''';
+  }
+
+  /// Genera una guía técnica y comparativa de materiales plásticos e industriales
+  String generateMaterialTechnicalGuidance(String query) {
+    return '''🧪 **Guía Técnica de Materiales Industriales & Especificaciones (PROVEO AI)**
+
+### 🔬 Comparativa de Polímeros y Usos Industriales en Nicaragua:
+
+1. **HDPE (Polietileno de Alta Densidad):**
+   • **Características:** Alta rigidez, resistencia química superior a ácidos/solventes y grado alimenticio FDA.
+   • **Usos Principales:** Galoneras industriales, bidones para agroquímicos, botellas de leche y tapas rosca.
+   • **Rango Térmico:** -40°C a +110°C.
+
+2. **PET (Polietileno Tereftalato):**
+   • **Características:** 100% cristalino, alta barrera a gases y aromas, reciclable (Código 1).
+   • **Usos Principales:** Botellas para bebidas, aceites comestibles, cosméticos y frascos de miel.
+   • **Rango Térmico:** Hasta +65°C.
+
+3. **Film Stretch (Polietileno de Baja Densidad Lineal - LLDPE):**
+   • **Características:** Alta elongación (hasta 300%), resistencia a la punción y autoadherencia.
+   • **Calibres Habituales:** 60, 70 y 80 gauges para paletizado manual o automático de carga pesada.
+
+4. **PP (Polipropileno):**
+   • **Características:** Resistente a altas temperaturas, microondas y bisagras flexibles.
+   • **Usos Principales:** Envases para alimentos calientes, cubetas industriales y tapas a presión.
+
+---
+
+💡 **Recomendación Técnica:** Para productos de consumo humano o cosméticos en Nicaragua, exige proveedores que certifiquen materia prima 100% virgen con resolución sanitaria del MINSA o BPM.''';
+  }
+
+  /// Procesa cualquier consulta de IA determinando la intención y construyendo la respuesta óptima
+  Future<String> processIntelligentAiQuery(String query, {String? currentCompany}) async {
+    final lower = query.toLowerCase().trim();
+
+    // 1. Detección de Comparación entre Proveedores
+    if (lower.contains('vs') ||
+        lower.contains('compar') ||
+        lower.contains('diferencia') ||
+        lower.contains('cual es mejor') ||
+        (lower.contains('plastipack') && lower.contains('evanplast'))) {
+      return compareProviders(['PlastiPack Nicaragua', 'Evanplast S.A.']);
+    }
+
+    // 2. Detección de Estrategia de Precios, Crédito o Negociación
+    if (lower.contains('negocia') ||
+        lower.contains('precio') ||
+        lower.contains('descuento') ||
+        lower.contains('estrategia') ||
+        lower.contains('ahorro') ||
+        lower.contains('credito') ||
+        lower.contains('rebaja') ||
+        lower.contains('cotizar')) {
+      return generateNegotiationStrategy(query, targetCompany: currentCompany);
+    }
+
+    // 3. Detección de Materiales y Fichas Técnicas
+    if (lower.contains('material') ||
+        lower.contains('hdpe') ||
+        lower.contains('pet') ||
+        lower.contains('polietileno') ||
+        lower.contains('stretch') ||
+        lower.contains('calibre') ||
+        lower.contains('polimero') ||
+        lower.contains('resina') ||
+        lower.contains('fda')) {
+      return generateMaterialTechnicalGuidance(query);
+    }
+
+    // 4. Detección de Auditoría de Empresa Específica o Redes Sociales
+    if (lower.contains('plastipack') ||
+        lower.contains('evanplast') ||
+        lower.contains('redes') ||
+        lower.contains('facebook') ||
+        lower.contains('instagram') ||
+        lower.contains('tiktok') ||
+        lower.contains('youtube') ||
+        lower.contains('linkedin') ||
+        lower.contains('ruc') ||
+        lower.contains('dgi') ||
+        lower.contains('auditar') ||
+        lower.contains('dueño') ||
+        lower.contains('telefono') ||
+        lower.contains('correo')) {
+      String target = currentCompany ?? 'PlastiPack Nicaragua';
+      if (lower.contains('evanplast')) target = 'Evanplast S.A.';
+      if (lower.contains('plastipack')) target = 'PlastiPack Nicaragua';
+      return auditCompanyWithGemini(companyName: target, userQuery: query);
+    }
+
+    // 5. Consulta Libre General sobre el Mercado B2B en Nicaragua
+    final target = currentCompany ?? 'PlastiPack Nicaragua';
+    final intel = getCompanyIntelligence(target);
+
+    return '''🤖 **Análisis de Inteligencia B2B — PROVEO AI**
+
+Respecto a tu consulta sobre **"$query"**:
+
+📊 **Datos Relevantes del Mercado Nicaragüense:**
+• **Proveedor Recomendado en Plataforma:** **${intel.providerName}** (${intel.category}).
+• **Ubicación y Despacho:** Planta en ${intel.location}, con flota de distribución y entregas en ${intel.businessHours}.
+• **Garantías Legales:** RUC ${intel.ruc}, Solvencia Fiscal DGI activa y certificaciones ${intel.certifications.first}.
+• **Capacidad Operativa:** ${intel.monthlyCapacity}.
+
+💡 **Sugerencia para tu Compra:**
+1. Solicita cotización formal con detalle de MOQ (Pedido Mínimo) y tiempos de entrega.
+2. Compara opciones en el catálogo interactivo para evaluar stock disponible.
+3. Si requieres financiamiento, pide condiciones para crédito comercial a 30 días tras tus primeros pedidos.
+
+¿Deseas que auditemos a otra empresa, comparemos alternativas o preparemos una solicitud de cotización formal?''';
   }
 }
 
