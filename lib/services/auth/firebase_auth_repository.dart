@@ -28,7 +28,7 @@ class FirebaseAuthRepository implements AuthRepository {
   final FirebaseAuth _auth;
 
   /// Cliente para el flujo nativo de Google Sign-In en plataformas móviles
-  final GoogleSignIn _googleSignIn;
+  final GoogleSignIn? _googleSignIn;
 
   /// Repositorio de base de datos para almacenar y leer metadatos de usuario
   final FirestoreRepository _repository;
@@ -39,7 +39,7 @@ class FirebaseAuthRepository implements AuthRepository {
     GoogleSignIn? googleSignIn,
     FirestoreRepository? repository,
   })  : _auth = auth ?? FirebaseAuth.instance,
-        _googleSignIn = googleSignIn ?? GoogleSignIn(),
+        _googleSignIn = googleSignIn ?? (kIsWeb ? null : GoogleSignIn()),
         _repository = repository ?? FirestoreRepository();
 
   /// Retorna el usuario actualmente autenticado en Firebase Auth mapeado a [AuthUser]
@@ -111,7 +111,7 @@ class FirebaseAuthRepository implements AuthRepository {
     } 
     // En entornos móviles nativos (Android / iOS)
     else {
-      final account = await _googleSignIn.signIn();
+      final account = await _googleSignIn?.signIn();
       // Si el usuario cierra el selector de cuenta de Google
       if (account == null) {
         throw FirebaseAuthException(
@@ -154,7 +154,7 @@ class FirebaseAuthRepository implements AuthRepository {
   @override
   Future<void> signOut() async {
     if (!kIsWeb) {
-      await _googleSignIn.signOut();
+      await _googleSignIn?.signOut();
     }
     await _auth.signOut();
   }
