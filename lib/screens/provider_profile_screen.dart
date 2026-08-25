@@ -5,6 +5,7 @@
 // ==============================================================================
 
 // Importa los componentes visuales de Flutter
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -290,11 +291,30 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
         url = 'https://$url';
       }
       final uri = Uri.parse(url);
-      final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+
+      bool launched = false;
+      if (kIsWeb) {
+        // En Flutter Web, platformDefault con webOnlyWindowName '_blank' abre en pestaña nueva sin bloqueo
+        launched = await launchUrl(
+          uri,
+          mode: LaunchMode.platformDefault,
+          webOnlyWindowName: '_blank',
+        );
+      } else {
+        launched = await launchUrl(
+          uri,
+          mode: LaunchMode.externalApplication,
+        );
+      }
+
+      if (!launched) {
+        launched = await launchUrl(uri);
+      }
+
       if (!launched) {
         _copyToClipboard(url, label);
       }
-    } catch (e) {
+    } catch (_) {
       _copyToClipboard(rawUrl, label);
     }
   }
@@ -980,6 +1000,32 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
           LayoutBuilder(
             builder: (context, constraints) {
               final isWide = constraints.maxWidth > 650;
+
+              final siteUrl = intel.website.startsWith('http')
+                  ? intel.website
+                  : 'https://${intel.website.replaceAll('https://', '').replaceAll('http://', '')}';
+
+              final fbClean = (intel.facebook['handle'] ?? widget.provider.name)
+                  .replaceAll('@', '')
+                  .replaceAll(' ', '');
+              final fbUrl = 'https://facebook.com/$fbClean';
+
+              final igClean = (intel.instagram['handle'] ?? widget.provider.name)
+                  .replaceAll('@', '')
+                  .replaceAll(' ', '');
+              final igUrl = 'https://instagram.com/$igClean';
+
+              final ttClean = (intel.tiktok['handle'] ?? widget.provider.name)
+                  .replaceAll('@', '')
+                  .replaceAll(' ', '');
+              final ttUrl = 'https://tiktok.com/@$ttClean';
+
+              final ytQuery = Uri.encodeComponent(intel.youtube['handle'] ?? widget.provider.name);
+              final ytUrl = 'https://youtube.com/results?search_query=$ytQuery';
+
+              final liQuery = Uri.encodeComponent(intel.linkedin['handle'] ?? widget.provider.name);
+              final liUrl = 'https://www.linkedin.com/search/results/all/?keywords=$liQuery';
+
               return GridView.count(
                 crossAxisCount: isWide ? 3 : 2,
                 crossAxisSpacing: 12,
@@ -995,81 +1041,63 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
                     handle: intel.website,
                     metric: 'Catálogo Online',
                     color: AppColors.teal,
-                    targetUrl: 'https://${intel.website.replaceAll('https://', '').replaceAll('http://', '')}',
-                    onTap: () => _launchExternalUrl(
-                      'https://${intel.website.replaceAll('https://', '').replaceAll('http://', '')}',
-                      'Sitio Web Oficial',
-                    ),
+                    targetUrl: siteUrl,
+                    onTap: () => _launchExternalUrl(siteUrl, 'Sitio Web Oficial'),
                   ),
 
                   // 2. Facebook Business
                   _buildSocialTile(
                     icon: Icons.facebook,
                     network: 'Facebook Business',
-                    handle: intel.facebook['handle'] ?? '@PlastiPackNicaragua',
+                    handle: intel.facebook['handle'] ?? '@${widget.provider.name.replaceAll(' ', '')}',
                     metric: intel.facebook['followers'] ?? '18.4K seguidores',
                     color: const Color(0xFF1877F2),
-                    targetUrl: 'https://facebook.com/${(intel.facebook['handle'] ?? 'PlastiPackNicaragua').replaceAll('@', '').replaceAll(' ', '')}',
-                    onTap: () => _launchExternalUrl(
-                      'https://facebook.com/${(intel.facebook['handle'] ?? 'PlastiPackNicaragua').replaceAll('@', '').replaceAll(' ', '')}',
-                      'Facebook',
-                    ),
+                    targetUrl: fbUrl,
+                    onTap: () => _launchExternalUrl(fbUrl, 'Facebook Business'),
                   ),
 
                   // 3. Instagram Corporativo
                   _buildSocialTile(
                     icon: Icons.camera_alt_outlined,
                     network: 'Instagram Corporativo',
-                    handle: intel.instagram['handle'] ?? '@plastipack_ni',
+                    handle: intel.instagram['handle'] ?? '@${widget.provider.name.toLowerCase().replaceAll(' ', '_')}',
                     metric: intel.instagram['followers'] ?? '12.8K seguidores',
                     color: const Color(0xFFE1306C),
-                    targetUrl: 'https://instagram.com/${(intel.instagram['handle'] ?? 'plastipack_ni').replaceAll('@', '').replaceAll(' ', '')}',
-                    onTap: () => _launchExternalUrl(
-                      'https://instagram.com/${(intel.instagram['handle'] ?? 'plastipack_ni').replaceAll('@', '').replaceAll(' ', '')}',
-                      'Instagram',
-                    ),
+                    targetUrl: igUrl,
+                    onTap: () => _launchExternalUrl(igUrl, 'Instagram Corporativo'),
                   ),
 
                   // 4. TikTok Business
                   _buildSocialTile(
                     icon: Icons.music_note_rounded,
                     network: 'TikTok Business',
-                    handle: intel.tiktok['handle'] ?? '@plastipack.nica',
+                    handle: intel.tiktok['handle'] ?? '@${widget.provider.name.toLowerCase().replaceAll(' ', '.')}',
                     metric: intel.tiktok['followers'] ?? '24.5K seguidores',
                     color: const Color(0xFF010101),
-                    targetUrl: 'https://tiktok.com/@${(intel.tiktok['handle'] ?? 'plastipack.nica').replaceAll('@', '').replaceAll(' ', '')}',
-                    onTap: () => _launchExternalUrl(
-                      'https://tiktok.com/@${(intel.tiktok['handle'] ?? 'plastipack.nica').replaceAll('@', '').replaceAll(' ', '')}',
-                      'TikTok',
-                    ),
+                    targetUrl: ttUrl,
+                    onTap: () => _launchExternalUrl(ttUrl, 'TikTok Business'),
                   ),
 
                   // 5. YouTube Oficial
                   _buildSocialTile(
                     icon: Icons.play_circle_fill_rounded,
                     network: 'YouTube Channel',
-                    handle: intel.youtube['handle'] ?? 'PlastiPack Nicaragua Oficial',
+                    handle: intel.youtube['handle'] ?? '${widget.provider.name} Oficial',
                     metric: intel.youtube['followers'] ?? '3.2K suscriptores',
                     color: const Color(0xFFFF0000),
-                    targetUrl: 'https://youtube.com/results?search_query=${Uri.encodeComponent(intel.youtube['handle'] ?? widget.provider.name)}',
-                    onTap: () => _launchExternalUrl(
-                      'https://youtube.com/results?search_query=${Uri.encodeComponent(intel.youtube['handle'] ?? widget.provider.name)}',
-                      'YouTube',
-                    ),
+                    targetUrl: ytUrl,
+                    onTap: () => _launchExternalUrl(ytUrl, 'YouTube Channel'),
                   ),
 
                   // 6. LinkedIn Corporativo B2B
                   _buildSocialTile(
                     icon: Icons.business_center_rounded,
                     network: 'LinkedIn B2B',
-                    handle: intel.linkedin['handle'] ?? 'PlastiPack Nicaragua S.A.',
+                    handle: intel.linkedin['handle'] ?? widget.provider.name,
                     metric: intel.linkedin['followers'] ?? '5.4K seguidores',
                     color: const Color(0xFF0A66C2),
-                    targetUrl: 'https://www.linkedin.com/search/results/all/?keywords=${Uri.encodeComponent(intel.linkedin['handle'] ?? widget.provider.name)}',
-                    onTap: () => _launchExternalUrl(
-                      'https://www.linkedin.com/search/results/all/?keywords=${Uri.encodeComponent(intel.linkedin['handle'] ?? widget.provider.name)}',
-                      'LinkedIn',
-                    ),
+                    targetUrl: liUrl,
+                    onTap: () => _launchExternalUrl(liUrl, 'LinkedIn B2B'),
                   ),
                 ],
               );
@@ -1276,27 +1304,35 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
                 const SizedBox(height: 8),
 
                 // Fila Inferior: Botón de acción con enlace externo directo
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
-                  decoration: BoxDecoration(
-                    color: AppColors.paleBlue,
+                MouseRegion(
+                  cursor: SystemMouseCursors.click,
+                  child: InkWell(
+                    onTap: onTap,
                     borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        'Visitar Página Oficial',
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w800,
-                          color: color,
-                        ),
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 8),
+                      decoration: BoxDecoration(
+                        color: AppColors.paleBlue,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: color.withValues(alpha: 0.2)),
                       ),
-                      const SizedBox(width: 5),
-                      Icon(Icons.open_in_new_rounded, size: 13, color: color),
-                    ],
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            'Visitar Página Oficial',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w800,
+                              color: color,
+                            ),
+                          ),
+                          const SizedBox(width: 5),
+                          Icon(Icons.open_in_new_rounded, size: 13, color: color),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
               ],
