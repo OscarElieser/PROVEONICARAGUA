@@ -2378,64 +2378,88 @@ class _LocationMapCardState extends State<_LocationMapCard> with SingleTickerPro
 
                 // ── 3. BOTONES DE ACCIÓN: GOOGLE MAPS, WAZE Y COORDENADAS ────
                 Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
+                  spacing: 10,
+                  runSpacing: 10,
                   children: [
-                    FilledButton.icon(
-                      style: FilledButton.styleFrom(
-                        backgroundColor: AppColors.navy,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                      ),
-                      onPressed: () {
-                        if (widget.onOpenUrl != null) {
-                          widget.onOpenUrl!(intel.googleMapsUrl, 'Google Maps');
-                        } else {
-                          widget.onCopy(intel.googleMapsUrl, 'Enlace Google Maps');
-                        }
-                      },
-                      icon: const Icon(Icons.map_rounded, size: 16),
-                      label: const Text(
-                        'Abrir en Google Maps',
-                        style: TextStyle(fontWeight: FontWeight.w800, fontSize: 12),
-                      ),
-                    ),
-                    OutlinedButton.icon(
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: AppColors.blue,
-                        side: const BorderSide(color: AppColors.blue),
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                      ),
-                      onPressed: () {
-                        const wazeUrl = 'https://waze.com/ul?ll=12.1485,-86.1923&navigate=yes';
-                        if (widget.onOpenUrl != null) {
-                          widget.onOpenUrl!(wazeUrl, 'Waze');
-                        } else {
-                          widget.onCopy(wazeUrl, 'Enlace Waze');
-                        }
-                      },
-                      icon: const Icon(Icons.directions_car_filled_rounded, size: 16),
-                      label: const Text(
-                        'Navegar en Waze',
-                        style: TextStyle(fontWeight: FontWeight.w800, fontSize: 12),
+                    // Botón 1: Google Maps
+                    MouseRegion(
+                      cursor: SystemMouseCursors.click,
+                      child: FilledButton.icon(
+                        style: FilledButton.styleFrom(
+                          backgroundColor: AppColors.navy,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          elevation: 2,
+                        ),
+                        onPressed: () {
+                          final mapsUrl = intel.googleMapsUrl.isNotEmpty
+                              ? intel.googleMapsUrl
+                              : 'https://maps.google.com/?q=${Uri.encodeComponent("${intel.providerName}, ${intel.location}")}';
+                          if (widget.onOpenUrl != null) {
+                            widget.onOpenUrl!(mapsUrl, 'Google Maps');
+                          } else {
+                            widget.onCopy(mapsUrl, 'Enlace Google Maps');
+                          }
+                        },
+                        icon: const Icon(Icons.map_rounded, size: 17),
+                        label: const Text(
+                          'Abrir en Google Maps',
+                          style: TextStyle(fontWeight: FontWeight.w800, fontSize: 12.5),
+                        ),
                       ),
                     ),
-                    OutlinedButton.icon(
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: AppColors.textSecondary,
-                        side: const BorderSide(color: AppColors.border),
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+
+                    // Botón 2: Waze
+                    MouseRegion(
+                      cursor: SystemMouseCursors.click,
+                      child: OutlinedButton.icon(
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppColors.blue,
+                          side: const BorderSide(color: AppColors.blue, width: 1.5),
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          backgroundColor: AppColors.blue.withValues(alpha: 0.04),
+                        ),
+                        onPressed: () {
+                          final cleanCoords = intel.coordinates
+                              .replaceAll('° N', '')
+                              .replaceAll('° W', '')
+                              .replaceAll(' ', '');
+                          final wazeUrl = 'https://waze.com/ul?ll=$cleanCoords&navigate=yes';
+                          if (widget.onOpenUrl != null) {
+                            widget.onOpenUrl!(wazeUrl, 'Waze');
+                          } else {
+                            widget.onCopy(wazeUrl, 'Enlace Waze');
+                          }
+                        },
+                        icon: const Icon(Icons.directions_car_filled_rounded, size: 17),
+                        label: const Text(
+                          'Navegar en Waze',
+                          style: TextStyle(fontWeight: FontWeight.w800, fontSize: 12.5),
+                        ),
                       ),
-                      onPressed: () {
-                        widget.onCopy(intel.coordinates, 'Coordenadas GPS');
-                      },
-                      icon: const Icon(Icons.copy_rounded, size: 15),
-                      label: const Text(
-                        'Copiar GPS',
-                        style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
+                    ),
+
+                    // Botón 3: Copiar Coordenadas GPS
+                    MouseRegion(
+                      cursor: SystemMouseCursors.click,
+                      child: OutlinedButton.icon(
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppColors.textPrimary,
+                          side: const BorderSide(color: AppColors.border, width: 1.2),
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          backgroundColor: Colors.white,
+                        ),
+                        onPressed: () {
+                          widget.onCopy(intel.coordinates, 'Coordenadas GPS (${intel.coordinates})');
+                        },
+                        icon: const Icon(Icons.copy_rounded, size: 16, color: AppColors.textSecondary),
+                        label: const Text(
+                          'Copiar GPS',
+                          style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12.5),
+                        ),
                       ),
                     ),
                   ],
