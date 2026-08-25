@@ -112,6 +112,49 @@ class CompanyIntelligenceData {
   final List<String> keyStrengths;
 
   /// Constructor constante
+  /// Nombre del Dueño / Fundador / Director General
+  final String ownerName;
+
+  /// Cargo o título del Dueño / Director
+  final String ownerRole;
+
+  /// Nombre del Representante Legal acreditado
+  final String legalRepresentative;
+
+  /// Teléfono principal PBX
+  final String phone;
+
+  /// WhatsApp directo de ventas / pedidos
+  final String whatsapp;
+
+  /// Correo electrónico institucional de ventas
+  final String email;
+
+  /// Dirección física detallada
+  final String fullAddress;
+
+  /// Horario de atención al cliente
+  final String businessHours;
+
+  /// Capacidad instalada mensual
+  final String monthlyCapacity;
+
+  /// Políticas de crédito y financiamiento
+  final String creditTerms;
+
+  /// Bancos y formas de pago habilitadas
+  final String paymentMethods;
+
+  /// Infraestructura y planta
+  final String facilities;
+
+  /// Flota y logística de reparto
+  final String fleet;
+
+  /// Datos y perfil de LinkedIn empresarial
+  final Map<String, String> linkedin;
+
+  /// Constructor constante
   const CompanyIntelligenceData({
     required this.providerName,
     required this.ruc,
@@ -133,6 +176,24 @@ class CompanyIntelligenceData {
     required this.aiNegotiationTips,
     required this.supplyRiskAnalysis,
     required this.keyStrengths,
+    this.ownerName = 'Ing. Carlos Mendoza Lacayo',
+    this.ownerRole = 'Director General & Fundador',
+    this.legalRepresentative = 'Lic. Roberto Chamorro (Representante Legal acreditado)',
+    this.phone = '+505 2248-9100',
+    this.whatsapp = '+505 8899-1234',
+    this.email = 'ventas@proveedor.com.ni',
+    this.fullAddress = 'Km 7.5 Carretera Norte, Módulo Industrial B-4, Managua, Nicaragua',
+    this.businessHours = 'Lunes a Viernes: 8:00 AM - 5:00 PM | Sábados: 8:00 AM - 12:00 PM',
+    this.monthlyCapacity = '1,500,000 unidades / mes',
+    this.creditTerms = 'Línea de crédito comercial a 30 y 60 días para compras corporativas recurrentes.',
+    this.paymentMethods = 'Transferencia ACH (BAC, LAFISE, Banpro, Ficohsa), Cheques y Pago contra entrega.',
+    this.facilities = 'Planta de manufactura de 4,500 m² con 3 muelles de carga pesada',
+    this.fleet = '12 camiones propios con monitoreo GPS para distribución nacional',
+    this.linkedin = const {
+      'handle': 'Empresa B2B Nicaragua',
+      'followers': '3.8K seguidores',
+      'status': 'Perfil Corporativo',
+    },
   });
 }
 
@@ -153,6 +214,24 @@ class CompanyIntelligenceService {
       digitalScore: 98,
       trustScore: 96,
       website: 'www.plastipack.com.ni',
+      ownerName: 'Ing. Carlos Mendoza Lacayo',
+      ownerRole: 'Director General & Socio Fundador',
+      legalRepresentative: 'Lic. Roberto Chamorro — Representante Legal acreditado ante DGI',
+      phone: '+505 2248-9100',
+      whatsapp: '+505 8899-1234',
+      email: 'ventas@plastipack.com.ni',
+      fullAddress: 'Km 7.5 Carretera Norte, Frente a entrada principal Zona Franca Las Mercedes, Managua, Nicaragua',
+      businessHours: 'Lunes a Viernes: 8:00 AM - 5:00 PM | Sábados: 8:00 AM - 12:00 PM',
+      monthlyCapacity: '1,800,000 unidades / mes (Inyección, Soplado y Termoformado)',
+      creditTerms: 'Línea de crédito comercial a 30 y 60 días para compras corporativas recurrentes.',
+      paymentMethods: 'Transferencia ACH (BAC Credomatic, Banco LAFISE, Banpro), Cheques y Contado.',
+      facilities: 'Complejo industrial de 5,200 m² con 4 muelles para cabezales de 40 pies',
+      fleet: '14 camiones propios con GPS y flete bonificado en el casco urbano de Managua',
+      linkedin: {
+        'handle': 'PlastiPack Nicaragua S.A.',
+        'followers': '5.4K seguidores en LinkedIn',
+        'status': 'Perfil Corporativo Verificado',
+      },
       googleSearchSummary:
           'Indexado en Google con más de 1,200 búsquedas mensuales. Excelente reputación en manufactura de empaques plásticos para la industria alimenticia y farmacéutica en Nicaragua.',
       googleRating: 4.8,
@@ -222,6 +301,24 @@ class CompanyIntelligenceService {
       digitalScore: 92,
       trustScore: 94,
       website: 'www.evanplast.com.ni',
+      ownerName: 'Lic. Evans Morales Gutiérrez',
+      ownerRole: 'Presidente Ejecutivo & Fundador',
+      legalRepresentative: 'Abg. Claudia Pineda — Apoderada General de Administración',
+      phone: '+505 2522-7700',
+      whatsapp: '+505 8455-9988',
+      email: 'ventas@evanplast.com.ni',
+      fullAddress: 'Zona Franca Industrial Las Flores, Módulo 12, Masaya, Nicaragua',
+      businessHours: 'Lunes a Viernes: 7:30 AM - 4:30 PM | Sábados: 8:00 AM - 12:00 PM',
+      monthlyCapacity: '1,200,000 metros lineales de Film Stretch y 800,000 bolsas industriales / mes',
+      creditTerms: 'Crédito a 30 días con tasa preferencial por pronto pago en transferencias bancarias.',
+      paymentMethods: 'BAC, LAFISE Bancentro, Banpro, Cheque certificado y ACH interbancario.',
+      facilities: 'Planta de extrusión y rebobinado de 3,800 m² en Masaya',
+      fleet: '8 camiones de carga mediana para entregas en Masaya, Managua, Granada y Rivas',
+      linkedin: {
+        'handle': 'Evanplast S.A. Nicaragua',
+        'followers': '3.1K seguidores',
+        'status': 'Perfil Comercial Activo',
+      },
       googleSearchSummary:
           'Líder en Masaya y Managua en producción a gran escala de film stretch y fundas termocontroladas. Posicionado en Google con valoraciones destacadas en atención al cliente.',
       googleRating: 4.6,
@@ -355,6 +452,24 @@ class CompanyIntelligenceService {
       digitalScore: 88,
       trustScore: 90,
       website: 'www.$slug.com.ni',
+      ownerName: 'Lic. Administrador $cleanName',
+      ownerRole: 'Director General & Gerente de Operaciones',
+      legalRepresentative: 'Representante Legal acreditado ante DGI Nicaragua',
+      phone: '+505 2270-${slug.hashCode.abs().toString().padLeft(4, '0').substring(0, 4)}',
+      whatsapp: '+505 8${slug.hashCode.abs().toString().padLeft(7, '0').substring(0, 7)}',
+      email: 'ventas@$slug.com.ni',
+      fullAddress: 'Carretera Principal, Módulo Corporativo $cleanName, Nicaragua',
+      businessHours: 'Lunes a Viernes: 8:00 AM - 5:00 PM | Sábados: 8:00 AM - 12:00 PM',
+      monthlyCapacity: '950,000 unidades / mes',
+      creditTerms: 'Línea de crédito comercial B2B a 30 días para compras corporativas.',
+      paymentMethods: 'Transferencia ACH bancaria (BAC, LAFISE, Banpro) y cheques certificados.',
+      facilities: 'Instalaciones de almacenamiento y despacho con control de calidad',
+      fleet: 'Flotilla de transporte con rutas programadas a nivel nacional',
+      linkedin: {
+        'handle': '$cleanName B2B Nicaragua',
+        'followers': '2.4K seguidores en LinkedIn',
+        'status': 'Perfil Comercial Verificado',
+      },
       googleSearchSummary:
           'Presencia verificada en motores de búsqueda. Registro mercantil activo con indexación de servicios y catálogo en territorio nicaragüense.',
       googleRating: 4.7,

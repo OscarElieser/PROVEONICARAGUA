@@ -6,12 +6,16 @@
 
 // Importa los componentes visuales de Flutter
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 // Importa los tokens de color corporativos
 import '../core/theme/app_colors.dart';
 
 // Importa los modelos del dominio de datos
 import '../models/models.dart';
+
+// Importa el servicio de inteligencia y auditoría de empresas
+import '../services/ai/company_intelligence_service.dart';
 
 // Importa el encabezado y pie de página globales
 import '../core/widgets/premium_footer.dart';
@@ -226,6 +230,9 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
   /// Controlador de pestañas para Catálogo, Perfil y Calidad
   late final TabController _tabController;
 
+  /// Servicio de inteligencia corporativa y auditoría digital
+  final _intelService = CompanyIntelligenceService();
+
   @override
   void initState() {
     super.initState();
@@ -248,9 +255,36 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
     );
   }
 
+  /// Copia texto al portapapeles y notifica al usuario con un Snackbar elegante
+  void _copyToClipboard(String text, String label) {
+    Clipboard.setData(ClipboardData(text: text));
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.check_circle_rounded, color: AppColors.trustGreen, size: 20),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                '$label copiado al portapapeles: $text',
+                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+              ),
+            ),
+          ],
+        ),
+        backgroundColor: AppColors.navy,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final products = _buildDemoProducts(widget.provider);
+    final intel = _intelService.getCompanyIntelligence(widget.provider.name);
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -299,17 +333,15 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
                               shape: BoxShape.circle,
                             ),
                             child: CircleAvatar(
-                              radius: 40,
-                              backgroundColor: AppColors.teal,
+                              radius: 36,
+                              backgroundColor: AppColors.navy,
                               child: Text(
-                                widget.provider.name.isNotEmpty
-                                    ? widget.provider.name.substring(0, 2).toUpperCase()
-                                    : 'PR',
+                                widget.provider.logo,
                                 style: const TextStyle(
-                                  fontSize: 26,
-                                  color: Colors.white,
+                                  fontSize: 24,
                                   fontWeight: FontWeight.w900,
-                                  letterSpacing: 1.2,
+                                  color: Colors.white,
+                                  letterSpacing: 1,
                                 ),
                               ),
                             ),
@@ -326,10 +358,12 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
                                       child: Text(
                                         widget.provider.name,
                                         style: const TextStyle(
-                                          color: Colors.white,
                                           fontSize: 22,
                                           fontWeight: FontWeight.w900,
+                                          color: Colors.white,
+                                          letterSpacing: -0.5,
                                         ),
+                                        overflow: TextOverflow.ellipsis,
                                       ),
                                     ),
                                     const SizedBox(width: 8),
@@ -338,20 +372,17 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
                                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                                         decoration: BoxDecoration(
                                           color: AppColors.trustGreen,
-                                          borderRadius: BorderRadius.circular(12),
+                                          borderRadius: BorderRadius.circular(8),
                                         ),
                                         child: const Row(
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
-                                            Icon(Icons.verified_rounded, color: Colors.white, size: 12),
-                                            SizedBox(width: 3),
+                                            Icon(Icons.verified_rounded, size: 12, color: Colors.white),
+                                            SizedBox(width: 4),
                                             Text(
                                               'Top Verificado',
                                               style: TextStyle(
-                                                color: Colors.white,
-                                                fontSize: 10,
-                                                fontWeight: FontWeight.bold,
-                                              ),
+                                                  color: Colors.white, fontSize: 10, fontWeight: FontWeight.w900),
                                             ),
                                           ],
                                         ),
@@ -366,17 +397,16 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
                                 const SizedBox(height: 6),
                                 Row(
                                   children: [
-                                    const Icon(Icons.star_rounded, color: AppColors.warning, size: 16),
-                                    const SizedBox(width: 3),
+                                    const Icon(Icons.star_rounded, size: 16, color: Colors.amber),
+                                    const SizedBox(width: 4),
                                     Text(
                                       '${widget.provider.rating} (${widget.provider.reviews} opiniones)',
-                                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 12),
+                                      style: const TextStyle(
+                                          color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
                                     ),
-                                    const SizedBox(width: 10),
-                                    const Text('•', style: TextStyle(color: Colors.white54)),
-                                    const SizedBox(width: 10),
-                                    const Icon(Icons.timer_outlined, color: Colors.white70, size: 14),
-                                    const SizedBox(width: 3),
+                                    const SizedBox(width: 12),
+                                    const Icon(Icons.access_time_rounded, size: 14, color: Colors.white70),
+                                    const SizedBox(width: 4),
                                     Text(
                                       'Resp: ${widget.provider.responseTime}',
                                       style: const TextStyle(color: Colors.white70, fontSize: 12),
@@ -396,7 +426,7 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
           ),
 
           // ------------------------------------------------------------------
-          // 2. CUERPO: Dossier IA, Botones de Acción y Pestañas
+          // 2. CONTENIDO PRINCIPAL: AUDITORÍA IA, ACCIONES Y PESTAÑAS
           // ------------------------------------------------------------------
           SliverToBoxAdapter(
             child: Center(
@@ -553,39 +583,15 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
                             const Divider(height: 1),
 
                             SizedBox(
-                              height: 560,
+                              height: 720,
                               child: TabBarView(
                                 controller: _tabController,
                                 children: [
                                   // ── TAB 1: CATÁLOGO EN GRID ────────────────────
                                   _CatalogGrid(products: products, onTap: _openProductDetail),
 
-                                  // ── TAB 2: PERFIL DEL FABRICANTE ──────────────
-                                  SingleChildScrollView(
-                                    padding: const EdgeInsets.all(20),
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          widget.provider.description,
-                                          style: const TextStyle(fontSize: 14, height: 1.6, color: AppColors.textPrimary),
-                                        ),
-                                        const SizedBox(height: 18),
-                                        Wrap(
-                                          spacing: 8,
-                                          runSpacing: 8,
-                                          children: [
-                                            _InfoBadge(
-                                                icon: Icons.business_center_outlined,
-                                                text: '${widget.provider.years} años de experiencia'),
-                                            const _InfoBadge(icon: Icons.verified_user_outlined, text: 'RUC y DGI Verificado'),
-                                            const _InfoBadge(icon: Icons.local_shipping_outlined, text: 'Flotilla propia de reparto'),
-                                            const _InfoBadge(icon: Icons.inventory_2_outlined, text: 'Venta Mayorista y Menudeo'),
-                                          ],
-                                        ),
-                                      ],
-                                    ),
-                                  ),
+                                  // ── TAB 2: PERFIL INTEGRAL DEL FABRICANTE ─────
+                                  _buildComprehensiveProfileTab(context, intel),
 
                                   // ── TAB 3: CALIFICACIONES Y PUNTUACIÓN ────────
                                   const SingleChildScrollView(
@@ -622,6 +628,647 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen>
           const SliverToBoxAdapter(child: PremiumFooter()),
         ],
       ),
+    );
+  }
+
+  /// Construye la pestaña integral de perfil con dueño, teléfonos, correos, ubicación, redes y condiciones comerciales
+  Widget _buildComprehensiveProfileTab(BuildContext context, CompanyIntelligenceData intel) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // ── 1. DESCRIPCIÓN COMERCIAL & CERTIFICACIONES ──────────────────────
+          Text(
+            widget.provider.description,
+            style: const TextStyle(fontSize: 14, height: 1.6, color: AppColors.textPrimary, fontWeight: FontWeight.w500),
+          ),
+          const SizedBox(height: 16),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _InfoBadge(icon: Icons.business_center_outlined, text: '${widget.provider.years} años de experiencia'),
+              const _InfoBadge(icon: Icons.verified_user_outlined, text: 'RUC y DGI Verificado'),
+              const _InfoBadge(icon: Icons.local_shipping_outlined, text: 'Flotilla propia de reparto'),
+              const _InfoBadge(icon: Icons.inventory_2_outlined, text: 'Venta Mayorista y Menudeo'),
+            ],
+          ),
+          const SizedBox(height: 14),
+          // Badges de Certificaciones
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: intel.certifications.map((cert) => Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              decoration: BoxDecoration(
+                color: AppColors.paleGreen,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: AppColors.trustGreen.withValues(alpha: 0.3)),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.verified_rounded, size: 14, color: AppColors.trustGreen),
+                  const SizedBox(width: 6),
+                  Text(
+                    cert,
+                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: AppColors.navy),
+                  ),
+                ],
+              ),
+            )).toList(),
+          ),
+
+          const SizedBox(height: 24),
+          const Divider(height: 1, color: AppColors.border),
+          const SizedBox(height: 20),
+
+          // ── 2. GOBERNANZA, DUEÑO & REPRESENTACIÓN LEGAL ────────────────────
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: AppColors.navy.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(Icons.badge_rounded, color: AppColors.navy, size: 18),
+              ),
+              const SizedBox(width: 10),
+              const Text(
+                'Gobernanza & Representación Legal',
+                style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: AppColors.navy),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [AppColors.paleBlue, Colors.white],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppColors.blue.withValues(alpha: 0.25)),
+            ),
+            child: Column(
+              children: [
+                // Ficha del Propietario / Director
+                Row(
+                  children: [
+                    const CircleAvatar(
+                      radius: 24,
+                      backgroundColor: AppColors.navy,
+                      child: Icon(Icons.person_rounded, color: Colors.white, size: 28),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  intel.ownerName,
+                                  style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 15, color: AppColors.navy),
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              const Icon(Icons.verified_rounded, size: 16, color: AppColors.trustGreen),
+                            ],
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            intel.ownerRole,
+                            style: const TextStyle(fontSize: 12, color: AppColors.textSecondary, fontWeight: FontWeight.w600),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 14),
+                const Divider(height: 1),
+                const SizedBox(height: 12),
+                // Ficha del Representante Legal
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Icon(Icons.shield_outlined, size: 18, color: AppColors.navy),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Representante Legal Acreditado',
+                            style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.textSecondary),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            intel.legalRepresentative,
+                            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.navy),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 24),
+          const Divider(height: 1, color: AppColors.border),
+          const SizedBox(height: 20),
+
+          // ── 3. CANALES DE CONTACTO DIRECTO B2B ──────────────────────────────
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: AppColors.trustGreen.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(Icons.contact_phone_rounded, color: AppColors.trustGreen, size: 18),
+              ),
+              const SizedBox(width: 10),
+              const Text(
+                'Canales de Contacto Directo B2B',
+                style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: AppColors.navy),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isWide = constraints.maxWidth > 580;
+              return Column(
+                children: [
+                  if (isWide)
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildContactItem(
+                            icon: Icons.phone_in_talk_rounded,
+                            title: 'Central Telefónica (PBX)',
+                            value: intel.phone,
+                            actionLabel: 'Copiar PBX',
+                            onAction: () => _copyToClipboard(intel.phone, 'Teléfono PBX'),
+                            color: AppColors.navy,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _buildContactItem(
+                            icon: Icons.chat_rounded,
+                            title: 'WhatsApp Ventas B2B',
+                            value: intel.whatsapp,
+                            actionLabel: 'Copiar WhatsApp',
+                            onAction: () => _copyToClipboard(intel.whatsapp, 'WhatsApp'),
+                            color: const Color(0xFF25D366),
+                          ),
+                        ),
+                      ],
+                    )
+                  else ...[
+                    _buildContactItem(
+                      icon: Icons.phone_in_talk_rounded,
+                      title: 'Central Telefónica (PBX)',
+                      value: intel.phone,
+                      actionLabel: 'Copiar PBX',
+                      onAction: () => _copyToClipboard(intel.phone, 'Teléfono PBX'),
+                      color: AppColors.navy,
+                    ),
+                    const SizedBox(height: 10),
+                    _buildContactItem(
+                      icon: Icons.chat_rounded,
+                      title: 'WhatsApp Ventas B2B',
+                      value: intel.whatsapp,
+                      actionLabel: 'Copiar WhatsApp',
+                      onAction: () => _copyToClipboard(intel.whatsapp, 'WhatsApp'),
+                      color: const Color(0xFF25D366),
+                    ),
+                  ],
+                  const SizedBox(height: 10),
+                  _buildContactItem(
+                    icon: Icons.alternate_email_rounded,
+                    title: 'Correo Institucional de Ventas',
+                    value: intel.email,
+                    actionLabel: 'Copiar Correo',
+                    onAction: () => _copyToClipboard(intel.email, 'Correo Electrónico'),
+                    color: AppColors.blue,
+                  ),
+                  const SizedBox(height: 10),
+                  // Horario de Atención
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: AppColors.border),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.schedule_rounded, color: AppColors.textSecondary, size: 20),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text('Horario de Atención Comercial',
+                                  style: TextStyle(fontSize: 11, color: AppColors.textSecondary, fontWeight: FontWeight.bold)),
+                              const SizedBox(height: 2),
+                              Text(intel.businessHours,
+                                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.navy)),
+                            ],
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: AppColors.paleGreen,
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: const Text('Atención Hoy',
+                              style: TextStyle(color: AppColors.trustGreen, fontSize: 10.5, fontWeight: FontWeight.w800)),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+
+          const SizedBox(height: 24),
+          const Divider(height: 1, color: AppColors.border),
+          const SizedBox(height: 20),
+
+          // ── 4. UBICACIÓN FÍSICA & LOGÍSTICA DE ENTREGA ──────────────────────
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: AppColors.blue.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(Icons.location_on_rounded, color: AppColors.blue, size: 18),
+              ),
+              const SizedBox(width: 10),
+              const Text(
+                'Ubicación Física & Capacidad Logística',
+                style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: AppColors.navy),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Icon(Icons.pin_drop_rounded, color: AppColors.error, size: 22),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('Dirección de Planta y Oficinas Centrales',
+                              style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.textSecondary)),
+                          const SizedBox(height: 3),
+                          Text(
+                            intel.fullAddress,
+                            style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w700, color: AppColors.textPrimary, height: 1.4),
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      tooltip: 'Copiar Dirección',
+                      icon: const Icon(Icons.copy_rounded, size: 18, color: AppColors.navy),
+                      onPressed: () => _copyToClipboard(intel.fullAddress, 'Dirección física'),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                const Divider(height: 1),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    const Icon(Icons.factory_outlined, color: AppColors.navy, size: 20),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        'Instalaciones: ${intel.facilities}',
+                        style: const TextStyle(fontSize: 12.5, color: AppColors.textPrimary, fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    const Icon(Icons.local_shipping_outlined, color: AppColors.trustGreen, size: 20),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        'Distribución: ${intel.fleet}',
+                        style: const TextStyle(fontSize: 12.5, color: AppColors.textPrimary, fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 24),
+          const Divider(height: 1, color: AppColors.border),
+          const SizedBox(height: 20),
+
+          // ── 5. REDES SOCIALES & CANALES DIGITALES OFICIALES ─────────────────
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: Colors.purple.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(Icons.public_rounded, color: Colors.purple, size: 18),
+              ),
+              const SizedBox(width: 10),
+              const Text(
+                'Presencia en Redes Sociales & Web Oficial',
+                style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: AppColors.navy),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          GridView.count(
+            crossAxisCount: MediaQuery.of(context).size.width > 700 ? 3 : 2,
+            crossAxisSpacing: 10,
+            mainAxisSpacing: 10,
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            childAspectRatio: 1.5,
+            children: [
+              _buildSocialTile(
+                icon: Icons.language_rounded,
+                network: 'Sitio Web Oficial',
+                handle: intel.website,
+                metric: 'Catálogo Online',
+                color: AppColors.teal,
+                onTap: () => _copyToClipboard('https://${intel.website}', 'Sitio Web'),
+              ),
+              _buildSocialTile(
+                icon: Icons.facebook,
+                network: 'Facebook Business',
+                handle: intel.facebook['handle'] ?? '',
+                metric: intel.facebook['followers'] ?? '',
+                color: const Color(0xFF1877F2),
+                onTap: () => _copyToClipboard('Facebook: ${intel.facebook['handle']}', 'Facebook'),
+              ),
+              _buildSocialTile(
+                icon: Icons.camera_alt_outlined,
+                network: 'Instagram Corporativo',
+                handle: intel.instagram['handle'] ?? '',
+                metric: intel.instagram['followers'] ?? '',
+                color: const Color(0xFFE1306C),
+                onTap: () => _copyToClipboard('Instagram: ${intel.instagram['handle']}', 'Instagram'),
+              ),
+              _buildSocialTile(
+                icon: Icons.music_note_rounded,
+                network: 'TikTok Business',
+                handle: intel.tiktok['handle'] ?? '',
+                metric: intel.tiktok['followers'] ?? '',
+                color: Colors.black,
+                onTap: () => _copyToClipboard('TikTok: ${intel.tiktok['handle']}', 'TikTok'),
+              ),
+              _buildSocialTile(
+                icon: Icons.play_circle_fill_rounded,
+                network: 'YouTube Channel',
+                handle: intel.youtube['handle'] ?? '',
+                metric: intel.youtube['followers'] ?? '',
+                color: const Color(0xFFFF0000),
+                onTap: () => _copyToClipboard('YouTube: ${intel.youtube['handle']}', 'YouTube'),
+              ),
+              _buildSocialTile(
+                icon: Icons.business_center_rounded,
+                network: 'LinkedIn B2B',
+                handle: intel.linkedin['handle'] ?? '',
+                metric: intel.linkedin['followers'] ?? 'Red B2B',
+                color: const Color(0xFF0A66C2),
+                onTap: () => _copyToClipboard('LinkedIn: ${intel.linkedin['handle']}', 'LinkedIn'),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 24),
+          const Divider(height: 1, color: AppColors.border),
+          const SizedBox(height: 20),
+
+          // ── 6. CAPACIDAD INDUSTRIAL & CONDICIONES COMERCIALES ──────────────
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: AppColors.warning.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(Icons.account_balance_wallet_rounded, color: AppColors.warning, size: 18),
+              ),
+              const SizedBox(width: 10),
+              const Text(
+                'Capacidad Industrial & Condiciones Comerciales',
+                style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: AppColors.navy),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.paleBlue,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppColors.blue.withValues(alpha: 0.2)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildCommercialRow(
+                  icon: Icons.precision_manufacturing_rounded,
+                  title: 'Capacidad de Producción Mensual',
+                  value: intel.monthlyCapacity,
+                ),
+                const SizedBox(height: 12),
+                _buildCommercialRow(
+                  icon: Icons.credit_score_rounded,
+                  title: 'Términos de Crédito B2B',
+                  value: intel.creditTerms,
+                ),
+                const SizedBox(height: 12),
+                _buildCommercialRow(
+                  icon: Icons.payments_outlined,
+                  title: 'Bancos y Medios de Pago',
+                  value: intel.paymentMethods,
+                ),
+                const SizedBox(height: 12),
+                _buildCommercialRow(
+                  icon: Icons.receipt_long_rounded,
+                  title: 'Registro Único de Contribuyente (RUC) & DGI',
+                  value: '${intel.ruc} • ${intel.fiscalStatus}',
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+        ],
+      ),
+    );
+  }
+
+  /// Tarjeta de contacto con valor y botón de acción directa
+  Widget _buildContactItem({
+    required IconData icon,
+    required String title,
+    required String value,
+    required String actionLabel,
+    required VoidCallback onAction,
+    required Color color,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icon, color: color, size: 20),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: const TextStyle(fontSize: 11, color: AppColors.textSecondary, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 2),
+                Text(value, style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w900, color: AppColors.navy)),
+              ],
+            ),
+          ),
+          OutlinedButton(
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              minimumSize: const Size(60, 32),
+              side: BorderSide(color: color.withValues(alpha: 0.5)),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            onPressed: onAction,
+            child: Text(actionLabel, style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: color)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Mosaico individual para cada red social con métrica y callback
+  Widget _buildSocialTile({
+    required IconData icon,
+    required String network,
+    required String handle,
+    required String metric,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Icon(icon, color: color, size: 18),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(metric, style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.w800, color: color)),
+                ),
+              ],
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(network, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 11, color: AppColors.navy)),
+                const SizedBox(height: 1),
+                Text(handle, style: TextStyle(fontSize: 10, color: color, fontWeight: FontWeight.w600), overflow: TextOverflow.ellipsis),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Fila de detalle comercial con icono y descripción
+  Widget _buildCommercialRow({
+    required IconData icon,
+    required String title,
+    required String value,
+  }) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, color: AppColors.navy, size: 18),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(title, style: const TextStyle(fontSize: 11, color: AppColors.textSecondary, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 2),
+              Text(value, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.navy, height: 1.3)),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
