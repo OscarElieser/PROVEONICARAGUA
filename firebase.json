@@ -4,6 +4,7 @@
 		"database": "proveodb"
 	},
 	"hosting": {
+		"site": "proveonicaragua-43264",
 		"public": "build/web",
 		"ignore": [
 			"firebase.json",
