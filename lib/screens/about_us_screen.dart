@@ -13,6 +13,7 @@ import '../core/theme/app_colors.dart';
 // Importa el encabezado y pie de página globales
 import '../core/widgets/premium_footer.dart';
 import '../core/widgets/premium_header.dart';
+import '../core/widgets/proveo_logo.dart';
 
 /// Pantalla institucional con la historia, misión, visión y valores de PROVEO Nicaragua.
 class AboutUsScreen extends StatelessWidget {
@@ -31,7 +32,7 @@ class AboutUsScreen extends StatelessWidget {
           // ------------------------------------------------------------------
           SliverToBoxAdapter(
             child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 80, horizontal: 24),
+              padding: const EdgeInsets.symmetric(vertical: 70, horizontal: 24),
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
@@ -42,12 +43,27 @@ class AboutUsScreen extends StatelessWidget {
               child: Column(
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 20),
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.1),
-                      shape: BoxShape.circle,
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(24),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.trustGreen.withValues(alpha: 0.35),
+                          blurRadius: 30,
+                          spreadRadius: 2,
+                        ),
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.15),
+                          blurRadius: 16,
+                          offset: const Offset(0, 8),
+                        ),
+                      ],
                     ),
-                    child: const Icon(Icons.hub_outlined, size: 64, color: AppColors.trustGreen),
+                    child: const ProveoLogo(
+                      variant: ProveoLogoVariant.extended,
+                      height: 85,
+                    ),
                   ),
                   const SizedBox(height: 24),
                   const Text(

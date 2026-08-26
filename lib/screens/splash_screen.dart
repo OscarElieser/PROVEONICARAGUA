@@ -80,25 +80,49 @@ class _SplashScreenState extends State<SplashScreen>
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Logotipo de Proveo
-                const ProveoLogo(height: 54),
-                const SizedBox(height: 24),
+                // Logotipo oficial de Proveo ampliado y resaltado
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 20),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.trustGreen.withValues(alpha: 0.35),
+                        blurRadius: 32,
+                        spreadRadius: 2,
+                      ),
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.2),
+                        blurRadius: 24,
+                        offset: const Offset(0, 10),
+                      ),
+                    ],
+                  ),
+                  child: const ProveoLogo(
+                    variant: ProveoLogoVariant.full,
+                    height: 85,
+                  ),
+                ),
+                const SizedBox(height: 28),
                 // Lema comercial de la marca
                 Text(
                   'Conectamos confianza. Impulsamos negocios.',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: Colors.white,
+                        fontSize: 15,
+                        letterSpacing: 0.3,
                         fontWeight: FontWeight.w600,
                       ),
                   textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 30),
+                const SizedBox(height: 32),
                 // Indicador de carga circular en verde confianza
                 const SizedBox(
                   width: 28,
                   height: 28,
                   child: CircularProgressIndicator(
-                    strokeWidth: 2,
+                    strokeWidth: 2.5,
                     color: AppColors.successGreen,
                   ),
                 ),

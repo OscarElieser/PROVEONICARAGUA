@@ -15,6 +15,7 @@ import '../core/theme/app_colors.dart';
 
 // Importa los widgets reutilizables del sistema de diseño
 import '../core/widgets/premium_widgets.dart';
+import '../core/widgets/proveo_logo.dart';
 
 // Importa los modelos del dominio
 import '../models/models.dart';
@@ -255,7 +256,8 @@ class _HeroVisual extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.handshake_outlined, color: Colors.white, size: 70),
+            // Isotipo oficial de Proveo con degradado corporativo
+            const ProveoLogo.iconOnly(height: 68),
             const SizedBox(height: 12),
             const Text(
               'PROVEO MATCH IA',

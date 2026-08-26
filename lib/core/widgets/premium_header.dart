@@ -16,6 +16,8 @@ import '../theme/app_colors.dart';
 // Importa el proveedor de autenticación
 import '../providers/auth_provider.dart';
 
+import 'proveo_logo.dart';
+
 // Importa las pantallas a las que enlaza la barra de navegación
 import '../../screens/search_screen.dart';
 import '../../screens/match_screen.dart';
@@ -119,49 +121,16 @@ class PremiumHeader extends StatelessWidget implements PreferredSizeWidget {
               ],
 
               // --------------------------------------------------------------
-              // 2. LOGOTIPO INTERACTIVO DE PROVEO
+              // 2. LOGOTIPO INTERACTIVO DE PROVEO (Vectorial, Nítido y Ampliado)
               // --------------------------------------------------------------
               InkWell(
                 onTap: () => _goHome(context),
                 borderRadius: BorderRadius.circular(12),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // Contenedor con isotipo en azul marino y verde lima
-                      Container(
-                        width: 36,
-                        height: 36,
-                        decoration: BoxDecoration(
-                          color: AppColors.navy,
-                          borderRadius: BorderRadius.circular(10),
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColors.navy.withValues(alpha: 0.2),
-                              blurRadius: 6,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: const Icon(
-                          Icons.hub_outlined,
-                          color: AppColors.trustGreen,
-                          size: 22,
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      // Tipografía del logotipo con espaciado amplio
-                      const Text(
-                        'PROVEO',
-                        style: TextStyle(
-                          color: AppColors.navy,
-                          fontSize: 22,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 1.5,
-                        ),
-                      ),
-                    ],
+                child: const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  child: ProveoLogo.horizontal(
+                    height: 44,
+                    subtitle: 'NICARAGUA',
                   ),
                 ),
               ),
@@ -426,10 +395,10 @@ class PremiumHeader extends StatelessWidget implements PreferredSizeWidget {
       enabled: false,
       child: Row(
         children: [
-          Icon(Icons.hub_rounded, color: AppColors.trustGreen, size: 20),
-          SizedBox(width: 8),
+          ProveoLogo.iconOnly(height: 24),
+          SizedBox(width: 10),
           Text(
-            'Menú de Navegación',
+            'PROVEO Nicaragua',
             style: TextStyle(
               fontWeight: FontWeight.w900,
               color: AppColors.navy,

@@ -190,9 +190,14 @@ class _AuthScreenState extends State<AuthScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          // Logotipo de PROVEO
-                          const Center(child: ProveoLogo(height: 52)),
-                          const SizedBox(height: 20),
+                          // Logotipo oficial de PROVEO ampliado
+                          const Center(
+                            child: ProveoLogo(
+                              variant: ProveoLogoVariant.extended,
+                              height: 75,
+                            ),
+                          ),
+                          const SizedBox(height: 18),
 
                           // Título dinámico según modo Login / Sign Up
                           Text(

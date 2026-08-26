@@ -60,7 +60,7 @@ class ProveoApp extends StatelessWidget {
         // Oculta el banner de "DEBUG" en la esquina superior derecha para mantener una apariencia limpia y profesional
         debugShowCheckedModeBanner: false,
         // Título de la aplicación que se muestra en pestañas del navegador web y administrador de tareas
-        title: 'PROVEO Premium',
+        title: 'PROVEO NICARAGUA',
         // Aplica el tema visual claro personalizado de Proveo Nicaragua
         theme: AppTheme.light,
         // Consumer escucha cambios en AuthProvider y reconstruye la pantalla inicial de forma reactiva

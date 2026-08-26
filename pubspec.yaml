@@ -57,6 +57,7 @@ dependencies:
 
   # Capacidad para abrir enlaces externos (sitios web, WhatsApp directo, correo electrónico y llamadas)
   url_launcher: ^6.3.2
+  flutter_svg: ^2.2.2
 
 # ==============================================================================
 # DEPENDENCIAS DE DESARROLLO (Herramientas para pruebas y calidad de código)
@@ -78,8 +79,8 @@ flutter:
 
   # Declaración de rutas de recursos gráficos estáticos incluidos en el bundle compilado
   assets:
-    # Logotipo oficial de Proveo en alta definición
-    - assets/logo/proveo_logo.png
+    # Logotipos vectoriales e isotipos oficiales de Proveo
+    - assets/logo/
     # Carpeta contenedora de imágenes ilustrativas, avatares y banners publicitarios
     - assets/images/
 

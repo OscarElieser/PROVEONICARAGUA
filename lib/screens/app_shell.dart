@@ -19,6 +19,8 @@ import '../core/providers/auth_provider.dart';
 // Importa los modelos del dominio de usuario
 import '../models/models.dart';
 
+import '../core/widgets/proveo_logo.dart';
+
 // Importa las pantallas que integran el flujo principal
 import 'chat_screen.dart';
 import 'admin_dashboard_screen.dart';
@@ -183,20 +185,10 @@ class _AppShellState extends State<AppShell> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Row(
-                        children: [
-                          Icon(Icons.inventory_2_rounded, color: AppColors.trustGreen, size: 24),
-                          SizedBox(width: 10),
-                          Text(
-                            'PROVEO',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 22,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: 2,
-                            ),
-                          ),
-                        ],
+                      const ProveoLogo.horizontal(
+                        height: 38,
+                        isDarkBackground: true,
+                        subtitle: 'NICARAGUA',
                       ),
                       IconButton(
                         icon: const Icon(Icons.close_rounded, color: Colors.white70),

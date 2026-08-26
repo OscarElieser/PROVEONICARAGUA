@@ -21,6 +21,7 @@ import '../../screens/terms_conditions_screen.dart';
 
 // Importa la paleta de colores corporativa
 import '../theme/app_colors.dart';
+import 'proveo_logo.dart';
 
 /// Pie de página corporativo presente al final de todas las pantallas públicas de PROVEO.
 class PremiumFooter extends StatelessWidget {
@@ -60,32 +61,10 @@ class PremiumFooter extends StatelessWidget {
                     crossAxisAlignment:
                         isMobile ? CrossAxisAlignment.center : CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: AppColors.trustGreen.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: const Icon(
-                              Icons.hub_outlined,
-                              color: AppColors.trustGreen,
-                              size: 28,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          const Text(
-                            'PROVEO',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 26,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: 2,
-                            ),
-                          ),
-                        ],
+                      const ProveoLogo.horizontal(
+                        height: 50,
+                        isDarkBackground: true,
+                        subtitle: 'NICARAGUA • B2B',
                       ),
                       const SizedBox(height: 16),
                       SizedBox(
