@@ -12,6 +12,7 @@ import 'dart:async';
 
 // Importa la paleta de colores corporativa
 import '../core/theme/app_colors.dart';
+import '../core/theme/app_typography.dart';
 
 // Importa los widgets reutilizables del sistema de diseño
 import '../core/widgets/premium_widgets.dart';
@@ -174,13 +175,18 @@ class _Hero extends StatelessWidget {
                 const VerifiedBadge(text: 'Red empresarial inteligente de Nicaragua'),
                 const SizedBox(height: 16),
                 Text(
-                  'Encuentra proveedores confiables para hacer crecer tu negocio.',
-                  style: Theme.of(context).textTheme.displayMedium?.copyWith(color: AppColors.navy),
+                  'Encuentra proveedores de confianza para hacer crecer tu negocio',
+                  style: AppTypography.titulo.copyWith(color: AppColors.navy),
                 ),
                 const SizedBox(height: 12),
-                const Text(
-                  'PROVEO es el puente inteligente que conecta emprendedores y empresas con los mejores proveedores verificados mediante IA.',
-                  style: TextStyle(color: AppColors.textSecondary, fontSize: 15, height: 1.45),
+                Text(
+                  'PROVEO es el puente inteligente que conecta emprendedores y empresas con los mejores proveedores.',
+                  style: AppTypography.subtitulo.copyWith(color: AppColors.textSecondary),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'Una forma más clara de elegir tus proveedores.',
+                  style: AppTypography.cuerpo.copyWith(color: AppColors.textSecondary),
                 ),
                 const SizedBox(height: 22),
                 // Formulario de búsqueda rápida

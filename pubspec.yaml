@@ -58,6 +58,7 @@ dependencies:
   # Capacidad para abrir enlaces externos (sitios web, WhatsApp directo, correo electrónico y llamadas)
   url_launcher: ^6.3.2
   flutter_svg: ^2.2.2
+  google_fonts: ^8.2.1
 
 # ==============================================================================
 # DEPENDENCIAS DE DESARROLLO (Herramientas para pruebas y calidad de código)

@@ -1,16 +1,13 @@
 // ==============================================================================
 // PROVEO NICARAGUA - Sistema de Diseño: Tema Global Material 3 (lib/core/theme/app_theme.dart)
 // ¿Qué hace?: Configura y consolida la apariencia visual, esquemas de color y comportamientos de widgets en Flutter.
-// ¿Por qué se utiliza?: Centraliza el diseño responsivo, la consistencia de bordes redondeados y la estética de Proveo.
+// ¿Por qué se utiliza?: Centraliza el diseño responsivo, la consistencia de bordes redondeados y la estética oficial de Proveo con Montserrat.
 // ==============================================================================
 
-// Importa los componentes de diseño de Flutter Material
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
-// Importa la paleta de colores corporativos
 import 'app_colors.dart';
-
-// Importa la escala tipográfica estandarizada
 import 'app_typography.dart';
 
 /// Clase que define el tema visual global (ThemeData) utilizado en toda la plataforma PROVEO.
@@ -28,6 +25,29 @@ class AppTheme {
       error: AppColors.error,           // Color de alertas y validaciones
     );
 
+    final baseTextTheme = TextTheme(
+      displayLarge: AppTypography.displayLarge,
+      displayMedium: AppTypography.displayMedium,
+      displaySmall: AppTypography.displaySmall,
+      headlineLarge: AppTypography.headlineLarge,
+      headlineMedium: AppTypography.headlineMedium,
+      headlineSmall: AppTypography.headlineSmall,
+      titleLarge: AppTypography.titleLarge,
+      titleMedium: AppTypography.titleMedium,
+      titleSmall: AppTypography.titleSmall,
+      bodyLarge: AppTypography.bodyLarge,
+      bodyMedium: AppTypography.bodyMedium,
+      bodySmall: AppTypography.bodySmall,
+      labelLarge: AppTypography.labelLarge,
+      labelMedium: AppTypography.labelMedium,
+      labelSmall: AppTypography.labelSmall,
+    );
+
+    final montserratTextTheme = GoogleFonts.montserratTextTheme(baseTextTheme).apply(
+      bodyColor: AppColors.textPrimary,
+      displayColor: AppColors.textPrimary,
+    );
+
     return ThemeData(
       // Habilita el sistema de diseño Material Design 3 más moderno de Flutter
       useMaterial3: true,
@@ -38,32 +58,24 @@ class AppTheme {
       // Establece el color de fondo por defecto para todas las pantallas Scaffold
       scaffoldBackgroundColor: AppColors.background,
 
-      // Define la fuente predeterminada Inter para mantener legibilidad moderna
-      fontFamily: 'Inter',
+      // Define la fuente predeterminada oficial Montserrat para todo el proyecto
+      fontFamily: GoogleFonts.montserrat().fontFamily,
 
       // Mapea la escala tipográfica personalizada aplicando los colores de texto corporativos
-      textTheme: const TextTheme(
-        displayLarge: AppTypography.displayLarge,
-        displayMedium: AppTypography.displayMedium,
-        headlineLarge: AppTypography.headlineLarge,
-        headlineMedium: AppTypography.headlineMedium,
-        titleLarge: AppTypography.titleLarge,
-        titleMedium: AppTypography.titleMedium,
-        bodyLarge: AppTypography.bodyLarge,
-        bodyMedium: AppTypography.bodyMedium,
-        bodySmall: AppTypography.bodySmall,
-        labelLarge: AppTypography.labelLarge,
-      ).apply(
-        bodyColor: AppColors.textPrimary,
-        displayColor: AppColors.textPrimary,
-      ),
+      textTheme: montserratTextTheme,
+      primaryTextTheme: montserratTextTheme,
 
       // Configuración homogénea de la barra superior (AppBar)
-      appBarTheme: const AppBarTheme(
+      appBarTheme: AppBarTheme(
         backgroundColor: AppColors.background, // Mismo tono del Scaffold para efecto limpio (flat)
         foregroundColor: AppColors.textPrimary, // Color de iconos y títulos en el AppBar
         elevation: 0,                           // Sin sombra brusca debajo de la barra
         centerTitle: false,                     // Título alineado a la izquierda según estética moderna
+        titleTextStyle: GoogleFonts.montserrat(
+          color: AppColors.textPrimary,
+          fontSize: 20,
+          fontWeight: FontWeight.w600,
+        ),
       ),
 
       // Estilo predeterminado de todas las tarjetas (Cards) de proveedores y productos
@@ -78,6 +90,8 @@ class AppTheme {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: AppColors.surface,                                        // Fondo blanco para destacar del gris de fondo
+        hintStyle: GoogleFonts.montserrat(color: AppColors.textSecondary, fontSize: 13),
+        labelStyle: GoogleFonts.montserrat(color: AppColors.textSecondary, fontSize: 13),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),                          // Curvatura amigable en esquinas
           borderSide: const BorderSide(color: AppColors.border),             // Borde sutil neutro
@@ -99,10 +113,32 @@ class AppTheme {
           foregroundColor: Colors.white,                                     // Texto en blanco con alto contraste
           minimumSize: const Size(0, 50),                                    // Altura táctil cómoda (50px)
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          textStyle: const TextStyle(fontWeight: FontWeight.w700),           // Tipografía en negrita
+          textStyle: GoogleFonts.montserrat(fontWeight: FontWeight.w600, fontSize: 14),
+        ),
+      ),
+
+      // Estilo de los botones de relleno (FilledButton)
+      filledButtonTheme: FilledButtonThemeData(
+        style: FilledButton.styleFrom(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          textStyle: GoogleFonts.montserrat(fontWeight: FontWeight.w600, fontSize: 14),
+        ),
+      ),
+
+      // Estilo de botones delineados (OutlinedButton)
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          textStyle: GoogleFonts.montserrat(fontWeight: FontWeight.w600, fontSize: 14),
+        ),
+      ),
+
+      // Estilo de botones de texto (TextButton)
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          textStyle: GoogleFonts.montserrat(fontWeight: FontWeight.w600, fontSize: 14),
         ),
       ),
     );
   }
 }
-

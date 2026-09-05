@@ -1,113 +1,171 @@
 // ==============================================================================
-// PROVEO NICARAGUA - Sistema de Diseño: Tipografía (lib/core/theme/app_typography.dart)
+// PROVEO NICARAGUA - Sistema de Diseño: Tipografía Oficial (lib/core/theme/app_typography.dart)
 // ¿Qué hace?: Define los estilos tipográficos, tamaños de fuente, grosores e interlineados oficiales.
-// ¿Por qué se utiliza?: Otorga una jerarquía visual clara, legible y profesional en pantallas móviles y de escritorio.
+// ¿Por qué se utiliza?: Otorga una jerarquía visual clara, legible y profesional basada en Montserrat.
 // ==============================================================================
 
-// Importa los componentes de estilos de texto de Flutter Material
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
-/// Escala tipográfica estandarizada para toda la aplicación PROVEO.
+/// Escala tipográfica oficial de PROVEO basada en Montserrat.
 ///
-/// Centraliza los estilos de texto para que los ajustes de legibilidad se reflejen automáticamente.
+/// Especificaciones de diseño:
+/// - 01 — TÍTULO:    Montserrat SemiBold — 36 pt (FontWeight.w600)
+/// - 02 — SUBTÍTULO: Montserrat Medium   — 20 pt (FontWeight.w500)
+/// - 03 — CUERPO:    Montserrat Regular  — 12 pt (FontWeight.w400)
 class AppTypography {
-  // --------------------------------------------------------------------------
-  // ENCABEZADOS PRINCIPALES Y HERO TITLES (Títulos de portadas y landings)
-  // --------------------------------------------------------------------------
+  static const String fontFamily = 'Montserrat';
 
-  /// Título colosal para el hero principal de la pantalla de bienvenida / landing.
-  static const displayLarge = TextStyle(
-    fontSize: 40,
-    height: 1.08,
-    fontWeight: FontWeight.w800,
-    letterSpacing: 0,
-  );
+  // ---------------------------------------------------------------------------
+  // TOKENS DIRECTOS DE LA GUÍA DE MARCA OFICIAL PROVEO
+  // ---------------------------------------------------------------------------
 
-  /// Título de sección destacada en dashboards y módulos de impacto.
-  static const displayMedium = TextStyle(
-    fontSize: 32,
-    height: 1.1,
-    fontWeight: FontWeight.w800,
-    letterSpacing: 0,
-  );
+  /// 01 — TÍTULO: Montserrat SemiBold — 36 pt
+  static TextStyle get titulo => GoogleFonts.montserrat(
+        fontSize: 36,
+        fontWeight: FontWeight.w600,
+        height: 1.15,
+        letterSpacing: -0.5,
+      );
 
-  // --------------------------------------------------------------------------
-  // TÍTULOS DE PANTALLA Y CATEGORÍAS (Headlines de vistas intermedias)
-  // --------------------------------------------------------------------------
+  /// 02 — SUBTÍTULO: Montserrat Medium — 20 pt
+  static TextStyle get subtitulo => GoogleFonts.montserrat(
+        fontSize: 20,
+        fontWeight: FontWeight.w500,
+        height: 1.3,
+        letterSpacing: -0.2,
+      );
 
-  /// Título principal de vistas de navegación (ej: "Directorio de Proveedores").
-  static const headlineLarge = TextStyle(
-    fontSize: 28,
-    height: 1.15,
-    fontWeight: FontWeight.w800,
-    letterSpacing: 0,
-  );
+  /// 03 — CUERPO: Montserrat Regular — 12 pt
+  static TextStyle get cuerpo => GoogleFonts.montserrat(
+        fontSize: 12,
+        fontWeight: FontWeight.w400,
+        height: 1.4,
+        letterSpacing: 0,
+      );
 
-  /// Subtítulo de bloques grandes o tarjetas modulares.
-  static const headlineMedium = TextStyle(
-    fontSize: 22,
-    height: 1.2,
-    fontWeight: FontWeight.w800,
-    letterSpacing: 0,
-  );
+  // ---------------------------------------------------------------------------
+  // ESCALA TIPOGRÁFICA MATERIAL 3 (MONTSERRAT)
+  // ---------------------------------------------------------------------------
 
-  // --------------------------------------------------------------------------
-  // TÍTULOS DE TARJETAS Y DIÁLOGOS (Titles)
-  // --------------------------------------------------------------------------
+  /// Título colosal para banners de impacto extremo
+  static TextStyle get displayLarge => GoogleFonts.montserrat(
+        fontSize: 40,
+        height: 1.1,
+        fontWeight: FontWeight.w700,
+        letterSpacing: -0.5,
+      );
 
-  /// Título de producto individual o nombre de empresa en listas.
-  static const titleLarge = TextStyle(
-    fontSize: 18,
-    height: 1.25,
-    fontWeight: FontWeight.w700,
-    letterSpacing: 0,
-  );
+  /// Corresponde a 01 — TÍTULO: Montserrat SemiBold — 36 pt
+  static TextStyle get displayMedium => GoogleFonts.montserrat(
+        fontSize: 36,
+        height: 1.15,
+        fontWeight: FontWeight.w600,
+        letterSpacing: -0.5,
+      );
 
-  /// Título de especificación técnica o campos de formulario.
-  static const titleMedium = TextStyle(
-    fontSize: 15,
-    height: 1.3,
-    fontWeight: FontWeight.w700,
-    letterSpacing: 0,
-  );
+  static TextStyle get displaySmall => GoogleFonts.montserrat(
+        fontSize: 30,
+        height: 1.2,
+        fontWeight: FontWeight.w600,
+        letterSpacing: -0.2,
+      );
 
-  // --------------------------------------------------------------------------
-  // CUERPO DE TEXTO Y DESCRIPCIONES (Body text)
-  // --------------------------------------------------------------------------
+  static TextStyle get headlineLarge => GoogleFonts.montserrat(
+        fontSize: 28,
+        height: 1.2,
+        fontWeight: FontWeight.w600,
+        letterSpacing: -0.2,
+      );
 
-  /// Párrafos explicativos, descripciones de productos y artículos.
-  static const bodyLarge = TextStyle(
-    fontSize: 16,
-    height: 1.45,
-    fontWeight: FontWeight.w400,
-    letterSpacing: 0,
-  );
+  static TextStyle get headlineMedium => GoogleFonts.montserrat(
+        fontSize: 24,
+        height: 1.25,
+        fontWeight: FontWeight.w600,
+        letterSpacing: 0,
+      );
 
-  /// Texto estándar para reseñas, especificaciones y tablas.
-  static const bodyMedium = TextStyle(
-    fontSize: 14,
-    height: 1.4,
-    fontWeight: FontWeight.w400,
-    letterSpacing: 0,
-  );
+  static TextStyle get headlineSmall => GoogleFonts.montserrat(
+        fontSize: 22,
+        height: 1.25,
+        fontWeight: FontWeight.w600,
+        letterSpacing: 0,
+      );
 
-  /// Texto pequeño para pies de foto, fechas, notas legales y avisos menores.
-  static const bodySmall = TextStyle(
-    fontSize: 12,
-    height: 1.35,
-    fontWeight: FontWeight.w400,
-    letterSpacing: 0,
-  );
+  /// Corresponde a 02 — SUBTÍTULO: Montserrat Medium — 20 pt
+  static TextStyle get titleLarge => GoogleFonts.montserrat(
+        fontSize: 20,
+        height: 1.3,
+        fontWeight: FontWeight.w500,
+        letterSpacing: -0.2,
+      );
 
-  // --------------------------------------------------------------------------
-  // ETIQUETAS Y BOTONES (Labels)
-  // --------------------------------------------------------------------------
+  static TextStyle get titleMedium => GoogleFonts.montserrat(
+        fontSize: 16,
+        height: 1.35,
+        fontWeight: FontWeight.w500,
+        letterSpacing: 0,
+      );
 
-  /// Texto en negrita para botones de acción (ElevatedButton, OutlinedButton) y badges.
-  static const labelLarge = TextStyle(
-    fontSize: 14,
-    height: 1.2,
-    fontWeight: FontWeight.w700,
-    letterSpacing: 0,
-  );
-}
+  static TextStyle get titleSmall => GoogleFonts.montserrat(
+        fontSize: 14,
+        height: 1.35,
+        fontWeight: FontWeight.w500,
+        letterSpacing: 0,
+      );
+
+  static TextStyle get bodyLarge => GoogleFonts.montserrat(
+        fontSize: 14,
+        height: 1.45,
+        fontWeight: FontWeight.w400,
+        letterSpacing: 0,
+      );
+
+  /// Corresponde a 03 — CUERPO: Montserrat Regular — 12 pt
+  static TextStyle get bodyMedium => GoogleFonts.montserrat(
+        fontSize: 12,
+        height: 1.4,
+        fontWeight: FontWeight.w400,
+        letterSpacing: 0,
+      );
+
+  static TextStyle get bodySmall => GoogleFonts.montserrat(
+        fontSize: 11,
+        height: 1.35,
+        fontWeight: FontWeight.w400,
+        letterSpacing: 0,
+      );
+
+  static TextStyle get labelLarge => GoogleFonts.montserrat(
+        fontSize: 14,
+        height: 1.2,
+        fontWeight: FontWeight.w600,
+        letterSpacing: 0,
+      );
+
+  static TextStyle get labelMedium => GoogleFonts.montserrat(
+        fontSize: 12,
+        height: 1.2,
+        fontWeight: FontWeight.w500,
+        letterSpacing: 0,
+      );
+
+  static TextStyle get labelSmall => GoogleFonts.montserrat(
+        fontSize: 10,
+        height: 1.2,
+        fontWeight: FontWeight.w500,
+        letterSpacing: 0,
+      );
+}
+
+/// Extensión de conveniencia para acceder a la escala tipográfica oficial de PROVEO directamente desde BuildContext.
+extension AppTypographyExtension on BuildContext {
+  /// 01 — TÍTULO: Montserrat SemiBold — 36 pt
+  TextStyle get titulo => AppTypography.titulo;
+
+  /// 02 — SUBTÍTULO: Montserrat Medium — 20 pt
+  TextStyle get subtitulo => AppTypography.subtitulo;
+
+  /// 03 — CUERPO: Montserrat Regular — 12 pt
+  TextStyle get cuerpo => AppTypography.cuerpo;
+}
