@@ -4,14 +4,10 @@
 
 ---
 
-## 📌 Índice de Contenidos (Criterios de Evaluación)
-1. [📖 1. README Técnico y Descripción General](#-1-readme-técnico-y-descripción-general)
-2. [🗄️ 2. Diagramación de Base de Datos (No Relacional / Clases)](#-2-diagramación-de-base-de-datos-no-relacional--clases)
-3. [💻 3. Interfaz y Desarrollo (Formularios y Vistas)](#-3-interfaz-y-desarrollo-formularios-y-vistas)
-4. [🌿 4. Control de Versiones (Git & GitHub)](#-4-control-de-versiones-git--github)
-5. [🛡️ 5. Seguridad, Buenas Prácticas y Matriz de Roles (Admin, Usuario, Auditor)](#-5-seguridad-buenas-prácticas-y-matriz-de-roles-admin-usuario-auditor)
-6. [▶️ 6. Ejecución de la Solución y Demo en Vivo](#-6-ejecución-de-la-solución-y-demo-en-vivo)
-7. [🎨 Identidad Visual y Tipografía Oficial](#-identidad-visual-y-tipografía-oficial)
+## 📌 Índice de Contenidos y Entregables Oficiales
+- 📖 **Desarrollo:** [1. README Técnico](#-1-readme-técnico-y-descripción-general) | [2. Diagrama de Base de Datos](#-2-diagramación-de-base-de-datos-no-relacional--clases) | [3. Interfaz](#-3-interfaz-y-desarrollo-formularios-y-vistas) | [4. Control de Versiones](#-4-control-de-versiones-git--github) | [5. Seguridad y Roles](#-5-seguridad-buenas-prácticas-y-matriz-de-roles-admin-usuario-auditor) | [6. Ejecución y Demo](#-6-ejecución-de-la-solución-y-demo-en-vivo)
+- 📈 **Marketing:** [Ver Documento Oficial de Marketing (Lean Canvas, Buyer Persona, SMART)](MARKETING.md)
+- 🎨 **Diseño Gráfico:** [Ver Manual de Marca Oficial (Logo, Colores, Montserrat, Moodboard)](DISENO_GRAFICO.md)
 
 ---
 
